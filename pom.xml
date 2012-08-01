@@ -1,0 +1,18 @@
+<project>
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>net.dovemq</groupId>
+	<version>1.0-SNAPSHOT</version>
+	<artifactId>dovemq-project</artifactId>
+	<packaging>pom</packaging>
+	<name>dovemq</name>
+
+	<profiles>
+	</profiles>
+
+	<modules>
+		<module>dovemq</module>
+		<module>gentools</module>
+		<module>functional-test</module>
+	</modules>
+</project>
