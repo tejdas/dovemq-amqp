@@ -128,7 +128,7 @@ abstract class AMQPCompositeType implements AMQPType
             outputStream.println("import org.jboss.netty.buffer.ChannelBuffer;");
             outputStream.println();
         }
-        outputStream.println("import com.cisco.camqp2.transport.protocol.*;");
+        outputStream.println("import net.dovemq.transport.protocol.*;");
         outputStream.println();
 
         outputStream.println("public class " + type);

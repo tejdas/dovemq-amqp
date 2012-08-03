@@ -144,7 +144,7 @@ class AMQPGenericTypeContainer
         try
         {
             outputStream.println(String.format("package %s;", AMQPXMLReader.PACKAGE_NAME));
-            outputStream.println("import com.cisco.camqp2.transport.protocol.Width;");
+            outputStream.println("import net.dovemq.transport.protocol.Width;");
             outputStream.println();
             outputStream.println("public enum CAMQPTypes");
             outputStream.println("{");            

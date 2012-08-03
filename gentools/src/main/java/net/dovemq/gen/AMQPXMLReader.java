@@ -14,9 +14,9 @@ class AMQPXMLReader
     private static final String AMQP_TRANSPORT_XML_FILE_NAME = "transport.xml";
     private static final String AMQP_MESSAGING_XML_FILE_NAME = "messaging.xml"; 
     private static final String AMQP_SECURITY_XML_FILE_NAME = "security.xml";  
-    private static final String AMQP_XML_FILES_LOCATION = System.getenv("HOME") + "/camqp/spec";
+    private static final String AMQP_XML_FILES_LOCATION = System.getenv("HOME") + "/dove-amqp/spec";
     
-    protected static final String PACKAGE_NAME = "com.cisco.camqp2.transport.protocol.data";
+    protected static final String PACKAGE_NAME = "net.dovemq.transport.protocol.data";
 
     protected static AMQPGenericTypeContainer gPrimitiveTypes = null;
     protected static AMQPGenericTypeContainer gRestrictedTypes = null;

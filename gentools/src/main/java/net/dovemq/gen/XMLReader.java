@@ -13,7 +13,7 @@ class XMLReader
     private static final String AMQP_TYPES_XML_FILE_NAME = "types.xml";
     private static final String AMQP_XML_FILES_LOCATION = "/Users/tejeswardas/camqp/spec";
     
-    protected static final String PACKAGE_NAME = "com.cisco.camqp2.transport.protocol.data";
+    protected static final String PACKAGE_NAME = "net.dovemq.transport.protocol.data";
 
     protected static AMQPGenericTypeContainer gPrimitiveTypes = null;
     protected static String gDirectory = null;
