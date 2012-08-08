@@ -42,7 +42,7 @@ import net.dovemq.transport.session.CAMQPSessionSenderTest;
 
 public class CAMQPLinkReceiverTest
 {
-    static class MockLinkReceiverFactory implements CAMQPLinkMessageHandlerFactory
+    private static class MockLinkReceiverFactory implements CAMQPLinkMessageHandlerFactory
     {
         private CAMQPLinkReceiver linkReceiver = null;
         
@@ -189,7 +189,6 @@ public class CAMQPLinkReceiverTest
         task.cancel(true);
         executor.shutdown();
         framesProcessor = null;
-        System.out.println(".");
     }
     
     @AfterClass

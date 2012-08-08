@@ -170,7 +170,7 @@ public class CAMQPSessionReceiverTest
         getAndAssertFlowFrames();
     }
     
-    static class TransferFrameSender implements Runnable
+    private static class TransferFrameSender implements Runnable
     {
         private int numTransferFramesToSend;
         private final CAMQPSessionReceiverTest linkLayer;

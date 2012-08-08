@@ -34,8 +34,7 @@ public class CAMQPDefinitionDeliveryStateCodecTest extends TestCase
         super.tearDown();
     }
     
-    public void
-    testCAMQPDefinitionDeliveryStateCodec() throws Exception
+    public void testCAMQPDefinitionDeliveryStateCodec() throws Exception
     {
         CAMQPDefinitionDeliveryState data = new CAMQPDefinitionDeliveryState();
         long bytesTransferred = 87467L;
@@ -68,8 +67,7 @@ public class CAMQPDefinitionDeliveryStateCodecTest extends TestCase
         assertTrue(data.getTxnId().equalsIgnoreCase(outputData.getTxnId()));        
     }
     
-    public void
-    testCAMQPDefinitionDeliveryStateCodecNoBytesTransferred() throws Exception
+    public void testCAMQPDefinitionDeliveryStateCodecNoBytesTransferred() throws Exception
     {
         CAMQPDefinitionDeliveryState data = new CAMQPDefinitionDeliveryState();
         
@@ -92,8 +90,7 @@ public class CAMQPDefinitionDeliveryStateCodecTest extends TestCase
         assertTrue(data.getTxnId().equalsIgnoreCase(outputData.getTxnId()));        
     }
     
-    public void
-    testCAMQPDefinitionDeliveryStateCodecNoOutcome() throws Exception
+    public void testCAMQPDefinitionDeliveryStateCodecNoOutcome() throws Exception
     {
         CAMQPDefinitionDeliveryState data = new CAMQPDefinitionDeliveryState();
         long bytesTransferred = 87467L;
@@ -116,8 +113,7 @@ public class CAMQPDefinitionDeliveryStateCodecTest extends TestCase
         assertTrue(data.getTxnId().equalsIgnoreCase(outputData.getTxnId()));        
     }
     
-    public void
-    testCAMQPDefinitionDeliveryStateCodecNoTxnId() throws Exception
+    public void testCAMQPDefinitionDeliveryStateCodecNoTxnId() throws Exception
     {
         CAMQPDefinitionDeliveryState data = new CAMQPDefinitionDeliveryState();
         long bytesTransferred = 87467L;
@@ -153,8 +149,7 @@ public class CAMQPDefinitionDeliveryStateCodecTest extends TestCase
         assertTrue(outputData.getTxnId().equalsIgnoreCase("transactionid4"));        
     }
     
-    public void
-    testCAMQPDefinitionDeliveryStateOutcomeReleaseCodecNoTxn() throws Exception
+    public void testCAMQPDefinitionDeliveryStateOutcomeReleaseCodecNoTxn() throws Exception
     {
         CAMQPDefinitionDeliveryState data = new CAMQPDefinitionDeliveryState();
         long bytesTransferred = 87467L;
@@ -181,8 +176,7 @@ public class CAMQPDefinitionDeliveryStateCodecTest extends TestCase
         assertTrue(outputData.getTxnId() == null);        
     } 
     
-    public void
-    testCAMQPDefinitionDeliveryStateOutcomeReleaseCodec() throws Exception
+    public void testCAMQPDefinitionDeliveryStateOutcomeReleaseCodec() throws Exception
     {
         CAMQPDefinitionDeliveryState data = new CAMQPDefinitionDeliveryState();
         long bytesTransferred = 87467L;

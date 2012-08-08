@@ -62,7 +62,6 @@ public class CAMQPLinkAsyncSenderTest
             }
             
             totalMessages.decrementAndGet();
-            //System.out.println(totalMessages.get());
                 
             String deliveryTag = UUID.randomUUID().toString();
             CAMQPMessagePayload payload = createMessage(r);
@@ -83,7 +82,7 @@ public class CAMQPLinkAsyncSenderTest
         }       
     }
     
-    static class MockLinkReceiverFactory implements CAMQPLinkMessageHandlerFactory
+    private static class MockLinkReceiverFactory implements CAMQPLinkMessageHandlerFactory
     {
         private CAMQPLinkAsyncSender linkSender = null;
         
@@ -170,7 +169,6 @@ public class CAMQPLinkAsyncSenderTest
         task.cancel(true);
         executor.shutdown();
         framesProcessor = null;
-        System.out.println(".");
     }
     
     @AfterClass
@@ -260,25 +258,7 @@ public class CAMQPLinkAsyncSenderTest
         
         checkAndAssertDeliveryCount();
     }
-    
-    
-    private void getAndAssertMessage(int expectedMessageCount, long timeOut) throws InterruptedException
-    {
-        int messageCount = 0;
-        while (true)
-        {
-            CAMQPControlTransfer transferFrame = transferFramesQueue.poll(timeOut, TimeUnit.MILLISECONDS);
-            if (transferFrame == null)
-            {
-                break;
-            }
- 
-            messageCount++;
-            nextExpectedIncomingTransferId.incrementAndGet();
-        }
-        assertEquals(expectedMessageCount, messageCount);
-    }
-    
+
     private void getAndAssertMessage(int expectedMessageCount) throws InterruptedException
     {
         int messageCount = 0;

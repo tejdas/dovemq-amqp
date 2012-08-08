@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.junit.Test;
 
 import net.dovemq.transport.protocol.data.CAMQPControlBegin;
 import net.dovemq.transport.protocol.data.CAMQPControlOpen;
@@ -35,9 +34,7 @@ public class CAMQPCodecTest extends TestCase
         super.tearDown();
     }
     
-    @Test
-    public void
-    testCAMQPControlBeginCodec() throws Exception
+    public void testCAMQPControlBeginCodec() throws Exception
     {
         CAMQPControlBegin data = new CAMQPControlBegin();
         data.setRemoteChannel(23);
@@ -77,11 +74,10 @@ public class CAMQPCodecTest extends TestCase
         }  
 
         assertTrue(outputData.getOfferedCapabilities().containsAll(data.getOfferedCapabilities()));
-        assertTrue(outputData.getDesiredCapabilities().containsAll(data.getDesiredCapabilities()));        
+        assertTrue(outputData.getDesiredCapabilities().containsAll(data.getDesiredCapabilities()));    
     }
     
-    public void
-    testCAMQPControlBeginCodecNoOfferedCapability() throws Exception
+    public void testCAMQPControlBeginCodecNoOfferedCapability() throws Exception
     {
         CAMQPControlBegin data = new CAMQPControlBegin();
         data.setRemoteChannel(23);
@@ -120,8 +116,7 @@ public class CAMQPCodecTest extends TestCase
         assertTrue(outputData.getDesiredCapabilities().containsAll(data.getDesiredCapabilities()));        
     }    
     
-    public void
-    testCAMQPControlBeginCodecOptionalOfferedCapability() throws Exception
+    public void testCAMQPControlBeginCodecOptionalOfferedCapability() throws Exception
     {
         CAMQPControlBegin data = new CAMQPControlBegin();
         data.setRemoteChannel(23);
@@ -164,15 +159,14 @@ public class CAMQPCodecTest extends TestCase
         assertTrue(outputData.getDesiredCapabilities().containsAll(data.getDesiredCapabilities()));        
     }
 
-    public void
-    testCAMQPControlOpenCodec() throws Exception
+    public void testCAMQPControlOpenCodec() throws Exception
     {
         CAMQPControlOpen data = new CAMQPControlOpen();
         
         data.setChannelMax(64);
         data.setContainerId("amqp-broker");
         data.setIdleTimeOut(4000L);
-        data.setHostname("td-win2003");
+        data.setHostname("tejdas-win2003");
         data.setMaxFrameSize(65536L);
         
         data.addDesiredCapabilities("desired-cap1");
@@ -225,8 +219,7 @@ public class CAMQPCodecTest extends TestCase
         assertTrue(outputData.getOutgoingLocales().containsAll(data.getOutgoingLocales()));        
     }
     
-    public void
-    testCAMQPDefinitionRejected() throws Exception
+    public void testCAMQPDefinitionRejected() throws Exception
     {
         CAMQPDefinitionRejected data = new CAMQPDefinitionRejected();
         CAMQPDefinitionError errorInfo = new CAMQPDefinitionError();
@@ -260,8 +253,7 @@ public class CAMQPCodecTest extends TestCase
         }        
     }
     
-    public void
-    testCAMQPDefinitionRejectedNoDescription() throws Exception
+    public void testCAMQPDefinitionRejectedNoDescription() throws Exception
     {
         CAMQPDefinitionRejected data = new CAMQPDefinitionRejected();
         CAMQPDefinitionError errorInfo = new CAMQPDefinitionError();
@@ -295,8 +287,7 @@ public class CAMQPCodecTest extends TestCase
         }        
     }
     
-    public void
-    testCAMQPDefinitionRejectedErrorNoInfo() throws Exception
+    public void testCAMQPDefinitionRejectedErrorNoInfo() throws Exception
     {
         CAMQPDefinitionRejected data = new CAMQPDefinitionRejected();
         CAMQPDefinitionError errorInfo = new CAMQPDefinitionError();
@@ -332,8 +323,7 @@ public class CAMQPCodecTest extends TestCase
         }
     }
     
-    public void
-    testCAMQPDefinitionRejectedNoErrorInfo() throws Exception
+    public void testCAMQPDefinitionRejectedNoErrorInfo() throws Exception
     {
         CAMQPDefinitionRejected data = new CAMQPDefinitionRejected();
         CAMQPDefinitionError errorInfo = new CAMQPDefinitionError();
@@ -360,8 +350,7 @@ public class CAMQPCodecTest extends TestCase
         assertTrue(outputData.getError().getInfo().size() == 2);
     }    
     
-    public void
-    testCAMQPDefinitionError() throws Exception
+    public void testCAMQPDefinitionError() throws Exception
     {
         CAMQPDefinitionError errorInfo = new CAMQPDefinitionError();
         errorInfo.setCondition("testErrorCondition");
@@ -382,22 +371,17 @@ public class CAMQPCodecTest extends TestCase
         assertTrue(outputData.getDescription().equalsIgnoreCase(errorInfo.getDescription()));        
     }
     
-    public void
-    testCAMQPDefinitionSourceNo() throws Exception
+    public void testCAMQPDefinitionSourceNo() throws Exception
     {
         CAMQPDefinitionSource data = new CAMQPDefinitionSource();
         data.setAddress("address");
         
         CAMQPDefinitionAccepted defAccepted = new CAMQPDefinitionAccepted();
-        defAccepted.getOptions().put("defaccpkey1", "defaccpval1");
-        defAccepted.getOptions().put("defaccpkey2", "defaccpval2");
         data.setDefaultOutcome(defAccepted);
         
         data.setDistributionMode("distributionMode");
         
         CAMQPDefinitionDeleteOnClose defDelOnClose = new CAMQPDefinitionDeleteOnClose();
-        defDelOnClose.getOptions().put("defdelonclosekey1", "defdeloncloseval1");
-        defDelOnClose.getOptions().put("defdelonclosekey2", "defdeloncloseval2");
         data.setDynamic(true);
 
         data.getFilter().put("opt1", "val1");
@@ -440,17 +424,6 @@ public class CAMQPCodecTest extends TestCase
             {
                 assertTrue(outputData.getFilter().get(s).equalsIgnoreCase(data.getFilter().get(s)));                
             }
-        }        
-        
-        {
-            CAMQPDefinitionAccepted outdefAccepted = (CAMQPDefinitionAccepted) outputData.getDefaultOutcome();
-            Map<String, String> map = outdefAccepted.getOptions();
-            Set<String> keys = map.keySet();
-            
-            for (String s : keys)
-            {
-                assertTrue(map.get(s).equalsIgnoreCase(defAccepted.getOptions().get(s)));                
-            }
-        }        
+        }               
     }    
 }

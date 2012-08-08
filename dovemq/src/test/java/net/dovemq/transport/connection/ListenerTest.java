@@ -27,8 +27,7 @@ public class ListenerTest extends TestCase
         super.tearDown();
     }
     
-    public void
-    testCAMQPListener()
+    public void testCAMQPListener()
     {
         CAMQPConnectionManager.initialize("broker");
         CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties.createConnectionProperties();
@@ -54,8 +53,7 @@ public class ListenerTest extends TestCase
         }
     }
     
-    public void
-    testCAMQPBadHandshake()
+    public void testCAMQPBadHandshake()
     {
         CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties.createConnectionProperties();
         try

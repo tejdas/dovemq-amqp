@@ -25,8 +25,7 @@ public class CAMQPConnectionStateActorTest extends TestCase
         super.tearDown();
     }
     
-    public void
-    testCreateStateActor()
+    public void testCreateStateActor()
     {
         CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties.createConnectionProperties();        
         CAMQPConnectionStateActor stateActor =
@@ -39,7 +38,6 @@ public class CAMQPConnectionStateActorTest extends TestCase
         sender.close();
         sender.waitForClose();
         assertTrue(sender.isClosed());        
-        //stateActor.initiateHandshake(connectionProps)
     }
 }
 

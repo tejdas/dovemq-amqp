@@ -41,7 +41,7 @@ import net.dovemq.transport.session.CAMQPSessionSenderTest;
 
 public class CAMQPLinkSenderTest
 {
-    static class MockLinkReceiverFactory implements CAMQPLinkMessageHandlerFactory
+    private static class MockLinkReceiverFactory implements CAMQPLinkMessageHandlerFactory
     {
         private CAMQPLinkSender linkSender = null;
         
@@ -151,7 +151,6 @@ public class CAMQPLinkSenderTest
         task.cancel(true);
         executor.shutdown();
         framesProcessor = null;
-        System.out.println(".");
     }
     
     @AfterClass
@@ -494,8 +493,8 @@ public class CAMQPLinkSenderTest
                     continue;
                 }
             }
-            if (transferFrame.getDeliveryId()> 0 && transferFrame.getDeliveryId()%500 == 0)
-                System.out.println("transferFrame: " + transferFrame.getDeliveryId());
+            //if (transferFrame.getDeliveryId()> 0 && transferFrame.getDeliveryId()%500 == 0)
+              //  System.out.println("transferFrame: " + transferFrame.getDeliveryId());
  
             lastFrameReceivedTime = new Date();
             messageCount++;

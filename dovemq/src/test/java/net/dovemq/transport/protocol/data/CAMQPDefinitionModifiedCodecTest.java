@@ -32,8 +32,7 @@ public class CAMQPDefinitionModifiedCodecTest extends TestCase
     }
     
     
-    public void
-    testCAMQPDefinitionModifiedCodec() throws Exception
+    public void testCAMQPDefinitionModifiedCodec() throws Exception
     {
         CAMQPDefinitionModified outcomeVal = new CAMQPDefinitionModified();
         outcomeVal.setUndeliverableHere(true);

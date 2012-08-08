@@ -257,7 +257,7 @@ public class CAMQPSyncDecoder
         {
             int firstByte = CAMQPCodecUtil.readUByte(buffer);
             assert (firstByte == 0);
-            assert (CAMQPFormatCodes.TRUE == CAMQPCodecUtil.readFormatCode(buffer));
+            CAMQPCodecUtil.readFormatCode(buffer);
             int compoundFormatCode = CAMQPCodecUtil.readFormatCode(buffer);
             long compoundCount = readCompoundSize(compoundFormatCode);
             elementFormatCode = CAMQPCodecUtil.readFormatCode(buffer);

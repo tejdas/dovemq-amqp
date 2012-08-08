@@ -26,19 +26,7 @@ public class AMQPListCompositeType extends AMQPCompositeType
     void
     generateClassFile(String dir) throws IOException
     {
-        String fileName = String.format("%s/%s.java", dir, type);
-        outputStream = new PrintWriter(new FileWriter(fileName, false));
-        try
-        {
-            super.generateClassFile(dir);            
-            generateEncoder();                
-            generateDecoder();
-            outputStream.println("}");
-        }
-        finally
-        {
-            outputStream.close();       
-        }        
+        super.generateClassFileForCompositeType(dir);
     }
 
     @Override

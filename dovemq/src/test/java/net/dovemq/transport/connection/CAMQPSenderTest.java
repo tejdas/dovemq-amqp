@@ -35,8 +35,7 @@ public class CAMQPSenderTest extends TestCase
         super.tearDown();
     }
     
-    public void
-    testCAMQPSenderNoMsg()
+    public void testCAMQPSenderNoMsg()
     {
         Channel channel = new MockJettyChannel(true);
         CAMQPSender sender = new CAMQPSender(channel);
@@ -46,8 +45,7 @@ public class CAMQPSenderTest extends TestCase
         assertTrue(sender.isClosed());       
     }
     
-    public void
-    testCAMQPSender()
+    public void testCAMQPSender()
     {
         Channel channel = new MockJettyChannel(true);
         CAMQPSender sender = new CAMQPSender(channel);
@@ -64,7 +62,7 @@ public class CAMQPSenderTest extends TestCase
         assertEquals(((MockJettyChannel) channel).getNumberOfWrites(), 100);        
     }    
     
-    static class CAMQPSenderThread implements Runnable
+    private static class CAMQPSenderThread implements Runnable
     {
         protected CAMQPSenderThread(CAMQPSender sender, int frequencyOfFrameTypeConnection, CAMQPSenderTest parent)
         {
@@ -113,8 +111,7 @@ public class CAMQPSenderTest extends TestCase
         }        
     }
 
-    public void
-    testCAMQPSenderMT()
+    public void testCAMQPSenderMT()
     {
         Channel channel = new MockJettyChannel(true);
         CAMQPSender sender = new CAMQPSender(channel);
