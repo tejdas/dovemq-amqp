@@ -205,7 +205,7 @@ public class CAMQPSyncDecoder
         }
         catch (UnsupportedEncodingException e)
         {
-            // REVISIT TODO tejdas
+            // REVISIT TODO
             throw new CAMQPCodecException(CAMQPTypes.STR8_UTF8, formatCode);
         }
     }

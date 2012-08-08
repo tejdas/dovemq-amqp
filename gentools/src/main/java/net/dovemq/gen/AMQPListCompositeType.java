@@ -102,7 +102,7 @@ public class AMQPListCompositeType extends AMQPCompositeType
             }
         }
         
-        outputStream.println(Utils.insertTabs(numberOfTabs+1, "encoder.fillCompoundSize(listSize);")); // TODO tejdas
+        outputStream.println(Utils.insertTabs(numberOfTabs+1, "encoder.fillCompoundSize(listSize);")); // TODO
         outputStream.println(Utils.insertTabs(numberOfTabs, "}"));        
     }
 

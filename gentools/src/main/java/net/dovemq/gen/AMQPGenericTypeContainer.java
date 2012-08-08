@@ -44,7 +44,7 @@ class AMQPGenericTypeContainer
             if ((item.getProvides() != null) &&
                 (item.getProvides().equalsIgnoreCase(provides)))
             {
-                // REVISIT TODO tejdas
+                // REVISIT TODO
                 return item.getName();
                 //return item.getSource();
             }

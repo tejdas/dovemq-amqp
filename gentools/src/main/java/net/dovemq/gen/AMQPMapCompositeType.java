@@ -88,7 +88,7 @@ public class AMQPMapCompositeType extends AMQPCompositeType
             }          
         }
         
-        outputStream.println(Utils.insertTabs(2, "encoder.fillCompoundSize(mapSize);")); // TODO tejdas        
+        outputStream.println(Utils.insertTabs(2, "encoder.fillCompoundSize(mapSize);")); // TODO        
         outputStream.println(Utils.insertTabs(1, "}"));        
     }
 

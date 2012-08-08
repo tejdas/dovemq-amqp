@@ -512,7 +512,7 @@ public class AMQPCompositeCodecUtils
         outputStream.println(Utils.insertTabs(numberOfTabs+2, "{"));                    
         outputStream.println(Utils.insertTabs(numberOfTabs+3, String.format("encoder.write%s(val);", repeatingCodecMethodName)));            
         outputStream.println(Utils.insertTabs(numberOfTabs+2, "}"));
-        outputStream.println(Utils.insertTabs(numberOfTabs+2, String.format("encoder.fillCompoundSize(%sSize);", canonicalFieldName)));// TODO tejdas
+        outputStream.println(Utils.insertTabs(numberOfTabs+2, String.format("encoder.fillCompoundSize(%sSize);", canonicalFieldName)));// TODO
         outputStream.println(Utils.insertTabs(numberOfTabs+1, "}"));
     }
     
@@ -532,7 +532,7 @@ public class AMQPCompositeCodecUtils
         outputStream.println(Utils.insertTabs(numberOfTabs+2, "{"));                    
         outputStream.println(Utils.insertTabs(numberOfTabs+3, String.format("%s.encode(encoder, val);", typeName)));          
         outputStream.println(Utils.insertTabs(numberOfTabs+2, "}"));
-        outputStream.println(Utils.insertTabs(numberOfTabs+2, String.format("encoder.fillCompoundSize(%sSize);", canonicalFieldName)));// TODO tejdas
+        outputStream.println(Utils.insertTabs(numberOfTabs+2, String.format("encoder.fillCompoundSize(%sSize);", canonicalFieldName)));// TODO
         outputStream.println(Utils.insertTabs(numberOfTabs+1, "}"));
     }
     
@@ -552,7 +552,7 @@ public class AMQPCompositeCodecUtils
         outputStream.println(Utils.insertTabs(numberOfTabs+2, "encoder.writeSymbol(entry.getKey());"));
         outputStream.println(Utils.insertTabs(numberOfTabs+2, "encoder.writeUTF8String(entry.getValue());"));                    
         outputStream.println(Utils.insertTabs(numberOfTabs+1, "}"));
-        outputStream.println(Utils.insertTabs(numberOfTabs+1, "encoder.fillCompoundSize(size);")); // TODO tejdas        
+        outputStream.println(Utils.insertTabs(numberOfTabs+1, "encoder.fillCompoundSize(size);")); // TODO        
         outputStream.println(Utils.insertTabs(numberOfTabs, "}"));
     }
     

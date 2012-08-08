@@ -37,7 +37,7 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 @ThreadSafe
 class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface, Runnable
 {
-    private class Transfer
+    private static class Transfer
     {
         Transfer(CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload, CAMQPLinkSenderInterface linkSender)
         {

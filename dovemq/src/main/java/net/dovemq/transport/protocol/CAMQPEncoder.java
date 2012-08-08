@@ -282,7 +282,7 @@ public class CAMQPEncoder
                 }
                 else
                 {
-                    // REVISIT TODO tejdas
+                    // REVISIT TODO
                     //formatCode = (charSet.equalsIgnoreCase(CAMQPProtocolConstants.CHARSET_UTF8)) ? (byte) CAMQPFormatCodes.STR8_UTF8 : (byte) CAMQPFormatCodes.STR8_UTF32;
                     formatCode = (byte) CAMQPFormatCodes.STR8_UTF8;
                 }
@@ -306,7 +306,7 @@ public class CAMQPEncoder
                 }
                 else
                 {
-                    // REVISIT TODO tejdas
+                    // REVISIT TODO
                     //formatCode = (charSet.equalsIgnoreCase(CAMQPProtocolConstants.CHARSET_UTF8)) ? (byte) CAMQPFormatCodes.STR32_UTF8 : (byte) CAMQPFormatCodes.STR32_UTF16;
                     formatCode = (byte) CAMQPFormatCodes.STR32_UTF8;
                 }
@@ -412,7 +412,7 @@ public class CAMQPEncoder
         }
         else
         {
-            //assert(size > CAMQPProtocolConstants.USHORT_MAX_VALUE); // REVISIT TODO tejdas commented on 06/15/2011
+            //assert(size > CAMQPProtocolConstants.USHORT_MAX_VALUE); // REVISIT TODO
             wrappedBinaryData = ChannelBuffers.copiedBuffer(binaryData);
         }
 
@@ -472,7 +472,7 @@ public class CAMQPEncoder
         getWritableBuffer().writeByte((byte) primitiveFormatCode);
     }    
 
-    // REFACTOR tejdas April 21 2011
+    // REFACTOR TODO
     public void writeListHeaderForMultiple(long listCount, int listElementFormatCode)
     {
         /*
@@ -511,7 +511,7 @@ public class CAMQPEncoder
         getWritableBuffer().writeByte((byte) arrayElementFormatCode);
     }
     
-    // REFACTOR tejdas April 21 2011
+    // REFACTOR TODO
     public void writeArrayHeaderForMultiple(long arrayCount, int arrayElementFormatCode)
     {
         /*

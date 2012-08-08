@@ -3,19 +3,6 @@ package net.dovemq.gen;
 class Utils
 {
     private static final String TAB_SPACE = "    ";
-    public static void main(String[] args)
-    {
-        String canName = convertToCanonicalName("error-string-value");
-        System.out.println(canName + "  " + lowerCapFirstLetter(canName));
-        
-        String foo = convertPackageNameToDir("/temp", "foo.bar.goo");
-        System.out.println(foo);
-        
-        String input = "Tejeswar";
-        System.out.println(insertTabs(1, input));         
-        System.out.println(insertTabs(2, input)); 
-        System.out.println(insertTabs(3, input)); 
-    }
 
     static String
     convertToCanonicalName(String input)

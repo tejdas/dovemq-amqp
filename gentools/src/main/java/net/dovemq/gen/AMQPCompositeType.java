@@ -263,7 +263,7 @@ abstract class AMQPCompositeType implements AMQPType
     static String
     getJavaTypeName(String typeName)
     {
-        if (typeName.equalsIgnoreCase("Object")) // REVISIT TODO tejdas
+        if (typeName.equalsIgnoreCase("Object")) // REVISIT TODO
         {
             return typeName;
         }
@@ -282,7 +282,7 @@ abstract class AMQPCompositeType implements AMQPType
             AMQPCompositeType compoundType = (AMQPCompositeType) AMQPXMLReader.gDefinitionsCompositeTypes.getType(typeName);
             return compoundType.getType();
         }
-        System.out.println("REVISIT TODO tejdas: returning null for getJavaTypeName() for typeName: " + typeName);
+        System.out.println("REVISIT TODO: returning null for getJavaTypeName() for typeName: " + typeName);
         return "String";
     }    
     

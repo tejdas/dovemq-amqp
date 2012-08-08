@@ -62,7 +62,7 @@ class AMQPCompositeFieldType
             }
             else
             {
-                System.out.println("ERROR CASE REVISIT tejdas : name: " + name + "  type: " + type);
+                System.out.println("ERROR CASE REVISIT TODO: name: " + name + "  type: " + type);
                 type = "string";
             }
         }
