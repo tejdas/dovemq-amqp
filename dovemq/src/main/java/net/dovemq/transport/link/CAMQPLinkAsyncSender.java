@@ -135,7 +135,6 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     @Override
     public void messageSent(CAMQPControlTransfer transferFrame)
     {
-        //System.out.println("messageSent: " + transferFrame.getDeliveryId());
         /*
          * In case of message fragmentation, change the I/O flow
          * state only when the last fragment has been sent

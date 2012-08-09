@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.apache.log4j.Logger;
+
 import net.jcip.annotations.GuardedBy;
 
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -14,6 +16,8 @@ import net.dovemq.transport.session.CAMQPSessionManager;
 
 class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
+    private static final Logger log = Logger.getLogger(CAMQPLinkSender.class);
+    
     private final CAMQPSessionInterface session;
     
     private final Map<String, CAMQPMessagePayload> unsettledDeliveries = new ConcurrentHashMap<String, CAMQPMessagePayload>();
@@ -128,7 +132,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
                 /*
                  * REVISIT TODO throw exception to throttle the Source
                  */
-                System.out.println("Exceeding available limit");
+                log.warn("Reached available limit threshold: " + maxAvailableLimit);
                 return;
             }
             available++;

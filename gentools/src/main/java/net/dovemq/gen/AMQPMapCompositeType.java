@@ -1,8 +1,6 @@
 package net.dovemq.gen;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collection;
 
 import org.jdom.DataConversionException;
