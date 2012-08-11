@@ -1,7 +1,14 @@
 package net.dovemq.transport.frame;
 
+import net.jcip.annotations.Immutable;
 import org.jboss.netty.buffer.ChannelBuffer;
 
+/**
+ * In-memory representation of AMQP frame
+ * @author tejdas
+ *
+ */
+@Immutable
 public class CAMQPFrame
 {
     public CAMQPFrame(CAMQPFrameHeader header, ChannelBuffer body)

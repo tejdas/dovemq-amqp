@@ -381,7 +381,6 @@ public class CAMQPCodecTest extends TestCase
         
         data.setDistributionMode("distributionMode");
         
-        CAMQPDefinitionDeleteOnClose defDelOnClose = new CAMQPDefinitionDeleteOnClose();
         data.setDynamic(true);
 
         data.getFilter().put("opt1", "val1");

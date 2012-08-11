@@ -51,7 +51,7 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     @Override
     public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
     {
-        // REVISIT TODO error condition : should never be called for CAMQPLinkSender
+        // TODO error condition : should never be called for CAMQPLinkSender
     }
 
     @Override

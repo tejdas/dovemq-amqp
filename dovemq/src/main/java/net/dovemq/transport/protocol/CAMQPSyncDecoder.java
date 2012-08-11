@@ -12,6 +12,14 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPFormatCodes;
 import net.dovemq.transport.protocol.data.CAMQPTypes;
 
+/**
+ * Decoder for AMQP data types.
+ * Used by CAMQPControlXYZ and CAMQPDefinitionXYZ classes
+ * to decode AMQP composite date types
+ * 
+ * @author tejdas
+ *
+ */
 public class CAMQPSyncDecoder
 {
     private ChannelBuffer buffer = null;
@@ -30,7 +38,6 @@ public class CAMQPSyncDecoder
     public CAMQPMessagePayload getPayload()
     {
         byte[] payloadBody = new byte[buffer.readableBytes()];
-        //buffer.getBytes(0, payloadBody);
         buffer.readBytes(payloadBody);
         return new CAMQPMessagePayload(payloadBody);
     }
@@ -88,7 +95,7 @@ public class CAMQPSyncDecoder
 
     public BigInteger readULong()
     {
-        // REVISIT TODO correct?
+        // TODO correct?
         long val = readLong();
         return BigInteger.valueOf(val);
     }
@@ -155,7 +162,7 @@ public class CAMQPSyncDecoder
         }
         else
         {
-            return -1; // REVISIT
+            return -1; // TODO
         }
     }
 
@@ -205,7 +212,7 @@ public class CAMQPSyncDecoder
         }
         catch (UnsupportedEncodingException e)
         {
-            // REVISIT TODO
+            // TODO
             throw new CAMQPCodecException(CAMQPTypes.STR8_UTF8, formatCode);
         }
     }
@@ -226,7 +233,7 @@ public class CAMQPSyncDecoder
 
     public long readCompoundSize(int formatCode)
     {
-        // size of the composite structure: for now skip it:REVISIT TODO
+        // size of the composite structure: for now skip it:TODO
         int width = CAMQPCodecUtil.computeWidth(formatCode);
         buffer.skipBytes(width);
         if (Width.VARIABLE_ONE.widthOctets() == width)

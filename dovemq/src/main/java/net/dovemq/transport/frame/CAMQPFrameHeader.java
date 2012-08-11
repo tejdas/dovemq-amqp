@@ -2,6 +2,11 @@ package net.dovemq.transport.frame;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
+/**
+ * In-memory representation of AMQP frame header
+ * @author tejdas
+ *
+ */
 public class CAMQPFrameHeader
 {
     public static CAMQPFrameHeader createFrameHeader(int channelNumber, int frameBodySize)

@@ -17,6 +17,25 @@ import net.dovemq.transport.protocol.CAMQPSyncDecoder;
 import net.dovemq.transport.protocol.data.CAMQPControlClose;
 import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 
+/**
+ * Handler class that compliments AMQPConnection on the incoming side.
+ * 
+ *    ==>> CAMQPConnection ==>>
+ * <<== CAMQPConnectionHandler <<==
+ * 
+ * It is added twice in the Netty incoming pipeline.
+ * See {@link CAMQPConnectionPipelineFactory}.
+ * 
+ * The bottom-most interceptor does AMQP handshake processing
+ * and is a passthru once the handshake is complete.
+ * 
+ * The second interceptor decodes and dispatches the connection
+ * frames, or dispatches session/link frames to the attached
+ * ChannelHandler.
+ * 
+ * @author tejdas
+ *
+ */
 class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
 {
     private static final Logger log = Logger.getLogger(CAMQPConnectionHandler.class);
@@ -52,7 +71,7 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
     @Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception
     {
-        stateActor.receivedDisconnect();
+        stateActor.disconnectReceived();
         super.channelDisconnected(ctx, e);
     }
 
@@ -69,7 +88,10 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
                     ctx.sendUpstream(e);
                     return;
                 }
-                stateActor.receivedConnectionHeaderBytes((ChannelBuffer) message);
+                /*
+                 * process AMQP handshake
+                 */
+                stateActor.connectionHeaderBytesReceived((ChannelBuffer) message);
             }
         }
         super.handleUpstream(ctx, e);
@@ -100,15 +122,19 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
         }
     }
 
+    /**
+     * Process incoming AMQP frames
+     * @param frame
+     */
     private void frameReceived(CAMQPFrame frame)
     {
         ChannelBuffer frameBody = frame.getBody();
         if (frameBody == null)
         {
             /*
-             * Heart-Beat control
+             * Heart-Beat control frame
              */
-            stateActor.receivedHeartbeat();
+            stateActor.heartbeatReceived();
             return;
         }
 
@@ -125,17 +151,20 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
             if (controlName.equalsIgnoreCase(CAMQPControlOpen.descriptor))
             {
                 CAMQPControlOpen peerConnectionProps = CAMQPControlOpen.decode(decoder);
-                stateActor.receivedOpenControl(peerConnectionProps);
+                stateActor.openControlReceived(peerConnectionProps);
             }
             else if (controlName.equalsIgnoreCase(CAMQPControlClose.descriptor))
             {
                 CAMQPControlClose closeContext = CAMQPControlClose.decode(decoder);
-                stateActor.receivedCloseControl(closeContext);
+                stateActor.closeControlReceived(closeContext);
             }
         }
 
         else
         {
+            /*
+             * session/link frame
+             */
             connection.frameReceived(channelNumber, frame);
         }
     }

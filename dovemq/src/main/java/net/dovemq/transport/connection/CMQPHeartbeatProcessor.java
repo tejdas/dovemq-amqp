@@ -10,6 +10,13 @@ import net.dovemq.transport.frame.CAMQPFrameConstants;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPFrameHeaderCodec;
 
+/**
+ * Sends heart-beats to AMQP peer. Also detects if there are any
+ * delays in incoming heart-beats.
+ * 
+ * @author tejdas
+ *
+ */
 class CMQPHeartbeatProcessor implements Runnable
 {
     @GuardedBy("this")

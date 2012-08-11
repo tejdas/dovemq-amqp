@@ -23,7 +23,7 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
     }
 
     /*
-     * REVISIT TODO : How do we configure steady state?
+     * TODO : How do we configure steady state?
      */
     private ReceiverLinkCreditPolicy linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_OFFERED_BY_TARGET;
     private long minLinkCreditThreshold = 0;

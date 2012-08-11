@@ -12,6 +12,11 @@ import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
+/**
+ * Manager of outstanding AMQP connections
+ * @author tejdas
+ *
+ */
 public class CAMQPConnectionManager
 {
     private static final Logger log = Logger.getLogger(CAMQPConnectionManager.class);
@@ -167,7 +172,7 @@ public class CAMQPConnectionManager
         if (shutdownInProgress)
         {
             log.error("Shutdown is already in progress: cannot add CAMQPConnection to ConnectionManager's openConnectionsList");
-            return; // REVISIT handle error
+            return; // TODO handle error
         }
         openConnections.put(key, connection);
     }
@@ -195,7 +200,7 @@ public class CAMQPConnectionManager
     
     private void connectionCloseInitiatedByRemotePeerInternal(CAMQPConnectionKey key)
     {
-        CAMQPConnectionObserver observer = getConnectionObserver();;
+        CAMQPConnectionObserver observer = getConnectionObserver();
         if (observer != null)
         {
             CAMQPConnection connection = null;

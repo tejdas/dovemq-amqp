@@ -14,6 +14,14 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPFormatCodes;
 import net.dovemq.transport.protocol.data.CAMQPTypes;
 
+/**
+ * Encoder for AMQP data types.
+ * Used by CAMQPControlXYZ and CAMQPDefinitionXYZ classes
+ * to encode AMQP composite date types
+ * 
+ * @author tejdas
+ *
+ */
 public class CAMQPEncoder
 {
     private ChannelBuffer buffer = null;
@@ -147,8 +155,7 @@ public class CAMQPEncoder
         writableBuffer.writeByte(value);        
     }
     
-    public void
-    writeShort(short value)
+    public void writeShort(short value)
     {
         byte formatCode = (byte) CAMQPFormatCodes.SHORT;
         ChannelBuffer writableBuffer = getWritableBuffer();
@@ -166,7 +173,7 @@ public class CAMQPEncoder
     
     public void writeULong(BigInteger value)
     {
-        writeLong(value.longValue()); // REVISIT TODO correct?
+        writeLong(value.longValue()); // TODO correct?
     }    
     
     public void writeLong(long value)
@@ -282,7 +289,7 @@ public class CAMQPEncoder
                 }
                 else
                 {
-                    // REVISIT TODO
+                    // TODO
                     //formatCode = (charSet.equalsIgnoreCase(CAMQPProtocolConstants.CHARSET_UTF8)) ? (byte) CAMQPFormatCodes.STR8_UTF8 : (byte) CAMQPFormatCodes.STR8_UTF32;
                     formatCode = (byte) CAMQPFormatCodes.STR8_UTF8;
                 }
@@ -296,7 +303,7 @@ public class CAMQPEncoder
             ChannelBuffer bufferToCopy = ensureCapacity(size);
             bufferToCopy.writeBytes(encodedString, 0, (int) size);
         }
-        else if (size <= CAMQPProtocolConstants.UINT_MAX_VALUE)
+        else if (size <= (int) CAMQPProtocolConstants.UINT_MAX_VALUE)
         {
             if (isSelfDescribed)
             {
@@ -306,7 +313,7 @@ public class CAMQPEncoder
                 }
                 else
                 {
-                    // REVISIT TODO
+                    // TODO
                     //formatCode = (charSet.equalsIgnoreCase(CAMQPProtocolConstants.CHARSET_UTF8)) ? (byte) CAMQPFormatCodes.STR32_UTF8 : (byte) CAMQPFormatCodes.STR32_UTF16;
                     formatCode = (byte) CAMQPFormatCodes.STR32_UTF8;
                 }
@@ -392,14 +399,9 @@ public class CAMQPEncoder
             bufferToCopy.writeBytes(binaryData, 0, (int) size);
             return;
         }
-        else if (size <= CAMQPProtocolConstants.UINT_MAX_VALUE)
-        {
-            writeBinaryBody(binaryData, true);
-        }
         else
         {
-            // error condition
-            return;
+            writeBinaryBody(binaryData, true);
         }
     }
 
@@ -412,7 +414,7 @@ public class CAMQPEncoder
         }
         else
         {
-            //assert(size > CAMQPProtocolConstants.USHORT_MAX_VALUE); // REVISIT TODO
+            //assert(size > CAMQPProtocolConstants.USHORT_MAX_VALUE); // TODO
             wrappedBinaryData = ChannelBuffers.copiedBuffer(binaryData);
         }
 
@@ -550,7 +552,7 @@ public class CAMQPEncoder
             return;
         }
         
-        int width =(compoundCount <= 255)? Width.FIXED_ONE.widthOctets() : Width.FIXED_FOUR.widthOctets();
+        int width = (compoundCount <= 255)? Width.FIXED_ONE.widthOctets() : Width.FIXED_FOUR.widthOctets();
         int position = compoundSizePosition.pop();
         /*
          * We need to exclude the size field from the compound size.
@@ -575,13 +577,13 @@ public class CAMQPEncoder
         compoundSizePosition.push(getWritableBuffer().readableBytes());
         if (width == 1)
         {
-            // size of the composite structure: for now set to 0 REVISIT TODO
+            // size of the composite structure: for now set to 0 TODO
             CAMQPCodecUtil.writeUByte((int) 0, getWritableBuffer());            
             CAMQPCodecUtil.writeUByte((int) compoundCount, getWritableBuffer());
         }
         else // (width == 4)
         {
-            // size of the composite structure: for now set to 0 REVISIT TODO            
+            // size of the composite structure: for now set to 0 TODO            
             CAMQPCodecUtil.writeUInt(0, getWritableBuffer());            
             CAMQPCodecUtil.writeUInt(compoundCount, getWritableBuffer());
         }

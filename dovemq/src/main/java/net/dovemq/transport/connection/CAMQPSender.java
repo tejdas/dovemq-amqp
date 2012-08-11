@@ -9,12 +9,19 @@ import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 
 import net.dovemq.transport.frame.CAMQPFrameConstants;
+import net.jcip.annotations.ThreadSafe;
 
+/**
+ * Sender of AMQP frames. Owned by CAMQPConnection
+ * @author tejdas
+ *
+ */
 enum SenderState
 {
     ACTIVE, CLOSE_REQUESTED, CLOSED
 }
 
+@ThreadSafe
 class CAMQPSender implements ChannelFutureListener
 {
     private final Channel channel;
@@ -75,6 +82,17 @@ class CAMQPSender implements ChannelFutureListener
         return (state == SenderState.CLOSED);
     }
 
+    /**
+     * When this method is called concurrently, one thread
+     * assumes the role of sender and the other threads
+     * just enqueue the outgoing frame.
+     * 
+     * Gives connection frames higher priority that session/link
+     * frames.
+     * 
+     * @param data
+     * @param frameType
+     */
     void sendBuffer(ChannelBuffer data, int frameType)
     {
         synchronized (this)

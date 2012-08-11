@@ -71,6 +71,11 @@ class QueuedContext
     private final Object context;
 }
 
+/**
+ * Acts on various state changes in AMQP connection
+ * @author tejdas
+ *
+ */
 @ThreadSafe
 class CAMQPConnectionStateActor
 {
@@ -132,7 +137,10 @@ class CAMQPConnectionStateActor
 
     void initiateHandshake(CAMQPConnectionProperties connectionProps)
     {
-        this.connectionProps = connectionProps;
+        synchronized(this)
+        {
+            this.connectionProps = connectionProps;
+        }
         queuedEvents.add(new QueuedContext(Event.SEND_CONN_HEADER_REQUESTED, null));
         processEvents();
     }
@@ -168,35 +176,40 @@ class CAMQPConnectionStateActor
         processEvents();
     }
 
-    void receivedOpenControl(CAMQPControlOpen peerConnectionProps)
+    void openControlReceived(CAMQPControlOpen peerConnectionProps)
     {
         queuedEvents.add(new QueuedContext(Event.OPEN_RECEIVED, peerConnectionProps));
         processEvents();
     }
 
-    void receivedCloseControl(CAMQPControlClose closeContext)
+    void closeControlReceived(CAMQPControlClose closeContext)
     {
         queuedEvents.add(new QueuedContext(Event.CLOSE_RECEIVED, closeContext));
         processEvents();
     }
 
-    void receivedHeartbeat()
+    void heartbeatReceived()
     {
         heartbeatProcessor.receivedHeartbeat();
     }
 
-    void receivedConnectionHeaderBytes(ChannelBuffer buffer)
+    void connectionHeaderBytesReceived(ChannelBuffer buffer)
     {
         queuedEvents.add(new QueuedContext(Event.CONN_HDR_BYTES_RECEIVED, buffer));
         processEvents();
     }
 
-    void receivedDisconnect()
+    void disconnectReceived()
     {
         queuedEvents.add(new QueuedContext(Event.CONNECTION_ABORTED, null));
         processEvents();
     }
 
+    /**
+     * Event processing loop.
+     * processXYZ() method processes the current context
+     * and calls getNextEvent() to return the next context to process.
+     */
     private void processEvents()
     {
         boolean firstPass = true;
@@ -298,7 +311,7 @@ class CAMQPConnectionStateActor
             else
             {
                 log.error("Connection was expected to be in State.START, but in state: " + currentState);
-                // REVISIT BAD state
+                // TODO BAD state
             }
             return getNextEvent();
         }
@@ -325,7 +338,7 @@ class CAMQPConnectionStateActor
             else
             {
                 log.error("Connection is in bad state: " + currentState);
-                // REVISIT BAD state
+                // TODO BAD state
             }
             return getNextEvent();
         }
@@ -387,7 +400,7 @@ class CAMQPConnectionStateActor
         else
         {
             log.error("Connection is in bad state: " + currentState);
-            // REVISIT BAD state
+            // TODO BAD state
         }
     }
 
@@ -427,7 +440,7 @@ class CAMQPConnectionStateActor
             else
             {
                 log.error("Connection is in bad state: " + currentState);
-                // REVISIT BAD state
+                // TODO BAD state
             }
             return getNextEvent();
         }
@@ -459,7 +472,7 @@ class CAMQPConnectionStateActor
             else
             {
                 log.error("Connection is in bad state: " + currentState);
-                // REVISIT BAD state
+                // TODO BAD state
             }
             return getNextEvent();
         }
@@ -547,7 +560,7 @@ class CAMQPConnectionStateActor
             else
             {
                 log.error("Connection is in bad state: " + currentState);
-                // REVISIT BAD state
+                // TODO BAD state
             }
             return getNextEvent();
         }
@@ -568,7 +581,7 @@ class CAMQPConnectionStateActor
         else
         {
             log.error("Connection is in bad state: " + currentState);
-            // REVISIT BAD state
+            // TODO BAD state
         }
     }
 
@@ -612,6 +625,13 @@ class CAMQPConnectionStateActor
         }
     }
 
+    /**
+     * Loops until it gets the next context event that could be processed. If it cannot be
+     * processed, it is ignored. Otherwise, it first processes the pre-condition,
+     * and if there's nothing else that needs to be done, it continues the loop,
+     * else returns the context to be processed.
+     * @return
+     */
     @GuardedBy("this")
     private QueuedContext getNextEvent()
     {

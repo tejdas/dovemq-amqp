@@ -382,7 +382,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         }
         
         /*
-         * REVISIT TODO: if unsentTransfers.add() fails, throw an exception
+         * TODO: if unsentTransfers.add() fails, throw an exception
          * indicating to the Link layer that the outgoing-window is full
          */
         synchronized (this)
@@ -644,7 +644,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             }
             else
             {
-                // REVISIT TODO handle error condition
+                // TODO handle error condition
             }
         }
         else
@@ -759,7 +759,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             if (incomingWindow <= 0)
             {
                 /*
-                 * REVISIT TODO
+                 * TODO
                  * Peer is not honoring the session flow control.
                  * Reject the incoming transfer frame and close the session
                  */

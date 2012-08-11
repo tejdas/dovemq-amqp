@@ -5,8 +5,18 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
 
+/**
+ * Decodes AMQP frames from the byte-stream
+ * @author tejdas
+ *
+ */
 public class CAMQPFrameDecoder extends FrameDecoder
 {
+    /*
+     * If only the header has been available so far, and not the body,
+     * it is stored here, and is used when the remainder of the body
+     * is available
+     */
     private CAMQPFrameHeader header = null;
     
     private CAMQPFrameHeader getHeaderAndReset()
@@ -29,6 +39,10 @@ public class CAMQPFrameDecoder extends FrameDecoder
         {
             if (buffer.readableBytes() < CAMQPFrameConstants.FRAME_HEADER_SIZE)
             {
+                /*
+                 * Insufficient bytes available to read the frame header.
+                 * Wait until we receive more bytes.
+                 */
                 return null;
             }
             ChannelBuffer headerBuffer =
@@ -44,6 +58,10 @@ public class CAMQPFrameDecoder extends FrameDecoder
         {
             if (buffer.readableBytes() < frameBodySize)
             {
+                /*
+                 * Insufficient bytes available to read the frame body.
+                 * Wait until we receive more bytes.
+                 */
                 return null;
             }
             int readerIndex = buffer.readerIndex();
@@ -53,6 +71,9 @@ public class CAMQPFrameDecoder extends FrameDecoder
         }
         else
         {
+            /*
+             * AMQP frame without a body
+             */
             return new CAMQPFrame(getHeaderAndReset(), null);
         }
     }

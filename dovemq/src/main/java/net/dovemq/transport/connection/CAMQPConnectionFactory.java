@@ -9,6 +9,11 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
+/**
+ * Factory for creating AMQP Connection
+ * @author tejdas
+ *
+ */
 public class CAMQPConnectionFactory
 {
     private static final Logger log = Logger.getLogger(CAMQPConnectionFactory.class);
@@ -43,7 +48,7 @@ public class CAMQPConnectionFactory
             throw new IllegalArgumentException(errorInfo);
         }
         String targetHostName = targetContainerId.split("@")[1];
-        // Make a new connection.
+
         ChannelFuture connectFuture = null;
         InetSocketAddress remoteAddress = new InetSocketAddress(targetHostName, CAMQPConnectionConstants.AMQP_IANA_PORT);
         if (remoteAddress.isUnresolved())
@@ -65,9 +70,17 @@ public class CAMQPConnectionFactory
             return null;
         }
 
+        /*
+         * Instantiate a sister incoming handler from the pipeline to
+         * receive data from AMQP peer
+         */
         CAMQPConnectionHandler handler = channel.getPipeline().get(CAMQPConnectionHandler.class);
 
         CAMQPConnection amqpConnection = new CAMQPConnection(handler.getStateActor());
+        /*
+         * Initiate handshake and wait for handshake complete
+         * TODO handshake timeout
+         */
         amqpConnection.initialize(channel, connectionProps);
         amqpConnection.waitForReady();
         return amqpConnection;

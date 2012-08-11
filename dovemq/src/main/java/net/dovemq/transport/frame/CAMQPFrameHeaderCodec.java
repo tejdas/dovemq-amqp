@@ -5,6 +5,11 @@ import org.jboss.netty.buffer.ChannelBuffers;
 
 import net.dovemq.transport.protocol.CAMQPCodecUtil;
 
+/**
+ * Encoder/Decoder of AMQP frame header
+ * @author tejdas
+ *
+ */
 public class CAMQPFrameHeaderCodec
 {
     public static ChannelBuffer encode(CAMQPFrameHeader header)

@@ -343,7 +343,7 @@ class CAMQPSessionStateActor
             else
             {
                 log.fatal("Could not process Event.SEND_ATTACH as underlying CAMQPConnection is null");
-                // REVISIT TODO
+                // TODO
                 return null;
             }
         }
@@ -360,7 +360,7 @@ class CAMQPSessionStateActor
             else
             {
                 log.fatal("Could not process Event.SEND_DETACH as underlying CAMQPConnection is null");
-                // REVISIT TODO
+                // TODO
                 return null;
             }
         }

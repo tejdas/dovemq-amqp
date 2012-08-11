@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -18,6 +19,14 @@ import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 import net.dovemq.transport.session.CAMQPSessionFrameHandler;
 
+/**
+ * AMQP Connection implementation on the outgoing side
+ * 
+ *    ==>> CAMQPConnection ==>>
+ * <<== CAMQPConnectionHandler <<==
+ * @author tejdas
+ *
+ */
 @ThreadSafe
 public class CAMQPConnection
 {
@@ -25,8 +34,9 @@ public class CAMQPConnection
 
     private CAMQPSender sender = null;
 
+    @GuardedBy("stateActor")
     private final Map<Integer, CAMQPIncomingChannelHandler> incomingChannels = new HashMap<Integer, CAMQPIncomingChannelHandler>();
-
+    @GuardedBy("stateActor")
     private final boolean[] outgoingChannelsInUse = new boolean[CAMQPConnectionConstants.MAX_CHANNELS_SUPPORTED];
 
     CAMQPConnection(CAMQPConnectionStateActor stateActor)
@@ -59,12 +69,22 @@ public class CAMQPConnection
         return stateActor.isInitiator;
     }
 
+    /**
+     * Send an AMQP frame on the specified channel
+     * @param data
+     * @param channelId
+     */
     public void sendFrame(ChannelBuffer data, int channelId)
     {
         ChannelBuffer header = CAMQPFrameHeader.createEncodedFrameHeader(channelId, data.readableBytes());
         sender.sendBuffer(ChannelBuffers.wrappedBuffer(header, data), CAMQPFrameConstants.FRAME_TYPE_SESSION);
     }
 
+    /**
+     * Initiate AMQP connection handshake
+     * @param channel
+     * @param connectionProps
+     */
     void initialize(Channel channel, CAMQPConnectionProperties connectionProps)
     {
         stateActor.setChannel(channel);
@@ -75,6 +95,9 @@ public class CAMQPConnection
         stateActor.initiateHandshake(connectionProps);
     }
 
+    /**
+     * Wait for AMQP handshake to complete
+     */
     void waitForReady()
     {
         stateActor.waitForOpenExchange();
@@ -87,12 +110,18 @@ public class CAMQPConnection
         stateActor.sendOpenControl(openControlData);
     }
 
+    /**
+     * Synchronously close the connection
+     */
     public void close()
     {
         stateActor.sendCloseControl();
         sender.waitForClose();
     }
 
+    /**
+     * Asynchronously close the connection
+     */
     public void closeAsync()
     {
         stateActor.sendCloseControl();
@@ -103,14 +132,20 @@ public class CAMQPConnection
         return sender.isClosed();
     }
 
+    /**
+     * Called by the session layer to reserve
+     * an outgoing channel, which it will
+     * subsequently attach to.
+     * @return
+     */
     public int reserveOutgoingChannel()
     {
-        int maxChannels = stateActor.getConnectionProps().getMaxChannels();
         synchronized (stateActor)
         {
+            int maxChannels = stateActor.getConnectionProps().getMaxChannels();
             if (!stateActor.canAttachChannels())
             {
-                return -1; // REVISIT TODO
+                return -1; // TODO
             }
             /*
              * ChannelID 0 is reserved for Connection control
@@ -127,6 +162,13 @@ public class CAMQPConnection
         return -1;
     }
 
+    /**
+     * Register an incoming channel with the channelHandler, so that
+     * the incoming frames on the rxChannel could be dispatched.
+     * 
+     * @param receiveChannelNumber
+     * @param channelHandler
+     */
     public void register(int receiveChannelNumber, CAMQPIncomingChannelHandler channelHandler)
     {
         synchronized (stateActor)
@@ -138,6 +180,13 @@ public class CAMQPConnection
         }
     }
 
+    /**
+     * Called by the session layer to detach itself from an
+     * outgoing channel.
+     * 
+     * @param outgoingChannelNumber
+     * @param incomingChannelNumber
+     */
     public void detach(int outgoingChannelNumber, int incomingChannelNumber)
     {
         synchronized (stateActor)
@@ -147,6 +196,14 @@ public class CAMQPConnection
         }
     }
 
+    /**
+     * Dispatches the incoming AMQP frame to the channelHandler
+     * associated with the channelNumber (if it's already attached),
+     * or to CAMQPSessionFrameHandler if it hasn't been attached yet.
+     * 
+     * @param channelNumber
+     * @param frame
+     */
     void frameReceived(int channelNumber, CAMQPFrame frame)
     {
         CAMQPIncomingChannelHandler channelHandler = null;
@@ -157,6 +214,11 @@ public class CAMQPConnection
 
         if (channelHandler == null)
         {
+            /*
+             * The channel has not been attached yet. Dispatch to the
+             * CAMQPSessionFrameHandler so it can attach a channelHandler
+             * to it.
+             */
             CAMQPSessionFrameHandler.getSingleton().frameReceived(channelNumber, frame, this);
         }
         else
@@ -167,18 +229,16 @@ public class CAMQPConnection
 
     void aborted()
     {
-        if (incomingChannels.size() > 0)
-        {
-            Collection<CAMQPIncomingChannelHandler> channelsToDetach = new ArrayList<CAMQPIncomingChannelHandler>();
+        Collection<CAMQPIncomingChannelHandler> channelsToDetach = new ArrayList<CAMQPIncomingChannelHandler>();
 
-            synchronized (stateActor)
-            {
+        synchronized (stateActor)
+        {
+            if (incomingChannels.size() > 0)
                 channelsToDetach.addAll(incomingChannels.values());
-            }
-            for (CAMQPIncomingChannelHandler channelHandler : channelsToDetach)
-            {
-                channelHandler.channelAbruptlyDetached();
-            }
+        }
+        for (CAMQPIncomingChannelHandler channelHandler : channelsToDetach)
+        {
+            channelHandler.channelAbruptlyDetached();
         }
         sender.close();
     }

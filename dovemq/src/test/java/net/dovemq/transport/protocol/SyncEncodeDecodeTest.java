@@ -589,7 +589,7 @@ public class SyncEncodeDecodeTest extends TestCase
         assertTrue(values.containsAll(outValues));
     }
     
-    // REVISIT TODO
+    // TODO
   /*  
     public void testCodecArrayCompoundElements() throws Exception
     {

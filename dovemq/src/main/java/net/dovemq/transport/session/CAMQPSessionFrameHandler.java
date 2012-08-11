@@ -68,7 +68,7 @@ public class CAMQPSessionFrameHandler
         {
             log.error("No CAMQPSessionHandler found for Session DETACH control");
             log.error("Session DETACH control should have been dispatched directly to CAMQPSessionHandler");
-            // REVISIT TODO handle error
+            // TODO handle error
         }
     }
 }

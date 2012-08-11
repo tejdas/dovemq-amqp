@@ -58,7 +58,7 @@ public class CAMQPListener
             }
             hasShutdown = true;
         }
-        // CAMQPSessionManager.shutdown(); // REVISIT TODO needed here???
+        // CAMQPSessionManager.shutdown(); // TODO needed here???
         ChannelFuture future = serverChannel.close();
         future.awaitUninterruptibly();
         factory.releaseExternalResources();

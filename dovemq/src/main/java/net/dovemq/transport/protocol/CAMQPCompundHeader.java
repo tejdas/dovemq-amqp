@@ -1,5 +1,8 @@
 package net.dovemq.transport.protocol;
 
+import net.jcip.annotations.Immutable;
+
+@Immutable
 public class CAMQPCompundHeader
 {
     public final int elementFormatCode;

@@ -63,7 +63,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     @Override
     public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
     {
-        // REVISIT TODO error condition : should never be called for CAMQPLinkSender
+        // TODO error condition : should never be called for CAMQPLinkSender
     }
 
     @Override
@@ -130,7 +130,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
             if (available >= maxAvailableLimit)
             {
                 /*
-                 * REVISIT TODO throw exception to throttle the Source
+                 * TODO throw exception to throttle the Source
                  */
                 log.warn("Reached available limit threshold: " + maxAvailableLimit);
                 return;
@@ -141,7 +141,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
             if (sendInProgress || (linkCredit <= unsentMessagesAtSession))
             {
                 /*
-                 * REVISIT TODO: send flow??
+                 * TODO: send flow??
                  */
                 unsentMessages.add(new CAMQPMessage(deliveryTag, message));
                 return;
