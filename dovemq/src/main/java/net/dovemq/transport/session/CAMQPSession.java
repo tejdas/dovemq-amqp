@@ -723,14 +723,6 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             {
                 processTransferFrame(controlName, frame);
             }
-            else
-            {
-                // TODO handle error condition
-            }
-        }
-        else
-        {
-            //linkReceiver.customFrameReceived(frame);
         }
     }
 

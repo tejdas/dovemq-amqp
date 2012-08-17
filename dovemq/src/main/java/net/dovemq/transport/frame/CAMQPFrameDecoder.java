@@ -28,11 +28,11 @@ public class CAMQPFrameDecoder extends FrameDecoder
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel,
-            ChannelBuffer buffer) throws Exception
+            ChannelBuffer buffer)
     {
         if (ctx == null || channel == null || buffer == null)
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException("null argument(s) to CAMQPFrameDecoder.decode()");
         }
         
         if (header == null)

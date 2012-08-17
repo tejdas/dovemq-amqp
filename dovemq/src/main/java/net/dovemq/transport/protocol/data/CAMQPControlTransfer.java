@@ -4,6 +4,7 @@
  */
 package net.dovemq.transport.protocol.data;
 
+import java.util.Arrays;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import net.dovemq.transport.protocol.*;
@@ -47,7 +48,7 @@ public class CAMQPControlTransfer
     public void setDeliveryTag(byte[] val)
     {
         isSetDeliveryTag = true;
-        deliveryTag = val;
+        deliveryTag = Arrays.copyOf(val, val.length);
     }
 
     public byte[] getDeliveryTag()

@@ -95,7 +95,9 @@ class CAMQPLinkStateActor
         try
         {
             while (currentState != State.ATTACHED)
+            {
                 wait();
+            }
         }
         catch (InterruptedException e)
         {
@@ -114,7 +116,9 @@ class CAMQPLinkStateActor
         try
         {
             while (currentState != State.DETACHED)
+            {
                 wait();
+            }
         }
         catch (InterruptedException e)
         {

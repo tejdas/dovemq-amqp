@@ -22,7 +22,7 @@ import net.dovemq.transport.protocol.data.CAMQPTypes;
  * @author tejdas
  *
  */
-public class CAMQPEncoder
+public final class CAMQPEncoder
 {
     private ChannelBuffer buffer = null;
     private ChannelBuffer dynamicBuffer = null;
@@ -273,7 +273,7 @@ public class CAMQPEncoder
         }
         catch (UnsupportedEncodingException e)
         {
-            throw new CAMQPCodecException(CAMQPTypes.STR8_UTF8, CAMQPFormatCodes.STR8_UTF8);
+            throw new CAMQPCodecException(CAMQPTypes.STR8_UTF8, CAMQPFormatCodes.STR8_UTF8, e);
         }
         long size = encodedString.length;
 

@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
@@ -60,7 +59,7 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
     }
 
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
     {
         Channel channel = ctx.getChannel();
         assert (channel != null);
@@ -102,7 +101,7 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
      * {@link ChannelHandler}.
      */
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
     {
         log.warn("exceptionCaught: " + e.getCause().getMessage());
     }

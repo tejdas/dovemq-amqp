@@ -4,6 +4,7 @@
  */
 package net.dovemq.transport.protocol.data;
 
+import java.util.Arrays;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import net.dovemq.transport.protocol.*;
@@ -15,7 +16,7 @@ public class CAMQPDefinitionSaslResponse
     private byte[] response = null;
     public void setResponse(byte[] val)
     {
-        response = val;
+        response = Arrays.copyOf(val, val.length);
     }
 
     public byte[] getResponse()

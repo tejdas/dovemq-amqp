@@ -152,7 +152,7 @@ public class CAMQPConnection
              */
             for (int i = 1; i < maxChannels; i++)
             {
-                if (outgoingChannelsInUse[i] == false)
+                if (!outgoingChannelsInUse[i])
                 {
                     outgoingChannelsInUse[i] = true;
                     return i;

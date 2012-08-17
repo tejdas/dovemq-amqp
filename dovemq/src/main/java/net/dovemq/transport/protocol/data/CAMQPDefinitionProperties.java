@@ -5,6 +5,7 @@
 package net.dovemq.transport.protocol.data;
 
 import java.util.Date;
+import java.util.Arrays;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import net.dovemq.transport.protocol.*;
@@ -47,7 +48,7 @@ public class CAMQPDefinitionProperties
     public void setUserId(byte[] val)
     {
         isSetUserId = true;
-        userId = val;
+        userId = Arrays.copyOf(val, val.length);
     }
 
     public byte[] getUserId()

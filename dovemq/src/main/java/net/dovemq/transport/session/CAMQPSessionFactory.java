@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
  * @author tejdas
  *
  */
-public class CAMQPSessionFactory
+public final class CAMQPSessionFactory
 {
     private static final Logger log = Logger.getLogger(CAMQPSessionFactory.class);
     private static final CAMQPSessionFactory sessionFactory = new CAMQPSessionFactory();
@@ -52,8 +52,7 @@ public class CAMQPSessionFactory
             session.open(targetContainerId);
         } catch (CAMQPSessionBeginException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            // TODO
             log.error("Could not open the session to: " + targetContainerId); 
         }
         

@@ -14,7 +14,7 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
  * @author tejdas
  *
  */
-public class CAMQPConnectionFactory
+public final class CAMQPConnectionFactory
 {
     private static final Logger log = Logger.getLogger(CAMQPConnectionFactory.class);
 
@@ -41,7 +41,7 @@ public class CAMQPConnectionFactory
 
     private CAMQPConnection createConnection(String targetContainerId, CAMQPConnectionProperties connectionProps)
     {
-        if (-1 == targetContainerId.indexOf("@"))
+        if (-1 == targetContainerId.indexOf('@'))
         {
             String errorInfo = String.format("Malformed containerID (%s), target Host could not be determined", targetContainerId);
             log.fatal(errorInfo);

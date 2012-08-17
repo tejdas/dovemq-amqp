@@ -11,9 +11,9 @@ public class CAMQPCodecException extends RuntimeException
     private final CAMQPTypes type;
     private final int formatCode;
     
-    public CAMQPCodecException(CAMQPTypes type, int formatCode)
+    public CAMQPCodecException(CAMQPTypes type, int formatCode, Throwable ex)
     {
-        super();
+        super(ex);
         this.type = type;
         this.formatCode = formatCode;
     }

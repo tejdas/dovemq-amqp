@@ -92,7 +92,9 @@ class CAMQPSessionStateActor
         try
         {
             while (currentState != State.MAPPED)
+            {
                 wait();
+            }
         }
         catch (InterruptedException e)
         {
@@ -111,7 +113,9 @@ class CAMQPSessionStateActor
         try
         {
             while (currentState != State.UNMAPPED)
+            {
                 wait();
+            }
         }
         catch (InterruptedException e)
         {
@@ -444,9 +448,6 @@ class CAMQPSessionStateActor
         else if (eventToBeProcessed == Event.RECEIVED_END)
         {
             preProcessEndReceived(contextToProcess);
-        }
-        else if (eventToBeProcessed == Event.SEND_BEGIN)
-        {
         }
         else if (eventToBeProcessed == Event.SEND_END)
         {

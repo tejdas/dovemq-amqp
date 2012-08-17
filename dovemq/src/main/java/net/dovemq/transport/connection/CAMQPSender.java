@@ -69,7 +69,9 @@ class CAMQPSender implements ChannelFutureListener
         try
         {
             while (state != SenderState.CLOSED)
+            {
                 wait();
+            }
         }
         catch (InterruptedException e)
         {
@@ -149,7 +151,7 @@ class CAMQPSender implements ChannelFutureListener
     }
 
     @Override
-    public void operationComplete(ChannelFuture future) throws Exception
+    public void operationComplete(ChannelFuture future)
     {
         synchronized (this)
         {

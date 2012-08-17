@@ -3,7 +3,7 @@ package net.dovemq.transport.connection;
 import net.dovemq.transport.protocol.CAMQPProtocolConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 
-public class CAMQPConnectionProperties
+public final class CAMQPConnectionProperties
 {
     public static CAMQPConnectionProperties createConnectionProperties()
     {

@@ -20,7 +20,7 @@ class CAMQPConnectionPipelineFactory implements ChannelPipelineFactory
     }
 
     @Override
-    public ChannelPipeline getPipeline() throws Exception
+    public ChannelPipeline getPipeline()
     {
         ChannelPipeline p = pipeline();
         CAMQPConnectionProperties clonedConnectionProps = (connectionProps != null)? connectionProps.cloneProperties() : null;

@@ -17,11 +17,11 @@ import org.apache.log4j.Logger;
  * @author tejdas
  *
  */
-public class CAMQPConnectionManager
+public final class CAMQPConnectionManager
 {
     private static final Logger log = Logger.getLogger(CAMQPConnectionManager.class);
 
-    private static CAMQPConnectionManager _connectionManager = null;
+    private static CAMQPConnectionManager connectionManager = null;
 
     private static final ScheduledExecutorService _scheduledExecutor = Executors.newScheduledThreadPool(8);
 
@@ -42,15 +42,15 @@ public class CAMQPConnectionManager
 
     public static synchronized void initialize(String containerId)
     {
-        if (_connectionManager == null)
+        if (connectionManager == null)
         {
-            _connectionManager = new CAMQPConnectionManager(containerId);
+            connectionManager = new CAMQPConnectionManager(containerId);
         }
     }
     
     private static synchronized CAMQPConnectionManager getConnectionManager()
     {
-        return _connectionManager ;
+        return connectionManager ;
     }
 
     public static CAMQPConnection getCAMQPConnection(String targetContainerId)
@@ -247,7 +247,9 @@ public class CAMQPConnectionManager
             try
             {
                 while (openConnections.size() > 0)
+                {
                     wait();
+                }
             }
             catch (InterruptedException e)
             {

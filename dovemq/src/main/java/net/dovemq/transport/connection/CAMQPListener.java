@@ -10,7 +10,7 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelFuture;
 
-public class CAMQPListener
+public final class CAMQPListener
 {
     private static final Logger log = Logger.getLogger(CAMQPListener.class);
     private boolean hasShutdown = false;

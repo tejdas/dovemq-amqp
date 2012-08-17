@@ -4,6 +4,7 @@
  */
 package net.dovemq.transport.protocol.data;
 
+import java.util.Arrays;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import net.dovemq.transport.protocol.*;
@@ -15,7 +16,7 @@ public class CAMQPDefinitionSaslChallenge
     private byte[] challenge = null;
     public void setChallenge(byte[] val)
     {
-        challenge = val;
+        challenge = Arrays.copyOf(val, val.length);
     }
 
     public byte[] getChallenge()

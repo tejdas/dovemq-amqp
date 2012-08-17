@@ -150,7 +150,9 @@ class CAMQPConnectionStateActor
         try
         {
             while (!openExchangeComplete)
+            {
                 wait();
+            }
         }
         catch (InterruptedException e)
         {
@@ -246,10 +248,6 @@ class CAMQPConnectionStateActor
             else if (contextToProcess.getEvent() == Event.CONN_HDR_BYTES_RECEIVED)
             {
                 contextToProcess = processConnHdrBytesReceived(contextToProcess);
-            }
-            else if (contextToProcess.getEvent() == Event.CONN_HEADER_RECEIVED)
-            {
-                // taken care of by pre-processing
             }
             else if (contextToProcess.getEvent() == Event.SEND_CONN_HEADER)
             {

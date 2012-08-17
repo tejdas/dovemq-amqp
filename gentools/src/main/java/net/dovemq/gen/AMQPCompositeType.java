@@ -154,6 +154,7 @@ abstract class AMQPCompositeType implements AMQPType
         }
         if (hasSpecifiedType("binary"))
         {
+            outputStream.println("import java.util.Arrays;");
             outputStream.println("import org.jboss.netty.buffer.ChannelBuffer;");
             outputStream.println();
         }
@@ -256,7 +257,14 @@ abstract class AMQPCompositeType implements AMQPType
                 }
                 else
                 {
-                    outputStream.println(Utils.insertTabs(2, String.format("%s = val;", fieldName)));                    
+                    if (typeName.equalsIgnoreCase(AMQPPrimitiveTypeMappings.getJavaType("binary")))
+                    {
+                        outputStream.println(Utils.insertTabs(2, String.format("%s = Arrays.copyOf(val, val.length);", fieldName)));                        
+                    }
+                    else
+                    {
+                        outputStream.println(Utils.insertTabs(2, String.format("%s = val;", fieldName)));
+                    }
                 }            
                 outputStream.println(Utils.insertTabs(1, "}"));
                 outputStream.println();                

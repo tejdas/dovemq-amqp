@@ -18,7 +18,7 @@ class CAMQPListenerShutdownHook extends Thread
             managedClass.shutdown();
         } catch (Exception ee)
         {
-            ee.printStackTrace();
+            // TODO log
         }
     }
 }
