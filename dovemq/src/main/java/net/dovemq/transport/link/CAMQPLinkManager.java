@@ -8,7 +8,12 @@ import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
 
-public class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
+/**
+ * This class is used
+ * @author tejdas
+ *
+ */
+public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
 {
     private static final AtomicLong nextLinkHandle = new AtomicLong(0);
     private static final CAMQPLinkManager linkManager = new CAMQPLinkManager();
@@ -25,8 +30,11 @@ public class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         CAMQPSessionManager.registerLinkReceiverFactory(linkManager);
     }
 
+    /**
+     * Called by Session layer upon the receipt of a Link attach frame.
+     */
     @Override
-    public CAMQPLinkMessageHandler createLinkReceiver(CAMQPSessionInterface session, CAMQPControlAttach attach)
+    public CAMQPLinkMessageHandler linkAccepted(CAMQPSessionInterface session, CAMQPControlAttach attach)
     {
         /*
          * role denotes the role of the Peer that has sent the ATTACH frame
@@ -36,19 +44,42 @@ public class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         CAMQPLinkMessageHandler linkEndpoint = CAMQPLinkManager.unregisterOutstandingLink(linkName);
         if (linkEndpoint != null)
         {
+            /*
+             * We initiated the Link establishment handshake (via CAMQPLinkEndpoint.createLink())
+             * The Link establishment is complete. Remove and return the previously registered
+             * link endpoint.
+             */
             return linkEndpoint;
         }
-        
+ 
+        /*
+         * We are the link receptors. Create an appropriate link end-point,
+         * based on the role of the peer.
+         */
         if (role == CAMQPLinkConstants.ROLE_RECEIVER)
         {
+            /*
+             * Peer is a Link receiver.
+             */
             return new CAMQPLinkSender(session);
         }
         else
         {
+            /*
+             * Peer is a Link sender.
+             */
             return new CAMQPLinkReceiver(session);
         }
     }
-    
+
+    /**
+     * If we are the initiators of the Link establishment handshake, we first register
+     * the link end-point here. It will be removed in linkAccepted, upon completion of
+     * the link establishment.
+     * 
+     * @param linkName
+     * @param linkEndpoint
+     */
     static void registerOutstandingLink(String linkName, CAMQPLinkMessageHandler linkEndpoint)
     {
         outstandingLinks.put(linkName, linkEndpoint);

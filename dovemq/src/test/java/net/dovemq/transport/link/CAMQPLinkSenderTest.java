@@ -50,7 +50,7 @@ public class CAMQPLinkSenderTest
             this.linkSender = linkSender;
         }
         @Override
-        public CAMQPLinkMessageHandler createLinkReceiver(CAMQPSessionInterface session, CAMQPControlAttach attach)
+        public CAMQPLinkMessageHandler linkAccepted(CAMQPSessionInterface session, CAMQPControlAttach attach)
         {
             synchronized (this)
             {

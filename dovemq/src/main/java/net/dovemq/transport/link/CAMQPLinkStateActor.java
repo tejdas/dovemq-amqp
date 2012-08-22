@@ -164,7 +164,7 @@ class CAMQPLinkStateActor
         CAMQPLinkControlInfo attachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         if (!attachContext.isInitiator)
         {
-            linkEndpoint.receivedAttach((CAMQPControlAttach) attachContext.data, attachContext.isInitiator);
+            linkEndpoint.processAttachReceived((CAMQPControlAttach) attachContext.data, attachContext.isInitiator);
         }
         else
         {
@@ -247,7 +247,7 @@ class CAMQPLinkStateActor
         }
         else
         {
-            linkEndpoint.receivedDetach((CAMQPControlDetach) detachContext.data, detachContext.isInitiator);
+            linkEndpoint.processDetachReceived((CAMQPControlDetach) detachContext.data, detachContext.isInitiator);
         }
 
         synchronized (this)

@@ -12,6 +12,13 @@ import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
 
+/**
+ * Asynchronous Link sender implementation.
+ * CAMQPLinkAsyncSender picks up message from the Link Source
+ * and sends it.
+ * 
+ * @author tejdas
+ */
 class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
     private final CAMQPSessionInterface session;
@@ -67,9 +74,13 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
             if (flow.isSetLinkCredit() && (flow.getLinkCredit() >= 0))
             {
                 if (flow.isSetDeliveryCount())
+                {
                     linkCredit = flow.getLinkCredit() - (deliveryCount - flow.getDeliveryCount());
+                }
                 else
+                {
                     linkCredit = flow.getLinkCredit() - deliveryCount;
+                }
             }
             
             if (flow.isSetDrain())
@@ -140,7 +151,9 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
          * state only when the last fragment has been sent
          */
         if (transferFrame.getMore())
+        {
             return;
+        }
         
         boolean checkMessageAvailability = false;
         boolean parkedMessages = false;
@@ -148,9 +161,11 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         synchronized (this)
         {
             messageOutstanding.set(false);
-            
+ 
             if (available > 0)
+            {
                 available--;
+            }
             deliveryCount++;
             linkCredit--;
             
@@ -174,7 +189,9 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         synchronized (this)
         {
             if (checkMessageAvailability)
+            {
                 available = messageCount;
+            }
 
             if (!sendInProgress)
             {
@@ -184,12 +201,16 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
                     sendInProgress = true;
                 }
                 else if (drainRequested)
+                {
                     flow = processDrainRequested(true);
+                }
             }
         }
         
         if (flow != null)
+        {
             session.sendFlow(flow);
+        }
         
         if (parkedMessages)
         {
@@ -237,7 +258,9 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         }
         
         if (flow != null)
+        {
             session.sendFlow(flow);
+        }
     }
     
     private void send(String deliveryTag, CAMQPMessagePayload message)
@@ -260,8 +283,12 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         linkCredit = 0;
         drainRequested = false;
         if (availableKnown)
+        {
             return populateFlowFrame();
+        }
         else
+        {
             return populateFlowFrameAvailableUnknown();
+        }
     }
 }

@@ -13,6 +13,14 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionSource;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionTarget;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
+/**
+ * This class is extended by Link Sender and Link Receiver
+ * implementations, to share the common logic around link
+ * establishment, teardown and some common flow-control
+ * attributes.
+ * 
+ * @author tejdas
+ */
 abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
 {
     private final boolean role;
@@ -31,13 +39,22 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     protected long linkCredit = 0;
     protected long available = 0;
 
+    /**
+     * @param role: true for link receiver
+     *              false for link sender
+     */
     public CAMQPLinkEndpoint(boolean role)
     {
         super();
         this.role = role;
         linkStateActor = new CAMQPLinkStateActor(this);
     }
-    
+ 
+    /**
+     * Establishes an AMQP link to a remote AMQP end-point.
+     * @param sourceName
+     * @param targetName
+     */
     void createLink(String sourceName, String targetName)
     {
         sourceAddress = sourceName;
@@ -75,7 +92,10 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     {
         
     }
-    
+ 
+    /**
+     * Closes an AMQP link
+     */
     void destroyLink()
     {
         CAMQPControlDetach data = new CAMQPControlDetach();
@@ -85,6 +105,11 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         linkStateActor.waitForDetached();
     }
     
+    /**
+     * Closes an AMQP link, specifying the reason
+     * for closure.
+     * @param message
+     */
     void destroyLink(String message)
     {
         CAMQPControlDetach data = new CAMQPControlDetach();
@@ -96,13 +121,21 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         linkStateActor.sendDetach(data);
         linkStateActor.waitForDetached();
     }
-    
+
+    /**
+     * Dispatched by session layer when a Link attach
+     * frame is received from the AMQP peer.
+     */
     @Override
     public void attachReceived(CAMQPControlAttach data)
     {
         linkStateActor.attachReceived(data);
     }
 
+    /**
+     * Dispatched by session layer when a Link detach
+     * frame is received from the AMQP peer.
+     */
     @Override
     public void detachReceived(CAMQPControlDetach data)
     {
@@ -112,8 +145,20 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     public abstract void attached();
     public abstract void detached();
     public abstract CAMQPSessionInterface getSession();
-    
-    void receivedAttach(CAMQPControlAttach data, boolean isInitiator)
+  
+    /**
+     * Process an incoming Link attach frame.
+     * 
+     * For link establishment initiator, nothing needs do be done.
+     * 
+     * Otherwise, set the initial delivery count
+     * and source or target address from the incoming attach frame.
+     * Send back an attach frame,
+     * 
+     * @param data
+     * @param isInitiator
+     */
+    void processAttachReceived(CAMQPControlAttach data, boolean isInitiator)
     {
         if (isInitiator)
             return;
@@ -159,8 +204,17 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         
         linkStateActor.sendAttach(responseData);       
     }
-    
-    void receivedDetach(CAMQPControlDetach data, boolean isInitiator)
+ 
+    /**
+     * Process an incoming Link detach frame.
+     * 
+     * For link establishment initiator, nothing needs do be done.
+     * Otherwise, send back an attach frame.
+     * 
+     * @param data
+     * @param isInitiator
+     */
+    void processDetachReceived(CAMQPControlDetach data, boolean isInitiator)
     {
         if (isInitiator)
             return;

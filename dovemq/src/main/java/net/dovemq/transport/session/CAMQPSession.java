@@ -922,7 +922,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         if (controlName.equalsIgnoreCase(CAMQPControlAttach.descriptor))
         {
             CAMQPControlAttach data = CAMQPControlAttach.decode(decoder);
-            linkReceiver = CAMQPSessionManager.getLinkReceiverFactory().createLinkReceiver(this, data);
+            linkReceiver = CAMQPSessionManager.getLinkReceiverFactory().linkAccepted(this, data);
             linkReceivers.put(data.getHandle(), linkReceiver);
             linkReceiver.attachReceived(data);
         }

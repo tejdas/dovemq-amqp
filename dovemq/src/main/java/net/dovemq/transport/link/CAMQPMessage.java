@@ -1,7 +1,9 @@
 package net.dovemq.transport.link;
 
 import net.dovemq.transport.frame.CAMQPMessagePayload;
+import net.jcip.annotations.Immutable;
 
+@Immutable
 public class CAMQPMessage
 {
     public String getDeliveryTag()

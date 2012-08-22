@@ -5,5 +5,5 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public interface CAMQPLinkMessageHandlerFactory
 {
-    public CAMQPLinkMessageHandler createLinkReceiver(CAMQPSessionInterface session, CAMQPControlAttach attach);
+    public CAMQPLinkMessageHandler linkAccepted(CAMQPSessionInterface session, CAMQPControlAttach attach);
 }
