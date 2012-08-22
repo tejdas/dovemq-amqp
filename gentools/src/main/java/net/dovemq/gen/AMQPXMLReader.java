@@ -38,6 +38,11 @@ class AMQPXMLReader
         gDefinitionsCompositeTypes = new AMQPGenericTypeContainer();
         gCompositeTypes = new AMQPGenericTypeContainer();
         
+        if (args.length == 0)
+        {
+            System.out.println("Please provide the base directory");
+            return;
+        }
         String baseDir = args[0];
         gDirectory = Utils.convertPackageNameToDir(baseDir, PACKAGE_NAME);
         System.out.println(gDirectory);
