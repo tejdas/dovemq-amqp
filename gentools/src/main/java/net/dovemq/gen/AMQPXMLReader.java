@@ -8,7 +8,7 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
-class AMQPXMLReader
+public class AMQPXMLReader
 {
     private static final String AMQP_TYPES_XML_FILE_NAME = "types.xml";
     private static final String AMQP_TRANSPORT_XML_FILE_NAME = "transport.xml";
