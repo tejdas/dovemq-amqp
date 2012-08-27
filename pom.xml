@@ -12,7 +12,6 @@
 
 	<modules>
 		<module>dovemq</module>
-		<module>gentools</module>
 		<module>functional-test</module>
 	</modules>
 </project>
