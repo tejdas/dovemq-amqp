@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -65,7 +66,7 @@ public class CAMQPLinkSenderTest
      * between each send.
      *
      */
-    private class MessageSender extends BaseMessageSender
+    private static class MessageSender extends BaseMessageSender
     {
         public MessageSender(int numMessagesToSend, boolean pauseBetweenSends, CAMQPLinkSender linkSender)
         {
@@ -82,6 +83,105 @@ public class CAMQPLinkSenderTest
             String deliveryTag = UUID.randomUUID().toString();
             this.linkSender.sendMessage(deliveryTag, createMessage(r));
         } 
+    }
+    
+    private static class MySession implements CAMQPSessionInterface
+    {
+        private final AtomicInteger messageCount = new AtomicInteger(0);
+        private final CountDownLatch latch;
+        private final CountDownLatch latch2;
+        private final AtomicLong deliveryId = new AtomicLong(0);
+        public MySession()
+        {
+            super();
+            this.latch = new CountDownLatch(1);
+            this.latch2 = new CountDownLatch(1);
+        }
+        
+        public void signalDoneTransfer()
+        {
+            latch.countDown();
+        }
+        
+        public void waitSendTransfer()
+        {
+            try
+            {
+                latch2.await();
+            }
+            catch (InterruptedException e)
+            {
+            }
+        }
+        
+        public void waitUntilAllMessagesSent()
+        {
+            synchronized (this)
+            {
+                while (messageCount.get() < 2)
+                {
+                    try
+                    {
+                        wait();
+                    }
+                    catch (InterruptedException e)
+                    {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        
+        @Override
+        public void sendLinkControlFrame(ChannelBuffer encodedLinkControlFrame)
+        {        
+        }
+
+        @Override
+        public void registerLinkReceiver(Long linkHandle, CAMQPLinkMessageHandler linkReceiver)
+        {
+        }
+
+        @Override
+        public long getNextDeliveryId()
+        {
+            return deliveryId.incrementAndGet();
+        }
+
+        @Override
+        public void sendTransfer(CAMQPControlTransfer transfer, CAMQPMessagePayload payload, CAMQPLinkSenderInterface linkSender)
+        {
+            int count = messageCount.incrementAndGet();
+            if (count == 1)
+            {
+                try
+                {
+                    latch2.countDown();
+                    latch.await();
+                }
+                catch (InterruptedException e)
+                {
+                }
+            }
+            if (count == 2)
+            {
+                synchronized (this)
+                {
+                    notifyAll();
+                }
+            }
+        }
+
+        @Override
+        public void sendFlow(CAMQPControlFlow flow)
+        {
+        }
+
+        @Override
+        public void ackTransfer(long transferId)
+        {
+        }
     }
     
     private static final MockLinkReceiverFactory factory = new MockLinkReceiverFactory();
@@ -175,7 +275,6 @@ public class CAMQPLinkSenderTest
         checkAndAssertDeliveryCount();
     }
     
- 
     /**
      * Tests session-level flow control.
      * num > linkCredit > sessionCredit
@@ -415,6 +514,74 @@ public class CAMQPLinkSenderTest
         sender.waitForDone();
     }
     
+    @Test
+    public void testParkMessageWhileSendInProgress() throws InterruptedException
+    {
+        final MySession localSession = new MySession();
+        
+        linkHandle = 1;
+        final CAMQPLinkSender linkSender = new CAMQPLinkSender(localSession);
+        linkSender.setMaxAvailableLimit(4096);
+        factory.setLinkSender(linkSender);
+        
+        CAMQPControlFlow flow = new CAMQPControlFlow();
+        flow.setHandle(linkHandle);
+ 
+        flow.setDrain(false);
+        flow.setEcho(false);
+        flow.setLinkCredit(20L);
+        flow.setIncomingWindow(20L);
+        flow.setNextIncomingId(nextExpectedIncomingTransferId.get());
+        flow.setDeliveryCount(nextExpectedIncomingTransferId.get());
+        linkSender.flowReceived(flow);
+        
+        final Random r = new Random();
+        
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run()
+            {
+                String deliveryTag = UUID.randomUUID().toString();
+                linkSender.sendMessage(deliveryTag, createMessage(r));
+            }          
+        };
+        Thread t = new Thread(runnable);
+        t.start();
+        
+        localSession.waitSendTransfer();
+        String deliveryTag = UUID.randomUUID().toString();
+        linkSender.sendMessage(deliveryTag, createMessage(r));
+        
+        localSession.signalDoneTransfer();
+        localSession.waitUntilAllMessagesSent();
+    }
+    
+    @Test
+    public void testFlowReceivedWithNoDeliveryCountSet()
+    {   
+        CAMQPControlFlow flow = new CAMQPControlFlow();
+        flow.setHandle(linkHandle);
+ 
+        flow.setDrain(true);
+        flow.setEcho(false);
+        flow.setLinkCredit(20L);
+        flow.setIncomingWindow(20L);
+        flow.setNextIncomingId(nextExpectedIncomingTransferId.get());
+        linkSender.flowReceived(flow);
+        
+        Object control = null;
+        try
+        {
+            control = controlFramesQueue.poll(2000, TimeUnit.MILLISECONDS);
+        }
+        catch (InterruptedException e)
+        {
+            assertFalse(true);
+        }
+        assertTrue(control != null);
+        assertTrue(control instanceof CAMQPControlFlow);
+    }
+    
     private void getAndAssertMessage(int expectedMessageCount) throws InterruptedException
     {
         int messageCount = 0;
@@ -493,8 +660,6 @@ public class CAMQPLinkSenderTest
                     continue;
                 }
             }
-            //if (transferFrame.getDeliveryId()> 0 && transferFrame.getDeliveryId()%500 == 0)
-              //  System.out.println("transferFrame: " + transferFrame.getDeliveryId());
  
             lastFrameReceivedTime = new Date();
             messageCount++;
@@ -591,7 +756,7 @@ public class CAMQPLinkSenderTest
         assertTrue(control instanceof CAMQPControlDetach);
     }
     
-    private CAMQPMessagePayload createMessage(Random r)
+    private static CAMQPMessagePayload createMessage(Random r)
     {
         int sectionSize = 256 * (r.nextInt(10) + 1);
         return new CAMQPMessagePayload(new byte[sectionSize]);

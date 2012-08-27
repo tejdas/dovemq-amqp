@@ -109,13 +109,8 @@ class FramesProcessor implements Runnable
                     {
                         controlData = CAMQPControlFlow.decode(inputPipe);
 
-                        if (!((CAMQPControlFlow) controlData).isSetHandle())
+                        if (((CAMQPControlFlow) controlData).isSetHandle())
                         {
-                            //System.out.println("Received session flow frame");
-                        }
-                        else
-                        {
-                            //System.out.println("Received link flow frame");
                             linkFlowFrameCount.incrementAndGet();
                             controlFramesQueue.put(controlData);
                         }

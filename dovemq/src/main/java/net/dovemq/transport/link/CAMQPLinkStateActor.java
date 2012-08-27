@@ -53,7 +53,7 @@ class QueuedContext
 @ThreadSafe
 class CAMQPLinkStateActor
 {
-    static class CAMQPLinkControlInfo
+    private static class CAMQPLinkControlInfo
     {
         CAMQPLinkControlInfo(Object data)
         {
@@ -312,7 +312,6 @@ class CAMQPLinkStateActor
 
     private QueuedContext processSessionUnmapped(QueuedContext contextToProcess)
     {
-        //session.unmapped();
         return null;
     }
 
@@ -336,7 +335,6 @@ class CAMQPLinkStateActor
                         processingQueuedEvents = true;
                     }
                     contextToProcess = getNextEvent();
-                    //attachedConnection = session.getConnection();
                 }
             }
 
@@ -357,7 +355,7 @@ class CAMQPLinkStateActor
         {
             return null;
         }
-        log.info("CAMQPLinkStateActor.processEvent: " + contextToProcess.getEvent().toString());
+        log.debug("CAMQPLinkStateActor.processEvent: " + contextToProcess.getEvent().toString());
         if (contextToProcess.getEvent() == Event.SEND_ATTACH)
         {
             return processSendAttach(contextToProcess);

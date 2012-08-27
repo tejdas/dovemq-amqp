@@ -321,6 +321,38 @@ public class CAMQPLinkReceiverTest
         detachHandshakeAndVerify(linkHandle);
     }
     
+    @Test
+    public void testProcessFlowMessageByLinkReceiverWithCreditDemandedBySender()
+    {
+        long availableMessages = 10L;
+        linkReceiver.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_AS_DEMANDED_BY_SENDER);
+
+        CAMQPControlFlow flow = new CAMQPControlFlow();
+        flow.setEcho(true);
+        flow.setAvailable(availableMessages);
+        flow.setLinkCredit(0L);
+        flow.setDeliveryCount(35L);
+        linkReceiver.flowReceived(flow);
+        
+        getAndAssertLinkCredit(availableMessages);        
+    }
+    
+    @Test
+    public void testProcessFlowMessageByLinkReceiverWithSteadyState()
+    {
+        long configuredCreditBoost = 10;
+        long minCreditThreshold = 5;
+        linkReceiver.setLinkCreditSteadyState(configuredCreditBoost, minCreditThreshold);
+
+        CAMQPControlFlow flow = new CAMQPControlFlow();
+        flow.setEcho(true);
+        flow.setAvailable(10L);
+        flow.setLinkCredit(0L);
+        linkReceiver.flowReceived(flow);
+        
+        getAndAssertLinkCredit(minCreditThreshold + configuredCreditBoost);        
+    }
+    
     private CAMQPConnection createMockConnection()
     {
         return new CAMQPConnection() {
