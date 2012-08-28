@@ -49,8 +49,8 @@ public class SessionSysTestBiDirIO
         Collection<Integer> attachedChannels = mbeanProxy.getChannelId(CAMQPConnectionManager.getContainerId());
         assertTrue(attachedChannels.size() == numThreads);
  
-        final String sourceName = System.getenv("HOME") + "/camqp05162011.tar";
-        final String targetName = System.getenv("HOME") + "/foo3.txt";
+        final String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/testfile.tar";
+        final String targetName = System.getenv("DOVEMQ_TEST_DIR") + "/foo3.txt";
         
         new Thread(new Runnable() {
             @Override

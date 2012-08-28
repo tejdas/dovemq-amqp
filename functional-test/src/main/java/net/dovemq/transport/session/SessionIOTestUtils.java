@@ -108,8 +108,8 @@ class SessionSender extends SessionTestTask implements Runnable
         
         try
         {
-            String sourceName = System.getenv("HOME") + "/camqp05162011.tar";
-            String targetName = System.getenv("HOME") + "/foo2.txt";
+            String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/testfile.tar";
+            String targetName = System.getenv("DOVEMQ_TEST_DIR") + "/foo2.txt";
             SessionIOTestUtils.transmitFile(session, sourceName, targetName);
         }
         catch (InterruptedException e)

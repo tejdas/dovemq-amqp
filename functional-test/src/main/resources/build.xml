@@ -4,9 +4,13 @@
     </description>
 
 	<!-- set global properties for this build -->
+	<property environment="env"/>	
 	<property name="projectName" value="dovemq-functional-test" />
 	<property name="jmxPortNumber" value="8746" />
 	<property name="lib" location="${basedir}/lib" />
+	<property name="mvn.repo.dir" location="${env.MVN_REPO}" />
+	<property name="dovemq.jars.dir" location="${mvn.repo.dir}/net/dovemq" />
+	<property name="dovemq.version" value="1.0-SNAPSHOT" />	
 
 	<path id="dovemq-functest-classpath">
 		<pathelement location="." />
@@ -24,11 +28,24 @@
 		<copy file="${mvn.repo.dir}/commons-lang/commons-lang/2.5/commons-lang-2.5.jar" todir="${lib}" />
 		<copy file="${mvn.repo.dir}/org/jboss/netty/netty/3.2.4.Final/netty-3.2.4.Final.jar" todir="${lib}" />
 		<copy file="${mvn.repo.dir}/log4j/log4j/1.2.15/log4j-1.2.15.jar" todir="${lib}" />
-		<copy file="${amqp.base.dir}/dovemq/target/dovemq-1.0-SNAPSHOT.jar" todir="${lib}" />
-		<copy file="${amqp.base.dir}/functional-test/target/dovemq-functional-test-1.0-SNAPSHOT.jar" todir="${lib}" />
+		<copy file="${dovemq.jars.dir}/dovemq/${dovemq.version}/dovemq-${dovemq.version}.jar" todir="${lib}" />		
+		<copy file="${dovemq.jars.dir}/dovemq-functional-test/${dovemq.version}/dovemq-functional-test-${dovemq.version}.jar" todir="${lib}" />
 		<copy file="${mvn.repo.dir}/junit/junit/4.8.1/junit-4.8.1.jar" todir="${lib}" />
 	</target>
 
+	<target name="usage" description="How to run DoveMQ functional tests">
+		<echo>To run one functional test:</echo>
+		<echo>ant -Dbroker.ip=FullyQualifiedHostName testName -Dparam1=foo -Dparam2=bar ...</echo>
+		<echo>Example:</echo>
+		<echo>ant -Dbroker.ip=192.168.1.105 SessionTestIOFlowControl</echo>
+		<echo>To run all Connection tests:</echo>
+		<echo>ant -Dbroker.ip=FullyQualifiedHostName ConnectionTest</echo>
+		<echo>To run all Session tests:</echo>
+		<echo>ant -Dbroker.ip=FullyQualifiedHostName test</echo>
+		<echo>To run Broker standalone:</echo>
+		<echo>ant -Dbroker.ip=FullyQualifiedHostName RunSessionBroker</echo>		
+	</target>
+	
 	<target name="clean" description="clean up">
 		<delete dir="${lib}" />
 	</target>
