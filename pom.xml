@@ -12,5 +12,6 @@
 
 	<modules>
 		<module>dovemq</module>
+		<module>functional-test</module>
 	</modules>
 </project>
