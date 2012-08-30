@@ -550,11 +550,12 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             if (!isFlowSendScheduled)
                 log.error("Assert failed isFlowSendScheduled");
             
-            /*
-             * Session is not under flow-control on either side, so no need to send flow frame
-             */
-            if (!isUnderFlowControl())
+            if (!isSenderUnderFlowControl() && !isRemoteSenderUnderFlowControl())
             {
+                /*
+                 * Neither SessionSender or peer SessionSender is not under flow-control.
+                 * so no need to send flow frame.
+                 */
                 isFlowSendScheduled = false;
                 return;
             }
@@ -592,9 +593,16 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
      * @return
      */
     @GuardedBy("this")
-    private boolean isUnderFlowControl()
+    private boolean isSenderUnderFlowControl()
     {
         return (!unsentTransfers.isEmpty() && remoteIncomingWindow < CAMQPSessionConstants.MIN_INCOMING_WINDOW_SIZE_THRESHOLD);
+    }
+    
+    @GuardedBy("this")
+    private boolean isRemoteSenderUnderFlowControl()
+    {
+        return ((incomingWindow < CAMQPSessionConstants.MIN_INCOMING_WINDOW_SIZE_THRESHOLD) ||
+                (remoteOutgoingWindow < CAMQPSessionConstants.MIN_INCOMING_WINDOW_SIZE_THRESHOLD));
     }
 
     /**
@@ -627,7 +635,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                      * asking the peer to send an updated remoteIncomingWindow.
                      */
                     remoteIncomingWindow--;
-                    if (isUnderFlowControl())
+                    if (isSenderUnderFlowControl())
                     {
                         flow = createFlowFrameIfNotScheduled();
                     }
@@ -856,8 +864,8 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         decoder.take(body);
         CAMQPControlTransfer transferFrame = CAMQPControlTransfer.decode(decoder);
         CAMQPMessagePayload payload = decoder.getPayload();
-        
-        CAMQPControlFlow flow = null;
+
+        boolean needScheduleFlowFrame = false;
         synchronized (this)
         {
             if (incomingWindow <= 0)
@@ -874,25 +882,25 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 remoteOutgoingWindow--;
                 incomingWindow--;
             }
-            
-            if ((incomingWindow < CAMQPSessionConstants.MIN_INCOMING_WINDOW_SIZE_THRESHOLD) ||
-                (remoteOutgoingWindow < CAMQPSessionConstants.MIN_INCOMING_WINDOW_SIZE_THRESHOLD))
+
+            /*
+             * Schedule sending of a flow-frame, if remote sender is under flow-control.
+             */
+            if (isRemoteSenderUnderFlowControl())
             {
-                flow = createFlowFrameIfNotScheduled();
+                if (!isFlowSendScheduled)
+                {
+                    isFlowSendScheduled = true;
+                    needScheduleFlowFrame = true;
+                }
             }
         }
-
-        if (flow != null)
-        {
-            CAMQPChannel channel = getChannel();
-            if (channel != null)
-                sendFlowFrame(flow, channel);
-            
-            /*
-             * Do NOT schedule sending of another flow-frame, if acting as a Session Receiver.
-             */
-        }
         
+        if (needScheduleFlowFrame)
+        {
+            flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);            
+        }
+
         /*
          * dispatch the transfer frame to a LinkReceiver
          */

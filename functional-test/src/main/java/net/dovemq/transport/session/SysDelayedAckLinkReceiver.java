@@ -1,5 +1,6 @@
 package net.dovemq.transport.session;
 
+import java.util.Date;
 import java.util.Random;
 
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -72,7 +73,7 @@ public class SysDelayedAckLinkReceiver extends SysBaseLinkReceiver implements Ru
             if (firstTime)
                 firstTime = false;
             
-            System.out.println("timer: acking from : " + ackStart + " to " + lastReceived);
+            System.out.println("timer: threadID: " + Thread.currentThread().getId() + " acking from : " + ackStart + " to " + lastReceived + " current time: " + new Date().toString());
             for (long i = ackStart; i <= lastReceived; i++)
             {
                 session.ackTransfer(i);

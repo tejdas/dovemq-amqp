@@ -104,12 +104,12 @@ class SessionSender extends SessionTestTask implements Runnable
     public void run()
     {
         waitForReady();
-        System.out.println("sending transfer frames over session " + Thread.currentThread().getId());
         
         try
         {
             String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/testfile.tar";
-            String targetName = System.getenv("DOVEMQ_TEST_DIR") + "/foo2.txt";
+            String targetName = String.format("%s/%s-%d.txt", System.getenv("DOVEMQ_TEST_DIR"), "foo2", Thread.currentThread().getId());
+            //String targetName = System.getenv("DOVEMQ_TEST_DIR") + "/foo2.txt";
             SessionIOTestUtils.transmitFile(session, sourceName, targetName);
         }
         catch (InterruptedException e)
@@ -122,7 +122,6 @@ class SessionSender extends SessionTestTask implements Runnable
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        System.out.println("DONE sending transfer frames over session  " + Thread.currentThread().getId());       
         done();
     }
     private final CAMQPSession session;
@@ -251,7 +250,7 @@ public class SessionIOTestUtils
             int randomInt = randomGenerator.nextInt(20);
             Thread.sleep(randomInt);
         }
-        System.out.println("Delivery ID of last message: " + deliveryId);
+        System.out.println("Delivery ID of last message: " + deliveryId + " source: " + source + " target: " + target);
         inputStream.close();
         Thread.sleep(5000);
     }

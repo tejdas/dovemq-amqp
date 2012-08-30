@@ -21,7 +21,7 @@ public class SessionSysTestBiDirIO
         String brokerIp = args[1];
         String jmxPort = args[2];
         String linkReceiverFactory = args[3];
-        int numThreads = 1;
+        int numThreads = 3;
         
         String brokerContainerId = String.format("broker@%s", brokerIp);
         
@@ -68,7 +68,6 @@ public class SessionSysTestBiDirIO
                 break;
         }
 
-        
         SessionIOTestUtils.closeSessions(numThreads, brokerContainerId, localSessionCommand);
         
         localConnectionCommand.close(brokerContainerId);        
