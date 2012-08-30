@@ -168,7 +168,7 @@ class CAMQPLinkStateActor
         }
         else
         {
-            linkEndpoint.attached();
+            linkEndpoint.attached(attachContext.isInitiator);
         }
  
         synchronized (this)
@@ -206,7 +206,7 @@ class CAMQPLinkStateActor
 
         if (!attachContext.isInitiator)
         {
-            linkEndpoint.attached();
+            linkEndpoint.attached(attachContext.isInitiator);
         }
 
         synchronized (this)
@@ -243,7 +243,7 @@ class CAMQPLinkStateActor
         CAMQPLinkControlInfo detachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         if (detachContext.isInitiator)
         {
-            linkEndpoint.detached();
+            linkEndpoint.detached(detachContext.isInitiator);
         }
         else
         {
@@ -284,7 +284,7 @@ class CAMQPLinkStateActor
 
         if (!detachContext.isInitiator)
         {
-            linkEndpoint.detached();
+            linkEndpoint.detached(detachContext.isInitiator);
         }
 
         synchronized (this)

@@ -63,6 +63,11 @@ public class CAMQPConnection
     {
         return stateActor.key.getRemoteContainerId();
     }
+    
+    public String getLocalContainerId()
+    {
+        return CAMQPConnectionManager.getContainerId();
+    }    
 
     public boolean isInitiator()
     {

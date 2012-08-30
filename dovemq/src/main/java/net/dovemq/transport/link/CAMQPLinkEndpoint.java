@@ -3,6 +3,8 @@ package net.dovemq.transport.link;
 import java.math.BigInteger;
 import java.util.UUID;
 
+import org.apache.log4j.Logger;
+
 import net.jcip.annotations.GuardedBy;
 
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
@@ -12,6 +14,12 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionSource;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionTarget;
 import net.dovemq.transport.session.CAMQPSessionInterface;
+
+enum LinkRole
+{
+    LinkSender,
+    LinkReceiver
+}
 
 /**
  * This class is extended by Link Sender and Link Receiver
@@ -23,7 +31,11 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
  */
 abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
 {
-    private final boolean role;
+    private static final Logger log = Logger.getLogger(CAMQPLinkEndpoint.class);
+    
+    abstract LinkRole getRole();
+    
+    private final String roleAsString;
     private String linkName;
     private final CAMQPLinkStateActor linkStateActor;
     
@@ -31,7 +43,13 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     
     private String sourceAddress;
     private String targetAddress;
+    private CAMQPLinkKey linkKey;
     
+    public CAMQPLinkKey getLinkKey()
+    {
+        return linkKey;
+    }
+
     /*
      * Flow-control attributes
      */
@@ -39,14 +57,10 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     protected long linkCredit = 0;
     protected long available = 0;
 
-    /**
-     * @param role: true for link receiver
-     *              false for link sender
-     */
-    public CAMQPLinkEndpoint(boolean role)
+    public CAMQPLinkEndpoint()
     {
         super();
-        this.role = role;
+        this.roleAsString = (getRole() == LinkRole.LinkSender)? "LinkSender" : "LinkReceiver";
         linkStateActor = new CAMQPLinkStateActor(this);
     }
  
@@ -62,12 +76,12 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
 
         linkHandle = CAMQPLinkManager.getNextLinkHandle();
         linkName = UUID.randomUUID().toString();
-        CAMQPLinkManager.registerOutstandingLink(linkName, this);
+        CAMQPLinkManager.getLinkHandshakeTracker().registerOutstandingLink(linkName, this);
         
         CAMQPControlAttach data = new CAMQPControlAttach();
         data.setHandle(linkHandle);
         data.setName(linkName);
-        data.setRole(role);
+        data.setRole(getRole() == LinkRole.LinkReceiver);
         
         CAMQPDefinitionSource source = new CAMQPDefinitionSource();
         source.setAddress(sourceAddress);
@@ -78,7 +92,7 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         data.setTarget(target);
      
         source.setDynamic(false);
-        if (role == CAMQPLinkConstants.ROLE_SENDER)
+        if (getRole() == LinkRole.LinkSender)
         {
             data.setInitialDeliveryCount(deliveryCount);
         }
@@ -130,6 +144,7 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     public void attachReceived(CAMQPControlAttach data)
     {
         linkStateActor.attachReceived(data);
+        linkKey = CAMQPLinkKey.createLinkKey(data);
     }
 
     /**
@@ -142,8 +157,26 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         linkStateActor.detachReceived(data); 
     }
     
-    public abstract void attached();
-    public abstract void detached();
+    public void attached(boolean isInitiator)
+    {
+        if (linkKey != null)
+        {
+            CAMQPLinkManager.getLinkmanager().registerLinkEndpoint(linkName, linkKey, this);
+        }
+        String initiatedBy =  isInitiator? "self" : "peer";
+        log.debug(roleAsString + " created between source: " + sourceAddress + " and target: " + targetAddress + " . Initiated by: " + initiatedBy);
+    }
+
+    public void detached(boolean isInitiator)
+    {
+        if (linkKey != null)
+        {
+            CAMQPLinkManager.getLinkmanager().unregisterLinkEndpoint(linkName, linkKey);
+        }
+        String initiatedBy =  isInitiator? "self" : "peer";
+        log.debug(roleAsString + " destroyed between source: " + sourceAddress + " and target: " + targetAddress + " . Initiated by: " + initiatedBy);
+    }
+
     public abstract CAMQPSessionInterface getSession();
   
     /**
@@ -167,7 +200,7 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         
         linkName = data.getName();
         
-        if (role == CAMQPLinkConstants.ROLE_RECEIVER)
+        if (getRole() == LinkRole.LinkReceiver)
         {
             if (data.isSetInitialDeliveryCount())
                 deliveryCount = data.getInitialDeliveryCount();
@@ -176,7 +209,7 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         CAMQPControlAttach responseData = new CAMQPControlAttach();
         responseData.setHandle(linkHandle);
         responseData.setName(linkName);
-        responseData.setRole(role);
+        responseData.setRole(getRole() == LinkRole.LinkReceiver);
         
         if (data.getSource() != null)
         {

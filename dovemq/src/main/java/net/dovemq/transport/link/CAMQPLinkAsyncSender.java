@@ -45,7 +45,7 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     
     public CAMQPLinkAsyncSender(CAMQPSessionInterface session)
     {
-        super(CAMQPLinkConstants.ROLE_SENDER);
+        super();
         this.session = session;
     }
     
@@ -131,16 +131,6 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         /*
          * Not implemented
          */
-    }
-
-    @Override
-    public void attached()
-    {       
-    }
-
-    @Override
-    public void detached()
-    {   
     }
 
     @Override
@@ -290,5 +280,11 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         {
             return populateFlowFrameAvailableUnknown();
         }
+    }
+
+    @Override
+    LinkRole getRole()
+    {
+        return LinkRole.LinkSender;
     }
 }

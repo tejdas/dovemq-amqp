@@ -62,7 +62,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
 
     public CAMQPLinkSender(CAMQPSessionInterface session)
     {
-        super(CAMQPLinkConstants.ROLE_SENDER);
+        super();
         this.session = session;
         maxAvailableLimit = CAMQPLinkConstants.DEFAULT_MAX_AVAILABLE_MESSAGES_AT_SENDER;
     }
@@ -214,16 +214,6 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
         {
             CAMQPSessionManager.getExecutor().execute(this);
         }
-    }
-
-    @Override
-    public void attached()
-    {       
-    }
-
-    @Override
-    public void detached()
-    {   
     }
 
     /**
@@ -390,5 +380,11 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     private boolean hasLinkCreditButNoMessage()
     {
         return (unsentMessages.isEmpty() && (linkCredit > 0));
+    }
+
+    @Override
+    LinkRole getRole()
+    {
+        return LinkRole.LinkSender;
     }
 }

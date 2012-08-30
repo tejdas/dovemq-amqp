@@ -67,7 +67,7 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
 
     public CAMQPLinkReceiver(CAMQPSessionInterface session)
     {
-        super(CAMQPLinkConstants.ROLE_RECEIVER);
+        super();
         this.session = session;
     }
 
@@ -216,18 +216,6 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
     }
 
     @Override
-    public void attached()
-    {
-        // TODO Auto-generated method stub       
-    }
-
-    @Override
-    public void detached()
-    {
-        // TODO Auto-generated method stub       
-    }
-
-    @Override
     public CAMQPSessionInterface getSession()
     {
         // TODO Auto-generated method stub
@@ -311,5 +299,11 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
         {
             session.sendFlow(flow);
         }
+    }
+
+    @Override
+    LinkRole getRole()
+    {
+        return LinkRole.LinkReceiver;
     }
 }
