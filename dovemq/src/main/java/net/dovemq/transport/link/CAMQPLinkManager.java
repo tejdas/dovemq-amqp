@@ -7,6 +7,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import net.dovemq.transport.connection.CAMQPConnectionFactory;
+import net.dovemq.transport.connection.CAMQPConnectionManager;
+import net.dovemq.transport.connection.CAMQPConnectionProperties;
+import net.dovemq.transport.connection.CAMQPListener;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
@@ -20,6 +24,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
 {
     private static final AtomicLong nextLinkHandle = new AtomicLong(0);
     private static final CAMQPLinkManager linkManager = new CAMQPLinkManager();
+    private static CAMQPListener listener = null;
     
     static CAMQPLinkManager getLinkmanager()
     {
@@ -42,9 +47,30 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         return nextLinkHandle.getAndIncrement();
     }
     
-    public static void initialize()
+    public static void initialize(boolean isBroker, String containerId)
     {
+        CAMQPConnectionManager.initialize(containerId);
+        System.out.println("container ID: " + CAMQPConnectionManager.getContainerId());
+        
+        if (isBroker)
+        {
+            CAMQPConnectionManager.registerConnectionObserver(new CAMQPConnectionReaper());
+            CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties.createConnectionProperties();
+            listener = CAMQPListener.createCAMQPListener(defaultConnectionProps);
+            listener.start();
+        }
         CAMQPSessionManager.registerLinkReceiverFactory(linkManager);
+    }
+    
+    public static void shutdown()
+    {
+        CAMQPSessionManager.shutdown();
+        CAMQPConnectionManager.shutdown();
+        CAMQPConnectionFactory.shutdown();
+        if (listener != null)
+        {
+            listener.shutdown();
+        }
     }
     
     public CAMQPLinkEndpoint getLinkEndpoint(String source, String target)
