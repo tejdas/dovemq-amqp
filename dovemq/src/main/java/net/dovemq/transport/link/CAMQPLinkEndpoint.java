@@ -37,6 +37,11 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     
     private final String roleAsString;
     private String linkName;
+    public String getLinkName()
+    {
+        return linkName;
+    }
+
     private final CAMQPLinkStateActor linkStateActor;
     
     protected long linkHandle;
@@ -143,8 +148,8 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     @Override
     public void attachReceived(CAMQPControlAttach data)
     {
+        linkKey = CAMQPLinkKey.createLinkKey(data);        
         linkStateActor.attachReceived(data);
-        linkKey = CAMQPLinkKey.createLinkKey(data);
     }
 
     /**

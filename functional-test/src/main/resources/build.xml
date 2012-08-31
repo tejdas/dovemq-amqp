@@ -1,4 +1,4 @@
-<project name="dovemq-functional-test" default="test" basedir=".">
+<project name="dovemq-functional-test" default="usage" basedir=".">
 	<description>
         DoveMQ Functional Tests
     </description>
@@ -41,33 +41,18 @@
 		<echo>To run all Connection tests:</echo>
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName ConnectionTest</echo>
 		<echo>To run all Session tests:</echo>
-		<echo>ant -Dbroker.ip=FullyQualifiedHostName test</echo>
+		<echo>ant -Dbroker.ip=FullyQualifiedHostName SessionTest</echo>
 		<echo>To run Broker standalone:</echo>
-		<echo>ant -Dbroker.ip=FullyQualifiedHostName RunSessionBroker</echo>		
+		<echo>ant -Dbroker.ip=FullyQualifiedHostName RunDoveMQBroker</echo>		
 	</target>
 	
 	<target name="clean" description="clean up">
 		<delete dir="${lib}" />
 	</target>
 
-	<target name="RunBroker" depends="init">
+	<target name="RunDoveMQBroker" depends="init">
 		<echo>...Starting DoveMQ Broker</echo>
-		<java fork="true" classname="net.dovemq.transport.connection.ConnectionSysTestJMXServer" maxmemory="2048M" failonerror="true">
-			<!--if we run into an out of memory error, dump it-->
-			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
-			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="com.sun.management.jmxremote.port" value="${jmxPortNumber}" />
-			<sysproperty key="com.sun.management.jmxremote.authenticate" value="false" />
-			<sysproperty key="com.sun.management.jmxremote.ssl" value="false" />
-			<sysproperty key="dovemq.testpath" value="${basedir}/server.log" />
-			<!-- sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
-			<classpath refid="dovemq-functest-classpath" />
-		</java>
-	</target>
-
-	<target name="RunSessionBroker" depends="init">
-		<echo>...Starting DoveMQ Broker</echo>
-		<java fork="true" classname="net.dovemq.transport.session.SessionSysTestJMXServer" maxmemory="2048M" failonerror="true">
+		<java fork="true" classname="net.dovemq.transport.common.DoveMQTestJMXServer" maxmemory="2048M" failonerror="true">
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -86,6 +71,7 @@
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<arg value="${broker.ip}" />			
 			<arg value="${jmxPortNumber}" />
 			<arg value="shutdown" />
 			<classpath refid="dovemq-functest-classpath" />
@@ -128,7 +114,7 @@
 
 	<target name="ConnectionTest" description="running connection tests">
 		<parallel>
-			<antcall target="RunBroker" />
+			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunClients" />
@@ -191,7 +177,7 @@
 	
 	<target name="SessionTestMultipleSessionsNoIO" description="running session tests">
 		<parallel>
-			<antcall target="RunSessionBroker" />
+			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunSessionClient">
@@ -206,7 +192,7 @@
 	
 	<target name="SessionTestIO" description="running session tests">
 		<parallel>
-			<antcall target="RunSessionBroker" />
+			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunSessionClient">
@@ -221,7 +207,7 @@
 	
 	<target name="SessionTestIOFlowControl" description="running session tests">
 		<parallel>
-			<antcall target="RunSessionBroker" />
+			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunSessionClient">
@@ -236,7 +222,7 @@
 	
 	<target name="SessionTestMultipleSessionsNoIOBiDir" description="running session tests">
 		<parallel>
-			<antcall target="RunSessionBroker" />
+			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunSessionClientBiDir">
@@ -251,7 +237,7 @@
 	
 	<target name="SessionTestBiDirIO" description="running BiDir IO session tests">
 		<parallel>
-			<antcall target="RunSessionBroker" />
+			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunSessionClientBiDirIO">
@@ -262,9 +248,40 @@
 		</parallel>
 	</target>
 	
-	<target name="test" description="running all session tests">
+	<target name="RunSimpleLinkClient">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.transport.link.LinkTestJMXSender" maxmemory="2048M" failonerror="true">
+			<!--if we run into an out of memory error, dump it-->
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="dovemq.testpath" value="${basedir}/client.log" />
+			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
+			<arg value="pub1" />
+			<arg value="${broker.ip}" />
+			<arg value="${jmxPortNumber}" />
+			<arg value="${param1}" />  <!-- Name of LinkSource -->
+			<arg value="${param2}" />  <!-- Name of LinkTarget -->			
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>	
+	
+	<target name="LinkSimpleTest" description="running link test">
 		<parallel>
-			<antcall target="RunSessionBroker" />
+			<antcall target="RunDoveMQBroker" />
+			<sequential>
+				<sleep seconds="5" />
+				<antcall target="RunSimpleLinkClient">
+					<param name="param1" value="src" />
+					<param name="param2" value="dest" />
+				</antcall>
+				<antcall target="ShutdownBroker" />
+			</sequential>
+		</parallel>
+	</target>	
+	
+	<target name="SessionTest" description="running all session tests">
+		<parallel>
+			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				

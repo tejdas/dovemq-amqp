@@ -3,13 +3,9 @@ package net.dovemq.transport.connection;
 import java.io.IOException;
 import java.util.Arrays;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
+
+import net.dovemq.transport.common.JMXProxyWrapper;
 
 public class ConnectionSysTestJMXProxy
 {
@@ -18,20 +14,16 @@ public class ConnectionSysTestJMXProxy
         if (args.length == 0)
             return;
         
-        JMXServiceURL url = new JMXServiceURL(String.format("service:jmx:rmi:///jndi/rmi://:%s/jmxrmi", args[0]));
-        JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
+        JMXProxyWrapper jmxWrapper = new JMXProxyWrapper(args[0], args[1]);        
 
-        MBeanServerConnection mbsc = jmxc.getMBeanServerConnection();
-        ObjectName mbeanName = new ObjectName("CAMQP:name=ConnectionCommandMBean");
-
-        ConnectionCommandMBean mbeanProxy = JMX.newMBeanProxy(mbsc, mbeanName, ConnectionCommandMBean.class, true);
+        ConnectionCommandMBean mbeanProxy = jmxWrapper.getConnectionBean();
         
         ConnectionSysTestCmdDriver.setCommandExecutor(mbeanProxy);
 
-        String[] cmdArgs = Arrays.copyOfRange(args, 1, args.length);
+        String[] cmdArgs = Arrays.copyOfRange(args, 2, args.length);
         String cmd = cmdArgs[0];
         ConnectionSysTestCmdDriver.processCommand(cmd, cmdArgs, false);
         
-        jmxc.close();
+        jmxWrapper.cleanup();
     }
 }

@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.log4j.Logger;
+
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.CAMQPConnectionProperties;
@@ -22,6 +24,8 @@ import net.dovemq.transport.session.CAMQPSessionManager;
  */
 public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
 {
+    private static final Logger log = Logger.getLogger(CAMQPLinkManager.class);
+
     private static final AtomicLong nextLinkHandle = new AtomicLong(0);
     private static final CAMQPLinkManager linkManager = new CAMQPLinkManager();
     private static CAMQPListener listener = null;
@@ -50,7 +54,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
     public static void initialize(boolean isBroker, String containerId)
     {
         CAMQPConnectionManager.initialize(containerId);
-        System.out.println("container ID: " + CAMQPConnectionManager.getContainerId());
+        log.info("container ID: " + CAMQPConnectionManager.getContainerId());
         
         if (isBroker)
         {
@@ -98,6 +102,11 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         return null;
     }
     
+    public CAMQPLinkEndpoint getLinkEndpoint(String linkName)
+    {
+        return openLinks.get(linkName);
+    }    
+    
     /**
      * Called by Session layer upon the receipt of a Link attach frame.
      */
@@ -142,6 +151,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
     
     void registerLinkEndpoint(String linkName, CAMQPLinkKey linkKey, CAMQPLinkEndpoint linkEndpoint)
     {
+        log.debug("registerLinkEndpoint: linkName: " + linkName + "  LinkKey: " + linkKey.toString());
         openLinks.put(linkName,  linkEndpoint);
         
         synchronized(this)
@@ -150,6 +160,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
             if (linkSetByKey == null)
             {
                 linkSetByKey = new LinkedHashSet<String>();
+                keyToLinkSets.put(linkKey,  linkSetByKey);
             }
             linkSetByKey.add(linkName);
         }
@@ -157,6 +168,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
     
     void unregisterLinkEndpoint(String linkName, CAMQPLinkKey linkKey)
     {
+        log.debug("unregisterLinkEndpoint: linkName: " + linkName + "  LinkKey: " + linkKey.toString());
         synchronized(this)
         {
             Set<String> linkSetByKey = keyToLinkSets.get(linkKey);

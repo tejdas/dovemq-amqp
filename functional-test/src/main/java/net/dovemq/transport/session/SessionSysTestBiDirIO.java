@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import javax.management.MalformedObjectNameException;
 
+import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.ConnectionCommand;
 
