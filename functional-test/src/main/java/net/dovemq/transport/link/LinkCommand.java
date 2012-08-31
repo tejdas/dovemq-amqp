@@ -4,7 +4,8 @@ import java.util.Collection;
 
 public class LinkCommand implements LinkCommandMBean
 {
-
+    private LinkTestTarget linkTargetEndpoint = new LinkTestTarget();
+    
     @Override
     public void registerFactory(String factoryName)
     {
@@ -31,7 +32,8 @@ public class LinkCommand implements LinkCommandMBean
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
         {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
-            linkReceiver.setTarget(new LinkTestTarget());
+            linkReceiver.setTarget(linkTargetEndpoint);
+            linkReceiver.issueLinkCredit(10);
         }
         else
         {
@@ -73,5 +75,32 @@ public class LinkCommand implements LinkCommandMBean
         {
             System.out.println("LinkEndpoint is not a LinkReceiver");           
         }       
+    }
+
+    @Override
+    public void issueLinkCredit(String linkName, long linkCreditBoost)
+    {
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkName);
+        if (linkEndpoint == null)
+        {
+            System.out.println("could not find linkEndpoint");
+            return;
+        }
+        if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
+        {
+            CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
+            linkReceiver.issueLinkCredit(linkCreditBoost);
+        }
+        else
+        {
+            System.out.println("LinkEndpoint is not a LinkReceiver");           
+        }
+    }
+
+    @Override
+    public long getNumMessagesReceived()
+    {
+        // TODO Auto-generated method stub
+        return linkTargetEndpoint.getNumberOfMessagesReceived();
     }
 }

@@ -10,4 +10,6 @@ public interface LinkCommandMBean
     public Collection<String> getLinks();
     public void createSenderLink(String source, String target, String remoteContainerId);
     public void setLinkCreditSteadyState(String linkName, long minLinkCreditThreshold, long linkCreditBoost);
+    public void issueLinkCredit(String linkName, long linkCreditBoost);
+    public long getNumMessagesReceived();
 }

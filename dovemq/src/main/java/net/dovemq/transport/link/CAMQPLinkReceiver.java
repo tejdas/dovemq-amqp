@@ -221,6 +221,27 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
         // TODO Auto-generated method stub
         return session;
     }
+    
+    private void boostLinkCredit(long linkCreditBoost, boolean drain)
+    {
+        CAMQPControlFlow flow = null;
+        synchronized (this)
+        {
+            linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_OFFERED_BY_TARGET;
+            linkCredit = linkCreditBoost;
+            flow = populateFlowFrame();
+            flow.setDrain(drain);
+        }
+        
+        session.sendFlow(flow);
+    }
+
+    
+    @Override
+    public void issueLinkCredit(long linkCreditBoost)
+    {
+        boostLinkCredit(linkCreditBoost, false);
+    }    
 
     /**
      * Called by Link target to asynchronously receive
@@ -233,16 +254,7 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
     @Override
     public void getMessages(int messageCount)
     {
-        CAMQPControlFlow flow = null;
-        synchronized (this)
-        {
-            linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_OFFERED_BY_TARGET;
-            linkCredit = messageCount;
-            flow = populateFlowFrame();
-            flow.setDrain(true);
-        }
-        
-        session.sendFlow(flow);
+        boostLinkCredit(messageCount, true);
     }
 
     /**

@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
+import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -69,7 +70,7 @@ class MockLinkSender implements CAMQPLinkSenderInterface
     }
 }
 
-class SessionCreator extends SessionTestTask implements Runnable
+class SessionCreator extends CAMQPTestTask implements Runnable
 {
     public SessionCreator(String brokerContainerId, SessionCommand localSessionCommand, CountDownLatch startSignal, CountDownLatch doneSignal)
     {
@@ -92,7 +93,7 @@ class SessionCreator extends SessionTestTask implements Runnable
     private final SessionCommand localSessionCommand;
 }
 
-class SessionSender extends SessionTestTask implements Runnable
+class SessionSender extends CAMQPTestTask implements Runnable
 {
     public SessionSender(CAMQPSession session, CountDownLatch startSignal, CountDownLatch doneSignal)
     {

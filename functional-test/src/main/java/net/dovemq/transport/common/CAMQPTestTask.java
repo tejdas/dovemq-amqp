@@ -1,11 +1,11 @@
-package net.dovemq.transport.session;
+package net.dovemq.transport.common;
 
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
-public abstract class SessionTestTask
+public abstract class CAMQPTestTask
 {
-    public SessionTestTask(CountDownLatch startSignal, CountDownLatch doneSignal)
+    public CAMQPTestTask(CountDownLatch startSignal, CountDownLatch doneSignal)
     {
         super();
         this.startSignal = startSignal;
