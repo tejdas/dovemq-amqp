@@ -33,7 +33,7 @@ public class LinkCommand implements LinkCommandMBean
         {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
             linkReceiver.setTarget(linkTargetEndpoint);
-            linkReceiver.issueLinkCredit(10);
+            //linkReceiver.issueLinkCredit(10);
         }
         else
         {

@@ -8,8 +8,9 @@ import java.util.concurrent.Executors;
 
 import javax.management.MalformedObjectNameException;
 import net.dovemq.transport.common.JMXProxyWrapper;
+import net.dovemq.transport.session.SessionCommand;
 
-public class LinkTestJMXSender
+public class MultipleLinkTestJMXSender
 {
     public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
     {
@@ -28,60 +29,52 @@ public class LinkTestJMXSender
         String brokerContainerId = String.format("broker@%s", brokerIp);
         CAMQPLinkManager.initialize(false, publisherName);
         
+        SessionCommand localSessionCommand = new SessionCommand();
+        localSessionCommand.sessionCreate(brokerContainerId);
+        
         LinkCommandMBean mbeanProxy = jmxWrapper.getLinkBean();
         
-        CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target);
-        linkSender.setMaxAvailableLimit(16348);
-        System.out.println("Sender Link created between : " + source + "  and: " + target);
-        
-        String linkName = linkSender.getLinkName();
-        
-        mbeanProxy.registerTarget(source, target);
-        //mbeanProxy.issueLinkCredit(linkName, 500);
-        mbeanProxy.setLinkCreditSteadyState(linkName, 100, 500);
-        
-        Thread.sleep(2000);
-
-        int numThreads = 10;
+        int numThreads = 5;
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch doneSignal = new CountDownLatch(numThreads);
-        int numMessagesExpected = 1000;
+        int numMessagesExpected = 500;
         
+        LinkTestMsgSender[] senders = new LinkTestMsgSender[numThreads];
         for (int i = 0; i < numThreads; i++)
         {
-            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal, doneSignal, linkSender, numMessagesExpected);
+            String src = String.format("%s%d", source, i);
+            String targ = String.format("%s%d", target, i);
+            LinkTestMsgSender sender = new LinkTestMsgSender(startSignal, doneSignal, src, targ, brokerContainerId, numMessagesExpected, mbeanProxy);
+            senders[i] = sender;
             executor.submit(sender);
         }
-        
-        startSignal.countDown();
 
         Random randomGenerator = new Random();
+        int iterator = 0;
         while (true)
         {
-            //int randomInt = randomGenerator.nextInt(100);
+            int randomInt = randomGenerator.nextInt(50);
             long messagesReceived = mbeanProxy.getNumMessagesReceived();
-            //System.out.println("got messages: " + messagesReceived + " issuing link credit: " + randomInt);
-            
-            System.out.println("got messages: " + messagesReceived);
+            System.out.println("got messages: " + messagesReceived + " issuing link credit: " + randomInt);
             if (messagesReceived == numMessagesExpected * numThreads)
             {
                 break;
             }
-            Thread.sleep(1000);
+            Thread.sleep(500);
 
-            //mbeanProxy.issueLinkCredit(linkName, randomInt);
-            
+            LinkTestMsgSender sender = senders[iterator % numThreads];
+            iterator++;
+            mbeanProxy.issueLinkCredit(sender.getLinkSender().getLinkName(), randomInt);            
         }
+        
+        startSignal.countDown();
         
         doneSignal.await();
         Thread.sleep(2000);
         executor.shutdown();
         
-        linkSender.destroyLink();
-
         CAMQPLinkManager.shutdown();        
-        
         jmxWrapper.cleanup();
     }
 }

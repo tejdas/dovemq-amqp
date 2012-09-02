@@ -64,19 +64,8 @@ public class SessionSysTestCmdDriver
             {
                 return true;
             }            
-            CAMQPSession session =
-                CAMQPSessionFactory.createCAMQPSession();
-            try
-            {
-                session.open(argList[1]);
-                System.out.println("Session opened");
-            } catch (CAMQPSessionBeginException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                System.out.println("Could not open the session to: " + argList[1]); 
-            }
-           
+            CAMQPSessionFactory.getOrCreateCAMQPSession(argList[1]);
+            System.out.println("Session opened");
             return true;
         }       
         else if (cmd.equalsIgnoreCase("sessionCreateMT"))

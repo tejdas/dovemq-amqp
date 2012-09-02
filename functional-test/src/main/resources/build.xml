@@ -248,9 +248,9 @@
 		</parallel>
 	</target>
 	
-	<target name="RunSimpleLinkClient">
+	<target name="RunLinksClient">
 		<echo>...Run DoveMQ Link client</echo>
-		<java fork="true" classname="net.dovemq.transport.link.LinkTestJMXSender" maxmemory="2048M" failonerror="true">
+		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -263,21 +263,37 @@
 			<arg value="${param2}" />  <!-- Name of LinkTarget -->			
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
-	</target>	
+	</target>
 	
 	<target name="LinkSimpleTest" description="running link test">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
-				<antcall target="RunSimpleLinkClient">
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestJMXSender"/>
 					<param name="param1" value="src" />
 					<param name="param2" value="dest" />
 				</antcall>
 				<antcall target="ShutdownBroker" />
 			</sequential>
 		</parallel>
-	</target>	
+	</target>
+	
+	<target name="LinkTestMultipleLinks" description="running link test">
+		<parallel>
+			<antcall target="RunDoveMQBroker" />
+			<sequential>
+				<sleep seconds="5" />
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.MultipleLinkTestJMXSender"/>
+					<param name="param1" value="src" />
+					<param name="param2" value="dest" />
+				</antcall>
+				<antcall target="ShutdownBroker" />
+			</sequential>
+		</parallel>
+	</target>
 	
 	<target name="SessionTest" description="running all session tests">
 		<parallel>

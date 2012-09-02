@@ -16,17 +16,7 @@ public class SessionCommand implements SessionCommandMBean
     @Override
     public void sessionCreate(String targetContainerId)
     {
-        CAMQPSession session =
-            CAMQPSessionFactory.createCAMQPSession();
-        try
-        {
-            session.open(targetContainerId);
-        } catch (CAMQPSessionBeginException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            System.out.println("Could not open the session to: " + targetContainerId); 
-        }
+        CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
     }
 
     @Override
