@@ -15,11 +15,8 @@ public class LinkTestUtils
         for (int i = 0; i < numMessagesToSend; i++)
         {
             int randomInt = randomGenerator.nextInt(20);
-            String deliveryTag = UUID.randomUUID().toString();
-            int sectionSize = 256 * (randomGenerator.nextInt(10) + 1);
-            String str = RandomStringUtils.randomAlphanumeric(sectionSize);
-            CAMQPMessagePayload payload = new CAMQPMessagePayload(str.getBytes());            
-            linkSender.sendMessage(deliveryTag, payload);
+            CAMQPMessage message = createMessage(randomGenerator);
+            linkSender.sendMessage(message.getDeliveryTag(), message.getPayload());
             try
             {
                 Thread.sleep(randomInt);
@@ -30,5 +27,14 @@ public class LinkTestUtils
                 e.printStackTrace();
             }
         }
+    }
+    
+    static CAMQPMessage createMessage(Random randomGenerator)
+    {
+        String deliveryTag = UUID.randomUUID().toString();
+        int sectionSize = 256 * (randomGenerator.nextInt(10) + 1);
+        String str = RandomStringUtils.randomAlphanumeric(sectionSize);
+        CAMQPMessagePayload payload = new CAMQPMessagePayload(str.getBytes()); 
+        return new CAMQPMessage(deliveryTag, payload);
     }
 }

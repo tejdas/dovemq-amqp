@@ -1,16 +1,39 @@
 package net.dovemq.transport.link;
 
 import java.io.IOException;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.management.MalformedObjectNameException;
-import net.dovemq.transport.common.JMXProxyWrapper;
 
-public class LinkTestJMXSender
+import net.dovemq.transport.common.CAMQPTestTask;
+import net.dovemq.transport.common.JMXProxyWrapper;
+import static org.junit.Assert.assertTrue;
+
+public class LinkTestMultipleSendersSharingOneLink
 {
+    private static class LinkTestMessageSender extends CAMQPTestTask implements Runnable
+    {
+        private final CAMQPLinkSender linkSender;
+        private final int numMessagesToSend;
+        public LinkTestMessageSender(CountDownLatch startSignal,
+                CountDownLatch doneSignal, CAMQPLinkSender linkSender, int numMessagesToSend)
+        {
+            super(startSignal, doneSignal);
+            this.linkSender = linkSender;
+            this.numMessagesToSend = numMessagesToSend;
+        }
+
+        @Override
+        public void run()
+        {
+            waitForReady();
+            LinkTestUtils.sendMessagesOnLink(linkSender, numMessagesToSend);
+            done();
+        }
+    }
+
     public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
     {
         /*
@@ -37,7 +60,9 @@ public class LinkTestJMXSender
         String linkName = linkSender.getLinkName();
         
         mbeanProxy.registerTarget(source, target);
-        //mbeanProxy.issueLinkCredit(linkName, 500);
+        /*
+         * ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE
+         */
         mbeanProxy.setLinkCreditSteadyState(linkName, 100, 500);
         
         Thread.sleep(2000);
@@ -55,24 +80,18 @@ public class LinkTestJMXSender
         }
         
         startSignal.countDown();
-
-        Random randomGenerator = new Random();
         while (true)
         {
-            //int randomInt = randomGenerator.nextInt(100);
             long messagesReceived = mbeanProxy.getNumMessagesReceived();
-            //System.out.println("got messages: " + messagesReceived + " issuing link credit: " + randomInt);
-            
             System.out.println("got messages: " + messagesReceived);
             if (messagesReceived == numMessagesExpected * numThreads)
             {
                 break;
             }
             Thread.sleep(1000);
-
-            //mbeanProxy.issueLinkCredit(linkName, randomInt);
-            
         }
+        
+        assertTrue(mbeanProxy.getNumMessagesReceived() == numMessagesExpected * numThreads);
         
         doneSignal.await();
         Thread.sleep(2000);
@@ -81,7 +100,7 @@ public class LinkTestJMXSender
         linkSender.destroyLink();
 
         CAMQPLinkManager.shutdown();        
-        
+        mbeanProxy.reset();
         jmxWrapper.cleanup();
     }
 }

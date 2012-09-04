@@ -17,6 +17,11 @@ import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
 
+enum LinkSenderType
+{
+    PUSH,
+    PULL
+}
 /**
  * This class is used
  * @author tejdas
@@ -35,6 +40,8 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         return linkManager;
     }
 
+    private LinkSenderType linkSenderType = LinkSenderType.PULL;
+    
     private final LinkHandshakeTracker linkHandshakeTracker = new LinkHandshakeTracker();
     
     private final ConcurrentMap<String, CAMQPLinkEndpoint> openLinks = new ConcurrentHashMap<String, CAMQPLinkEndpoint>();
@@ -138,7 +145,14 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
             /*
              * Peer is a Link receiver.
              */
-            return new CAMQPLinkSender(session);
+            if (linkSenderType == LinkSenderType.PUSH)
+            {
+                return new CAMQPLinkSender(session);
+            }
+            else
+            {
+                return new CAMQPLinkAsyncSender(session);
+            }
         }
         else
         {

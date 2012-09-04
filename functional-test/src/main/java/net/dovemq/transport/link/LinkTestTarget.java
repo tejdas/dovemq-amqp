@@ -11,7 +11,6 @@ public class LinkTestTarget implements CAMQPTargetInterface
     @Override
     public void messageReceived(String deliveryTag, CAMQPMessagePayload message)
     {
-        //System.out.println("messageReceived: " + deliveryTag);
         messageCount.incrementAndGet();
     }
 
@@ -20,8 +19,6 @@ public class LinkTestTarget implements CAMQPTargetInterface
             int oldState,
             int newState)
     {
-        // TODO Auto-generated method stub
-        
     }
     
     public long getNumberOfMessagesReceived()

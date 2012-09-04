@@ -42,6 +42,8 @@
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName ConnectionTest</echo>
 		<echo>To run all Session tests:</echo>
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName SessionTest</echo>
+		<echo>To run all Link tests:</echo>
+		<echo>ant -Dbroker.ip=FullyQualifiedHostName LinkTest</echo>
 		<echo>To run Broker standalone:</echo>
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName RunDoveMQBroker</echo>		
 	</target>
@@ -271,7 +273,7 @@
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestJMXSender"/>
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneLink"/>
 					<param name="param1" value="src" />
 					<param name="param2" value="dest" />
 				</antcall>
@@ -286,7 +288,22 @@
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.MultipleLinkTestJMXSender"/>
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing"/>
+					<param name="param1" value="src" />
+					<param name="param2" value="dest" />
+				</antcall>
+				<antcall target="ShutdownBroker" />
+			</sequential>
+		</parallel>
+	</target>
+	
+	<target name="LinkTestReceiver" description="running link test">
+		<parallel>
+			<antcall target="RunDoveMQBroker" />
+			<sequential>
+				<sleep seconds="5" />
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestReceiver"/>
 					<param name="param1" value="src" />
 					<param name="param2" value="dest" />
 				</antcall>
@@ -327,6 +344,35 @@
 
 				<antcall target="RunSessionClientBiDirIO">
 					<param name="param1" value="SysTestDelayedAckLinkReceiver" />
+				</antcall>
+
+				<antcall target="ShutdownBroker" />
+			</sequential>
+		</parallel>
+	</target>
+	
+	<target name="LinkTest" description="running all link tests">
+		<parallel>
+			<antcall target="RunDoveMQBroker" />
+			<sequential>
+				<sleep seconds="5" />
+				
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing"/>
+					<param name="param1" value="src" />
+					<param name="param2" value="dest" />
+				</antcall>
+				
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneLink"/>
+					<param name="param1" value="src" />
+					<param name="param2" value="dest" />
+				</antcall>
+				
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestReceiver"/>
+					<param name="param1" value="src" />
+					<param name="param2" value="dest" />
 				</antcall>
 
 				<antcall target="ShutdownBroker" />

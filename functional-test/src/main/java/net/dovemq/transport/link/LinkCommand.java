@@ -4,7 +4,7 @@ import java.util.Collection;
 
 public class LinkCommand implements LinkCommandMBean
 {
-    private LinkTestTarget linkTargetEndpoint = new LinkTestTarget();
+    private volatile LinkTestTarget linkTargetEndpoint = new LinkTestTarget();
     
     @Override
     public void registerFactory(String factoryName)
@@ -14,10 +14,23 @@ public class LinkCommand implements LinkCommandMBean
     }
 
     @Override
-    public void registerSource(String linkSource, String linkTarget)
+    public void registerSource(String linkSource, String linkTarget, long initialMessageCount)
     {
-        // TODO Auto-generated method stub
-        
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
+        if (linkEndpoint == null)
+        {
+            System.out.println("could not find linkEndpoint");
+            return;
+        }
+        if (linkEndpoint.getRole() == LinkRole.LinkSender)
+        {
+            CAMQPLinkAsyncSender linkSender = (CAMQPLinkAsyncSender) linkEndpoint;
+            linkSender.setSource(new LinkTestSource(initialMessageCount));
+        }
+        else
+        {
+            System.out.println("LinkEndpoint is not a LinkSender");           
+        }
     }
 
     @Override
@@ -32,8 +45,8 @@ public class LinkCommand implements LinkCommandMBean
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
         {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
+            
             linkReceiver.setTarget(linkTargetEndpoint);
-            //linkReceiver.issueLinkCredit(10);
         }
         else
         {
@@ -100,7 +113,12 @@ public class LinkCommand implements LinkCommandMBean
     @Override
     public long getNumMessagesReceived()
     {
-        // TODO Auto-generated method stub
         return linkTargetEndpoint.getNumberOfMessagesReceived();
+    }
+
+    @Override
+    public void reset()
+    {
+        linkTargetEndpoint.resetNumberOfMessagesReceived();
     }
 }
