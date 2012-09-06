@@ -35,6 +35,11 @@ public final class CAMQPSessionFactory
         return sessionList.get(0); // TODO get the session with minimal linkReceivers attached       
     }
     
+    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId)
+    {
+         return sessionFactory.createSession(targetContainerId);
+    }    
+    
     private CAMQPSession createSession(String targetContainerId)
     {
         CAMQPSession session = new CAMQPSession();

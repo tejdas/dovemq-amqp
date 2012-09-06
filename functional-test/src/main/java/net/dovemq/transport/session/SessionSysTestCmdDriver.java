@@ -64,7 +64,7 @@ public class SessionSysTestCmdDriver
             {
                 return true;
             }            
-            CAMQPSessionFactory.getOrCreateCAMQPSession(argList[1]);
+            CAMQPSessionFactory.createCAMQPSession(argList[1]);
             System.out.println("Session opened");
             return true;
         }       

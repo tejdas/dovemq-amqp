@@ -16,7 +16,7 @@ public class SessionCommand implements SessionCommandMBean
     @Override
     public void sessionCreate(String targetContainerId)
     {
-        CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
+        CAMQPSessionFactory.createCAMQPSession(targetContainerId);
     }
 
     @Override
