@@ -19,13 +19,13 @@ import net.dovemq.transport.session.CAMQPSessionManager;
  * @author tejdas
  *
  */
-class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
+public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkSender.class);
     
     private CAMQPSourceInterface source = null;
     
-    void setSource(CAMQPSourceInterface source)
+    public void setSource(CAMQPSourceInterface source)
     {
         this.source = source;
     }
@@ -58,7 +58,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     
     private long maxAvailableLimit;
     
-    void setMaxAvailableLimit(long maxAvailableLimit)
+    public void setMaxAvailableLimit(long maxAvailableLimit)
     {
         this.maxAvailableLimit = maxAvailableLimit;
     }

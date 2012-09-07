@@ -40,10 +40,10 @@ enum ReceiverLinkCreditPolicy
  * Implementation of AMQP Link Receiver.
  * @author tejdas
  */
-class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverInterface
+public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverInterface
 {
     private CAMQPTargetInterface target = null;
-    void setTarget(CAMQPTargetInterface target)
+    public void setTarget(CAMQPTargetInterface target)
     {
         this.target = target;
     }

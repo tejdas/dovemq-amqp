@@ -35,7 +35,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
     private static final CAMQPLinkManager linkManager = new CAMQPLinkManager();
     private static CAMQPListener listener = null;
     
-    static CAMQPLinkManager getLinkmanager()
+    public static CAMQPLinkManager getLinkmanager()
     {
         return linkManager;
     }
