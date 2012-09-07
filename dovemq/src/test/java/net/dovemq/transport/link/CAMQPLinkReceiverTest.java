@@ -1,5 +1,6 @@
 package net.dovemq.transport.link;
 
+import java.util.Collection;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -26,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -64,7 +66,7 @@ public class CAMQPLinkReceiverTest
     {
         public AtomicInteger numMessagesReceived = new AtomicInteger(0);
         @Override
-        public void messageReceived(String deliveryTag, CAMQPMessagePayload payload)
+        public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode)
         {
             numMessagesReceived.incrementAndGet();
         }
@@ -74,6 +76,15 @@ public class CAMQPLinkReceiverTest
         {
             // TODO Auto-generated method stub
             
+        }
+
+        @Override
+        public Collection<Long> processDisposition(Collection<Long> deliveryIds,
+                boolean settleMode,
+                Object newState)
+        {
+            // TODO Auto-generated method stub
+            return null;
         }      
     }
     

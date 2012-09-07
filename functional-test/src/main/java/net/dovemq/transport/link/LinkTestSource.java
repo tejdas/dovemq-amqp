@@ -1,7 +1,11 @@
 package net.dovemq.transport.link;
 
+import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 public class LinkTestSource implements CAMQPSourceInterface
 {
@@ -29,5 +33,28 @@ public class LinkTestSource implements CAMQPSourceInterface
     @Override
     public void messageStateChanged(String deliveryId, int oldState, int newState)
     {
+    }
+
+    @Override
+    public void messageSent(long deliveryId, CAMQPMessage message)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds,
+            boolean settleMode,
+            Object newState)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void sendMessage(CAMQPMessagePayload message)
+    {
+        // TODO Auto-generated method stub
+        
     }
 }

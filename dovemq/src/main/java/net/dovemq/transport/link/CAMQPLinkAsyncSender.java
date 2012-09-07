@@ -1,11 +1,11 @@
 package net.dovemq.transport.link;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.jcip.annotations.GuardedBy;
 
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
@@ -21,7 +21,6 @@ import net.dovemq.transport.session.CAMQPSessionManager;
  */
 class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
-    private final CAMQPSessionInterface session;
     private CAMQPSourceInterface source = null;
     
     void setSource(CAMQPSourceInterface source)
@@ -29,8 +28,6 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         this.source = source;
     }
 
-    private final Map<String, CAMQPMessagePayload> unsettledDeliveries = new ConcurrentHashMap<String, CAMQPMessagePayload>();
-    
     /*
      * messageOutstanding is set to true before calling CAMQPSessionInterface.sendTransfer()
      * 
@@ -45,16 +42,9 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     
     public CAMQPLinkAsyncSender(CAMQPSessionInterface session)
     {
-        super();
-        this.session = session;
+        super(session);
     }
     
-    @Override
-    public CAMQPSessionInterface getSession()
-    {
-        return session;
-    }
-
     @Override
     public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
     {
@@ -221,9 +211,8 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
             if (message != null)
             {
                 deliveryTag = message.getDeliveryTag();
-                unsettledDeliveries.put(deliveryTag, message.getPayload());
                 messageOutstanding.set(true);
-                send(deliveryTag, message.getPayload());
+                send(deliveryTag, message.getPayload(), this, source);
             }
             
             synchronized (this)
@@ -253,18 +242,6 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         }
     }
     
-    private void send(String deliveryTag, CAMQPMessagePayload message)
-    {
-        long deliveryId = session.getNextDeliveryId();
-        CAMQPControlTransfer transferFrame = new CAMQPControlTransfer();
-        transferFrame.setDeliveryId(deliveryId);
-        transferFrame.setMore(false);
-        transferFrame.setHandle(linkHandle);
-        transferFrame.setDeliveryTag(deliveryTag.getBytes());
- 
-        session.sendTransfer(transferFrame, message, this);
-    }
-    
     @GuardedBy("this")
     private CAMQPControlFlow processDrainRequested(boolean availableKnown)
     {
@@ -283,8 +260,18 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     }
 
     @Override
-    LinkRole getRole()
+    public LinkRole getRole()
     {
         return LinkRole.LinkSender;
+    }
+
+    @Override
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean settleMode, Object newState)
+    {
+        if (source != null)
+        {
+            return source.processDisposition(deliveryIds, settleMode, newState);
+        }
+        return deliveryIds;
     }
 }

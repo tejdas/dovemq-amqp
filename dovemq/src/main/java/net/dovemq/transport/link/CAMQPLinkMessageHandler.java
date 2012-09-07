@@ -1,5 +1,7 @@
 package net.dovemq.transport.link;
 
+import java.util.Collection;
+
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
@@ -15,6 +17,10 @@ public interface CAMQPLinkMessageHandler
     public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload);
     
     public void flowReceived(CAMQPControlFlow flow);
+    
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean settleMode, Object newState);
 
     public void sessionClosed();
+    
+    public LinkRole getRole();
 }

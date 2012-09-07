@@ -182,6 +182,12 @@ public class CAMQPLinkSenderTest
         public void ackTransfer(long transferId)
         {
         }
+
+        @Override
+        public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState)
+        {
+            // TODO Auto-generated method stub
+        }
     }
     
     private static final MockLinkReceiverFactory factory = new MockLinkReceiverFactory();

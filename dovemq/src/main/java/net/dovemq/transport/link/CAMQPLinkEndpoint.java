@@ -7,19 +7,17 @@ import org.apache.log4j.Logger;
 
 import net.jcip.annotations.GuardedBy;
 
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.dovemq.transport.frame.CAMQPMessagePayload;
+import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
+import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionSource;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionTarget;
 import net.dovemq.transport.session.CAMQPSessionInterface;
-
-enum LinkRole
-{
-    LinkSender,
-    LinkReceiver
-}
 
 /**
  * This class is extended by Link Sender and Link Receiver
@@ -29,11 +27,9 @@ enum LinkRole
  * 
  * @author tejdas
  */
-abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
+public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkEndpoint.class);
-    
-    abstract LinkRole getRole();
     
     private final String roleAsString;
     private String linkName;
@@ -61,10 +57,15 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     protected long deliveryCount = 0;
     protected long linkCredit = 0;
     protected long available = 0;
+    
+    protected final CAMQPSessionInterface session;
+    
+    private final CAMQPLinkProperties linkProperties = new CAMQPLinkProperties();
 
-    public CAMQPLinkEndpoint()
+    public CAMQPLinkEndpoint(CAMQPSessionInterface session)
     {
         super();
+        this.session = session;
         this.roleAsString = (getRole() == LinkRole.LinkSender)? "LinkSender" : "LinkReceiver";
         linkStateActor = new CAMQPLinkStateActor(this);
     }
@@ -182,7 +183,10 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         log.debug(roleAsString + " destroyed between source: " + sourceAddress + " and target: " + targetAddress + " . Initiated by: " + initiatedBy);
     }
 
-    public abstract CAMQPSessionInterface getSession();
+    CAMQPSessionInterface getSession()
+    {
+        return session;
+    }
   
     /**
      * Process an incoming Link attach frame.
@@ -283,4 +287,45 @@ abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         flow.setLinkCredit(linkCredit);
         return flow;
     }
+    
+    public void sendDisposition(long deliveryId, boolean settleMode, Object newState)
+    {
+        session.sendDisposition(deliveryId, settleMode, (getRole() == LinkRole.LinkSender), newState);
+    }
+    
+    /**
+     * Send the message on the underlying AMQP session
+     * as a transfer frame.
+     * 
+     * @param deliveryTag
+     * @param message
+     * @param linkSender
+     */
+    void send(String deliveryTag, CAMQPMessagePayload message, CAMQPLinkSenderInterface linkSender, CAMQPSourceInterface messageSource)
+    {
+        /*
+         * TODO: fragment the message into multiple transfer frames
+         * if the message size is greater than the negotiated transfer
+         * frame size.
+         */
+        long deliveryId = session.getNextDeliveryId();
+        CAMQPControlTransfer transferFrame = new CAMQPControlTransfer();
+        transferFrame.setDeliveryId(deliveryId);
+        transferFrame.setMore(false);
+        transferFrame.setHandle(linkHandle);
+        transferFrame.setDeliveryTag(deliveryTag.getBytes());
+
+        boolean settled = (linkProperties.getDeliveryPolicy() == MessageDeliveryPolicy.AtmostOnce);
+        transferFrame.setSettled(settled);
+        
+        int receiverSettleMode = settled? CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST : CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
+        transferFrame.setRcvSettleMode(receiverSettleMode);
+        
+        if (messageSource != null)
+        {
+            messageSource.messageSent(deliveryId, new CAMQPMessage(deliveryTag, message));
+        }
+ 
+        session.sendTransfer(transferFrame, message, linkSender);
+    }    
 }

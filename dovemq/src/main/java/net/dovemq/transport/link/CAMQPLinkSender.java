@@ -1,13 +1,13 @@
 package net.dovemq.transport.link;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.log4j.Logger;
 
 import net.jcip.annotations.GuardedBy;
 
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
@@ -23,9 +23,12 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkSender.class);
     
-    private final CAMQPSessionInterface session;
+    private CAMQPSourceInterface source = null;
     
-    private final Map<String, CAMQPMessagePayload> unsettledDeliveries = new ConcurrentHashMap<String, CAMQPMessagePayload>();
+    void setSource(CAMQPSourceInterface source)
+    {
+        this.source = source;
+    }
     
     /**
      * Messages that are waiting to be sent because no link credit is available,
@@ -62,17 +65,10 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
 
     public CAMQPLinkSender(CAMQPSessionInterface session)
     {
-        super();
-        this.session = session;
+        super(session);
         maxAvailableLimit = CAMQPLinkConstants.DEFAULT_MAX_AVAILABLE_MESSAGES_AT_SENDER;
     }
     
-    @Override
-    public CAMQPSessionInterface getSession()
-    {
-        return session;
-    }
-
     @Override
     public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
     {
@@ -171,7 +167,6 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
                 return;
             }
             available++;
-            unsettledDeliveries.put(deliveryTag, message);
             
             if (sendInProgress || (linkCredit <= unsentMessagesAtSession))
             {
@@ -186,7 +181,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
             unsentMessagesAtSession++;
         }
     
-        send(deliveryTag, message);
+        send(deliveryTag, message, this, source);
 
         boolean parkedMessages = false;
         synchronized (this)
@@ -316,7 +311,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
                 }
             }
             
-            send(message.getDeliveryTag(), message.getPayload());
+            send(message.getDeliveryTag(), message.getPayload(), this, source);
         }
         
         if (flow != null)
@@ -325,30 +320,6 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
         }
     }
  
-    /**
-     * Send the message on the underlying AMQP session
-     * as a transfer frame.
-     * 
-     * @param deliveryTag
-     * @param message
-     */
-    private void send(String deliveryTag, CAMQPMessagePayload message)
-    {
-        /*
-         * TODO: fragment the message into multiple transfer frames
-         * if the message size is greater than the negotiated transfer
-         * frame size.
-         */
-        long deliveryId = session.getNextDeliveryId();
-        CAMQPControlTransfer transferFrame = new CAMQPControlTransfer();
-        transferFrame.setDeliveryId(deliveryId);
-        transferFrame.setMore(false);
-        transferFrame.setHandle(linkHandle);
-        transferFrame.setDeliveryTag(deliveryTag.getBytes());
- 
-        session.sendTransfer(transferFrame, message, this);
-    }
-    
     @GuardedBy("this")
     private CAMQPControlFlow processDrainRequested()
     {
@@ -383,8 +354,18 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     }
 
     @Override
-    LinkRole getRole()
+    public LinkRole getRole()
     {
         return LinkRole.LinkSender;
+    }
+
+    @Override
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean settleMode, Object newState)
+    {
+        if (source != null)
+        {
+            return source.processDisposition(deliveryIds, settleMode, newState);
+        }
+        return deliveryIds;
     }
 }

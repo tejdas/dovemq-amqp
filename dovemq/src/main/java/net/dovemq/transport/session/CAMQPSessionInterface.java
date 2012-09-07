@@ -25,4 +25,6 @@ public interface CAMQPSessionInterface
     public void sendFlow(CAMQPControlFlow flow);
     
     public void ackTransfer(long transferId);
+    
+    public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState);
 }

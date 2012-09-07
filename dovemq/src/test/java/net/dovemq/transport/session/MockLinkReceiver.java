@@ -1,10 +1,12 @@
 package net.dovemq.transport.session;
 
+import java.util.Collection;
 import java.util.Random;
 
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkMessageHandler;
 import net.dovemq.transport.link.CAMQPLinkMessageHandlerFactory;
+import net.dovemq.transport.link.LinkRole;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
@@ -120,6 +122,22 @@ public class MockLinkReceiver implements CAMQPLinkMessageHandler, Runnable
                 lastTransferIdAcked = lastReceived;
             }
         }
+    }
+
+    @Override
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds,
+            boolean settleMode,
+            Object newState)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public LinkRole getRole()
+    {
+        // TODO Auto-generated method stub
+        return LinkRole.LinkReceiver;
     }
 }
 

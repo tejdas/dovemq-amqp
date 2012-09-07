@@ -1,7 +1,9 @@
 package net.dovemq.transport.link;
 
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 public class LinkTestTarget implements CAMQPTargetInterface
@@ -9,7 +11,7 @@ public class LinkTestTarget implements CAMQPTargetInterface
     private final AtomicLong messageCount = new AtomicLong(0);
     
     @Override
-    public void messageReceived(String deliveryTag, CAMQPMessagePayload message)
+    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode)
     {
         messageCount.incrementAndGet();
     }
@@ -29,5 +31,14 @@ public class LinkTestTarget implements CAMQPTargetInterface
     public void resetNumberOfMessagesReceived()
     {
        messageCount.set(0);
+    }
+
+    @Override
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds,
+            boolean settleMode,
+            Object newState)
+    {
+        // TODO Auto-generated method stub
+        return null;
     }    
 }

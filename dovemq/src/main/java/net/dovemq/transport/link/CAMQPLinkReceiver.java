@@ -1,5 +1,8 @@
 package net.dovemq.transport.link;
 
+import java.util.Collection;
+
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
@@ -39,7 +42,6 @@ enum ReceiverLinkCreditPolicy
  */
 class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverInterface
 {
-    private final CAMQPSessionInterface session;
     private CAMQPTargetInterface target = null;
     void setTarget(CAMQPTargetInterface target)
     {
@@ -67,8 +69,7 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
 
     public CAMQPLinkReceiver(CAMQPSessionInterface session)
     {
-        super();
-        this.session = session;
+        super(session);
     }
 
     @Override
@@ -153,7 +154,7 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
     private void deliverMessage(CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
     {
         String deliveryTag = new String(transferFrame.getDeliveryTag());
-        target.messageReceived(deliveryTag, payload);
+        target.messageReceived(transferFrame.getDeliveryId(), deliveryTag, payload, transferFrame.getSettled(), transferFrame.getRcvSettleMode());
     }
  
     /**
@@ -215,13 +216,6 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
         // TODO Auto-generated method stub
     }
 
-    @Override
-    public CAMQPSessionInterface getSession()
-    {
-        // TODO Auto-generated method stub
-        return session;
-    }
-    
     private void boostLinkCredit(long linkCreditBoost, boolean drain)
     {
         CAMQPControlFlow flow = null;
@@ -236,7 +230,6 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
         session.sendFlow(flow);
     }
 
-    
     @Override
     public void issueLinkCredit(long linkCreditBoost)
     {
@@ -314,8 +307,18 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
     }
 
     @Override
-    LinkRole getRole()
+    public LinkRole getRole()
     {
         return LinkRole.LinkReceiver;
+    }
+
+    @Override
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean settleMode, Object newState)
+    {
+        if (target != null)
+        {
+            return target.processDisposition(deliveryIds, settleMode, newState);
+        }
+        return deliveryIds;
     }
 }

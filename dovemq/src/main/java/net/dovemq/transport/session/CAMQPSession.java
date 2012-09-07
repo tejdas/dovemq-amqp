@@ -1,7 +1,10 @@
 package net.dovemq.transport.session;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -25,11 +28,13 @@ import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkMessageHandler;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
+import net.dovemq.transport.link.LinkRole;
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.CAMQPSyncDecoder;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlBegin;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
+import net.dovemq.transport.protocol.data.CAMQPControlDisposition;
 import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
@@ -943,6 +948,43 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 linkReceiver.detachReceived(data);
             }
         }
+        else if (controlName.equalsIgnoreCase(CAMQPControlDisposition.descriptor))
+        {
+            dispatchDispositionFrame(decoder);
+         }        
+    }
+
+    private void dispatchDispositionFrame(CAMQPSyncDecoder decoder)
+    {
+        CAMQPControlDisposition data = CAMQPControlDisposition.decode(decoder);
+        Collection<Long> disposedIds = new LinkedList<Long>();
+        
+        Object newState = data.isSetState()? data.getState() : null;
+        boolean settleMode = data.isSetSettled()? data.getSettled() : null;
+        boolean role = data.getRole();
+        long firstDisposedId = data.getFirst();
+        long lastDisposedId = data.isSetLast()? data.getLast() : data.getFirst();
+        
+        for (long disposedId = firstDisposedId; disposedId <= lastDisposedId; disposedId++)
+        {
+            disposedIds.add(disposedId);
+        }
+        
+        LinkRole expectedRole = role? LinkRole.LinkSender : LinkRole.LinkReceiver; 
+        Set<Long> linkReceiverKeys = linkReceivers.keySet();
+        for (long linkReceiverKey : linkReceiverKeys)
+        {
+            if (disposedIds.isEmpty())
+            {
+                break;
+            }
+            CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(linkReceiverKey);
+
+            if ((linkReceiver != null) && linkReceiver.getRole() == expectedRole)
+            {
+                disposedIds = linkReceiver.dispositionReceived(disposedIds, settleMode, newState);
+            }
+        }
     }
     
     private void processSessionControlFrame(String controlName, CAMQPFrame frame)
@@ -986,5 +1028,28 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         {
             incomingWindow++;
         }      
+    }
+
+    @Override
+    public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState)
+    {
+        CAMQPChannel channel = getChannel();
+        if (channel == null)
+        {
+            return;
+        }
+
+        CAMQPControlDisposition disposition = new CAMQPControlDisposition();
+        disposition.setBatchable(false);
+        disposition.setFirst(deliveryId);
+        disposition.setLast(deliveryId);
+        disposition.setRole(role);
+        disposition.setSettled(settleMode);
+        disposition.setState(newState);
+        
+        CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
+        CAMQPControlDisposition.encode(encoder, disposition);
+        ChannelBuffer encodedTransfer = encoder.getEncodedBuffer();
+        channel.getAmqpConnection().sendFrame(encodedTransfer, channel.getChannelId());
     }
 }

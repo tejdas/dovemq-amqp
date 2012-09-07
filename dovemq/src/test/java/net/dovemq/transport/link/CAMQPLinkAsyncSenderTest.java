@@ -1,5 +1,6 @@
 package net.dovemq.transport.link;
 
+import java.util.Collection;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -26,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -79,6 +81,28 @@ public class CAMQPLinkAsyncSenderTest
         {
             // TODO Auto-generated method stub
             
+        }
+
+        @Override
+        public void messageSent(long deliveryId, CAMQPMessage message)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public Collection<Long> processDisposition(Collection<Long> deliveryIds,
+                boolean settleMode,
+                Object newState)
+        {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void sendMessage(CAMQPMessagePayload message)
+        {
+            // TODO Auto-generated method stub
         }       
     }
     
