@@ -83,7 +83,7 @@ class CAMQPConnectionStateActor
 
     private ScheduledFuture<?> scheduledFuture = null;
 
-    private CMQPHeartbeatProcessor heartbeatProcessor = null;
+    private CAMQPHeartbeatProcessor heartbeatProcessor = null;
 
     private CAMQPConnectionProperties connectionProps = null;
 
@@ -114,7 +114,7 @@ class CAMQPConnectionStateActor
         }
         key.setEphemeralPort(ephemeralPort);
         sender = new CAMQPSender(channel);
-        heartbeatProcessor = new CMQPHeartbeatProcessor(this, sender);
+        heartbeatProcessor = new CAMQPHeartbeatProcessor(this, sender);
     }
 
     private boolean processingQueuedEvents = false;
@@ -483,7 +483,8 @@ class CAMQPConnectionStateActor
             CAMQPConnectionManager.connectionAccepted(this, key);
         }
 
-        scheduledFuture = CAMQPConnectionManager.getScheduledExecutor().scheduleAtFixedRate(heartbeatProcessor, CAMQPConnectionConstants.HEARTBEAT_PERIOD, CAMQPConnectionConstants.HEARTBEAT_PERIOD, TimeUnit.MILLISECONDS);
+        scheduledFuture = CAMQPConnectionManager.getScheduledExecutor().scheduleWithFixedDelay(heartbeatProcessor,
+                CAMQPConnectionConstants.HEARTBEAT_PERIOD, CAMQPConnectionConstants.HEARTBEAT_PERIOD, TimeUnit.MILLISECONDS);
 
         synchronized (this)
         {
@@ -750,11 +751,13 @@ class CAMQPConnectionStateActor
 
     private void cancelHeartbeat()
     {
-        log.warn("Calling cancelHeartbeat()");
         if ((scheduledFuture != null) && !scheduledFuture.isCancelled())
         {
             scheduledFuture.cancel(false);
+            heartbeatProcessor.done();
         }
+        scheduledFuture = null;
+        heartbeatProcessor = null;
     }
 
     private CAMQPControlOpen initializeControlOpen(String containerId)

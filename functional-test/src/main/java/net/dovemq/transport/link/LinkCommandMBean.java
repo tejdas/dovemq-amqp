@@ -13,4 +13,6 @@ public interface LinkCommandMBean
     public void issueLinkCredit(String linkName, long linkCreditBoost);
     public long getNumMessagesReceived();
     public void reset();
+    
+    public void attachTarget(String linkSource, String linkTarget);
 }

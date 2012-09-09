@@ -1,5 +1,7 @@
 package net.dovemq.transport.session;
 
+import java.util.Collection;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -27,4 +29,5 @@ public interface CAMQPSessionInterface
     public void ackTransfer(long transferId);
     
     public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState);
+    public void sendBatchedDisposition(Collection<Long> deliveryIds, boolean settleMode, boolean role, Object newState);    
 }

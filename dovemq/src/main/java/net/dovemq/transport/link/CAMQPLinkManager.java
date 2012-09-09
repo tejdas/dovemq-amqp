@@ -75,6 +75,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
     
     public static void shutdown()
     {
+        linkManager.shutdownLinks();
         CAMQPSessionManager.shutdown();
         CAMQPConnectionManager.shutdown();
         CAMQPConnectionFactory.shutdown();
@@ -196,5 +197,18 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
             }
         }
         openLinks.remove(linkName);
+    }
+    
+    private void shutdownLinks()
+    {
+        Set<String> linksByName = openLinks.keySet();
+        for (String linkName : linksByName)
+        {
+            CAMQPLinkEndpoint linkEndpoint = openLinks.remove(linkName);
+            if (linkEndpoint != null)
+            {
+                linkEndpoint.destroyLink();
+            }
+        }
     }
 }

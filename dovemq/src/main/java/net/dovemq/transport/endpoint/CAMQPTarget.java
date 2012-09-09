@@ -12,6 +12,7 @@ import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionDeliveryState;
 
 public class CAMQPTarget implements CAMQPTargetInterface
 {
@@ -50,7 +51,9 @@ public class CAMQPTarget implements CAMQPTargetInterface
         
         // send the disposition
         Object settledState = new CAMQPDefinitionAccepted();
-        messageProcessingComplete(deliveryId, settled, settledState);
+        CAMQPDefinitionDeliveryState deliveryState = new CAMQPDefinitionDeliveryState();
+        deliveryState.setOutcome(settledState);
+        messageProcessingComplete(deliveryId, settled, deliveryState);
     }
 
     @Override
@@ -72,6 +75,7 @@ public class CAMQPTarget implements CAMQPTargetInterface
         List<Long> settledDeliveryIds = new ArrayList<Long>();
         for (long deliveryId : deliveryIds)
         {
+            System.out.println("CAMQPTarget:processdisposition and remove frame from unsettled map for deliveryId: " + deliveryId);
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null)
             {

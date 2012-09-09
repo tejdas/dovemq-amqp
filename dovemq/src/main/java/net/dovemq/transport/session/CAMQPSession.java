@@ -746,7 +746,9 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     
     private static boolean isLinkControlFrame(String controlName)
     {
-        return ((controlName.equalsIgnoreCase(CAMQPControlAttach.descriptor)) || (controlName.equalsIgnoreCase(CAMQPControlDetach.descriptor)));
+        return ((controlName.equalsIgnoreCase(CAMQPControlAttach.descriptor)) ||
+                (controlName.equalsIgnoreCase(CAMQPControlDetach.descriptor)) ||
+                (controlName.equalsIgnoreCase(CAMQPControlDisposition.descriptor)));
     }
     
     private static boolean isFlowFrame(String controlName)
@@ -979,7 +981,6 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 break;
             }
             CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(linkReceiverKey);
-
             if ((linkReceiver != null) && linkReceiver.getRole() == expectedRole)
             {
                 disposedIds = linkReceiver.dispositionReceived(disposedIds, settleMode, newState);
@@ -1045,11 +1046,17 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         disposition.setLast(deliveryId);
         disposition.setRole(role);
         disposition.setSettled(settleMode);
-        disposition.setState(newState);
+        if (newState != null)
+            disposition.setState(newState);
         
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlDisposition.encode(encoder, disposition);
         ChannelBuffer encodedTransfer = encoder.getEncodedBuffer();
         channel.getAmqpConnection().sendFrame(encodedTransfer, channel.getChannelId());
+    }
+
+    @Override
+    public void sendBatchedDisposition(Collection<Long> deliveryIds, boolean settleMode, boolean role, Object newState)
+    {
     }
 }

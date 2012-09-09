@@ -1,5 +1,6 @@
 package net.dovemq.transport.link;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
@@ -185,6 +186,15 @@ public class CAMQPLinkSenderTest
 
         @Override
         public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState)
+        {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public void sendBatchedDisposition(Collection<Long> deliveryIds,
+                boolean settleMode,
+                boolean role,
+                Object newState)
         {
             // TODO Auto-generated method stub
         }

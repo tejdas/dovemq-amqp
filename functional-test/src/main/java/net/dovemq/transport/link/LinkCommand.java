@@ -2,6 +2,8 @@ package net.dovemq.transport.link;
 
 import java.util.Collection;
 
+import net.dovemq.transport.endpoint.CAMQPEndpointManager;
+
 public class LinkCommand implements LinkCommandMBean
 {
     private volatile LinkTestTarget linkTargetEndpoint = new LinkTestTarget();
@@ -120,5 +122,11 @@ public class LinkCommand implements LinkCommandMBean
     public void reset()
     {
         linkTargetEndpoint.resetNumberOfMessagesReceived();
+    }
+
+    @Override
+    public void attachTarget(String linkSource, String linkTarget)
+    {
+        CAMQPEndpointManager.attachTarget(linkSource, linkTarget);
     }
 }

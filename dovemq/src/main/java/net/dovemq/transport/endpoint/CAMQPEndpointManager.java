@@ -9,7 +9,7 @@ import net.dovemq.transport.link.LinkRole;
 
 public final class CAMQPEndpointManager
 {
-    public CAMQPSourceInterface createSource(String containerId, String source, String target)
+    public static CAMQPSourceInterface createSource(String containerId, String source, String target)
     {
         CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target);
         linkSender.setMaxAvailableLimit(16348);
@@ -18,11 +18,11 @@ public final class CAMQPEndpointManager
         return dovemqSource;
     }
     
-    public void createTarget()
+    public static void createTarget()
     {
     }
     
-    public CAMQPTargetInterface attachTarget(String linkSource, String linkTarget)
+    public static CAMQPTargetInterface attachTarget(String linkSource, String linkTarget)
     {
         CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
         if (linkEndpoint == null)
@@ -35,6 +35,7 @@ public final class CAMQPEndpointManager
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
             CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver);
             linkReceiver.setTarget(dovemqTarget);
+            linkReceiver.flowMessages(10, 100);
             return dovemqTarget;
         }
         else

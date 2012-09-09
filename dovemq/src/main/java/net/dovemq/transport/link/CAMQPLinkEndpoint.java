@@ -287,10 +287,19 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         flow.setLinkCredit(linkCredit);
         return flow;
     }
-    
+
+    /**
+     * Sends disposition frame to the peer.
+     * If the current role is LinkReceiver, it is sending the disposition for LinkSender, so set role to true
+     * If the current role is LinkSender, it is sending the disposition for LinkReceiver, so set role to false
+     * 
+     * @param deliveryId
+     * @param settleMode
+     * @param newState
+     */
     public void sendDisposition(long deliveryId, boolean settleMode, Object newState)
     {
-        session.sendDisposition(deliveryId, settleMode, (getRole() == LinkRole.LinkSender), newState);
+        session.sendDisposition(deliveryId, settleMode, (getRole() == LinkRole.LinkReceiver), newState);
     }
     
     /**
