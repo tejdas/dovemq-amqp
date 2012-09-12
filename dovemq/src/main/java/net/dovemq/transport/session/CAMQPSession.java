@@ -38,6 +38,7 @@ import net.dovemq.transport.protocol.data.CAMQPControlDisposition;
 import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionDeliveryState;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 
 /**
@@ -79,7 +80,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     }
     
     @Immutable
-    private static class CAMQPChannel
+    static class CAMQPChannel
     {
         final CAMQPConnection getAmqpConnection()
         {
@@ -106,7 +107,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
      * until the session is not under flow-control state any longer.
      */
     private static final long FLOW_SENDER_INTERVAL = 1000L;
-    private final ScheduledExecutorService flowSendScheduler = Executors.newScheduledThreadPool(1);
+    final ScheduledExecutorService flowSendScheduler = Executors.newScheduledThreadPool(2);
     @GuardedBy("this")
     private Date lastFlowSent = new Date();
     @GuardedBy("this")
@@ -127,6 +128,8 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     private int incomingChannelNumber = 0;
     @GuardedBy("stateActor")
     private CAMQPConnection connection = null;
+    
+    private CAMQPDispositionSender dispositionSender = null;
 
     CAMQPConnection getConnection()
     {
@@ -291,6 +294,8 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         CAMQPSessionManager.sessionCreated(connection.getRemoteContainerId(), outgoingChannelNumber, this);
         String logInfo = String.format("Session is attached to txChannel: %d and rxChannel: %d", outgoingChannelNumber, incomingChannelNumber);
         log.info(logInfo);
+        dispositionSender = new CAMQPDispositionSender(this);
+        flowSendScheduler.schedule(dispositionSender, FLOW_SENDER_INTERVAL*2, TimeUnit.MILLISECONDS);   
     }
 
     /**
@@ -691,7 +696,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         channel.getAmqpConnection().sendFrame(encodedTransfer, channel.getChannelId());
     }
     
-    private CAMQPChannel getChannel()
+    CAMQPChannel getChannel()
     {
         synchronized (stateActor)
         {
@@ -1034,25 +1039,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     @Override
     public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState)
     {
-        CAMQPChannel channel = getChannel();
-        if (channel == null)
-        {
-            return;
-        }
-
-        CAMQPControlDisposition disposition = new CAMQPControlDisposition();
-        disposition.setBatchable(false);
-        disposition.setFirst(deliveryId);
-        disposition.setLast(deliveryId);
-        disposition.setRole(role);
-        disposition.setSettled(settleMode);
-        if (newState != null)
-            disposition.setState(newState);
-        
-        CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
-        CAMQPControlDisposition.encode(encoder, disposition);
-        ChannelBuffer encodedTransfer = encoder.getEncodedBuffer();
-        channel.getAmqpConnection().sendFrame(encodedTransfer, channel.getChannelId());
+        dispositionSender.insertDispositionRange(deliveryId, role, settleMode, newState);
     }
 
     @Override

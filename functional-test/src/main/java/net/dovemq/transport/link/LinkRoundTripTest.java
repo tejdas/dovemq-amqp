@@ -41,10 +41,11 @@ public class LinkRoundTripTest
         mbeanProxy.attachTarget(source,  target);
         
         Random randomGenerator = new Random();
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 200; i++)
         {
             CAMQPMessagePayload message = LinkTestUtils.createMessagePayload(randomGenerator);
             sender.sendMessage(message);
+            Thread.sleep(randomGenerator.nextInt(75) + 10);
         }
         System.out.println("Done sending messages");
         

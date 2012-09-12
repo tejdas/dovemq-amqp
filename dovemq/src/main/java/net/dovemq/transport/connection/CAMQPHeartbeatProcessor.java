@@ -51,7 +51,6 @@ class CAMQPHeartbeatProcessor implements Runnable
     @Override
     public void run()
     {
-        System.out.println("hearbeat.run()");
         boolean heartBeatDelayed = false;
         Date now = new Date();
         

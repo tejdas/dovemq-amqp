@@ -12,15 +12,14 @@ import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
-import net.dovemq.transport.protocol.data.CAMQPDefinitionDeliveryState;
 
-public class CAMQPTarget implements CAMQPTargetInterface
+class CAMQPTarget implements CAMQPTargetInterface
 {
 
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     private final CAMQPLinkReceiverInterface linkReceiver;
     
-    public CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver)
+    CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver)
     {
         super();
         this.linkReceiver = linkReceiver;
@@ -50,10 +49,7 @@ public class CAMQPTarget implements CAMQPTargetInterface
          */
         
         // send the disposition
-        Object settledState = new CAMQPDefinitionAccepted();
-        CAMQPDefinitionDeliveryState deliveryState = new CAMQPDefinitionDeliveryState();
-        deliveryState.setOutcome(settledState);
-        messageProcessingComplete(deliveryId, settled, deliveryState);
+        messageProcessingComplete(deliveryId, settled, new CAMQPDefinitionAccepted());
     }
 
     @Override

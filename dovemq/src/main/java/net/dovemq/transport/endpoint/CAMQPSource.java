@@ -12,12 +12,12 @@ import net.dovemq.transport.link.CAMQPLinkEndpoint;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.link.CAMQPMessage;
 
-public class CAMQPSource implements CAMQPSourceInterface
+class CAMQPSource implements CAMQPSourceInterface
 {
     private final CAMQPLinkSenderInterface linkSender;
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     
-    public CAMQPSource(CAMQPLinkSenderInterface linkSender)
+    CAMQPSource(CAMQPLinkSenderInterface linkSender)
     {
         super();
         this.linkSender = linkSender;
