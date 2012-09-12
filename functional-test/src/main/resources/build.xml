@@ -374,6 +374,12 @@
 					<param name="param1" value="src" />
 					<param name="param2" value="dest" />
 				</antcall>
+				
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkRoundTripTest"/>
+					<param name="param1" value="src" />
+					<param name="param2" value="dest" />
+				</antcall>				
 
 				<antcall target="ShutdownBroker" />
 			</sequential>

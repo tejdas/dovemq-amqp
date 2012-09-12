@@ -71,7 +71,7 @@ class CAMQPTarget implements CAMQPTargetInterface
         List<Long> settledDeliveryIds = new ArrayList<Long>();
         for (long deliveryId : deliveryIds)
         {
-            System.out.println("CAMQPTarget:processdisposition and remove frame from unsettled map for deliveryId: " + deliveryId);
+            System.out.println("processed and acked deliveryId: " + deliveryId);
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null)
             {

@@ -17,8 +17,29 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 class CAMQPDispositionSender implements Runnable
 {
-    private static class DispositionRange
+    static class DispositionRange
     {
+        @Override
+        public String toString()
+        {
+            String outcomeStr = "null";
+            if (outcome instanceof CAMQPDefinitionAccepted)
+                outcomeStr = CAMQPDefinitionAccepted.class.getSimpleName();
+            else if (outcome instanceof CAMQPDefinitionModified)
+                outcomeStr = CAMQPDefinitionModified.class.getSimpleName();
+            else if (outcome instanceof CAMQPDefinitionRejected)
+                outcomeStr =CAMQPDefinitionRejected.class.getSimpleName();
+            
+            return "DispositionRange [min=" + min
+                    + ", max="
+                    + max
+                    + ", settled="
+                    + settled
+                    + ", outcome="
+                    + outcomeStr
+                    + "]";
+        }
+
         public DispositionRange(long min,
                 long max,
                 boolean settled,
@@ -71,7 +92,7 @@ class CAMQPDispositionSender implements Runnable
             return max;
         }
         
-        private boolean isCompatible(boolean settled, Object newOutcome)
+        boolean isCompatible(boolean settled, Object newOutcome)
         {
             if (this.settled != settled)
                 return false;
@@ -99,12 +120,12 @@ class CAMQPDispositionSender implements Runnable
     private List<DispositionRange> receiverDispositionRanges = null;    
     private final CAMQPSession session;
 
-    public CAMQPDispositionSender(CAMQPSession session)
+    CAMQPDispositionSender(CAMQPSession session)
     {
         super();
         this.session = session;
     }
-
+    
     synchronized void insertDispositionRange(long val, boolean role, boolean settled, Object newOutcome)
     {
         List<DispositionRange> dispositionRanges;
@@ -153,11 +174,11 @@ class CAMQPDispositionSender implements Runnable
         }
         finally
         {
-            session.flowSendScheduler.schedule(this, 2000L, TimeUnit.MILLISECONDS); 
+            session.flowSendScheduler.schedule(this, CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL, TimeUnit.MILLISECONDS); 
         }
     }
     
-    private void sendDispositions(List<DispositionRange> dispositionRanges, boolean role, CAMQPChannel channel)
+    private static void sendDispositions(List<DispositionRange> dispositionRanges, boolean role, CAMQPChannel channel)
     {
         if (dispositionRanges != null)
         {
@@ -183,7 +204,7 @@ class CAMQPDispositionSender implements Runnable
         }        
     }
     
-    private static void addDisposition(long val, boolean settled, Object newOutcome, List<DispositionRange> dispositionRanges)
+    static void addDisposition(long val, boolean settled, Object newOutcome, List<DispositionRange> dispositionRanges)
     {
         if (dispositionRanges.isEmpty())
         {
@@ -274,7 +295,7 @@ class CAMQPDispositionSender implements Runnable
                 continue;
             }
             
-            System.out.println("Should never come here");
+            assert(false);
         }
         dispositionRanges.add(new DispositionRange(val, val, settled, newOutcome));
     }
@@ -383,8 +404,7 @@ class CAMQPDispositionSender implements Runnable
                     return true;
                 }
             }
-            System.out.println("COMING HERE: nextRange:" + nextRange);
-            
+
             if (nextRange != null)
                 dispositionRanges.add(index+1, newRange);
             else
@@ -402,5 +422,5 @@ class CAMQPDispositionSender implements Runnable
         }
       
         return true;
-    }    
+    }
 }

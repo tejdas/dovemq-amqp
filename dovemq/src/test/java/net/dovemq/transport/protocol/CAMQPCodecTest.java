@@ -8,7 +8,6 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import net.dovemq.transport.protocol.data.CAMQPControlBegin;
 import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
-import net.dovemq.transport.protocol.data.CAMQPDefinitionDeleteOnClose;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionRejected;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionSource;

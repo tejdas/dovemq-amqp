@@ -38,7 +38,6 @@ import net.dovemq.transport.protocol.data.CAMQPControlDisposition;
 import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
-import net.dovemq.transport.protocol.data.CAMQPDefinitionDeliveryState;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 
 /**
@@ -295,7 +294,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         String logInfo = String.format("Session is attached to txChannel: %d and rxChannel: %d", outgoingChannelNumber, incomingChannelNumber);
         log.info(logInfo);
         dispositionSender = new CAMQPDispositionSender(this);
-        flowSendScheduler.schedule(dispositionSender, FLOW_SENDER_INTERVAL*2, TimeUnit.MILLISECONDS);   
+        flowSendScheduler.schedule(dispositionSender, CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL, TimeUnit.MILLISECONDS);   
     }
 
     /**
