@@ -890,6 +890,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             }
             else
             {
+                nextIncomingTransferId++;
                 remoteOutgoingWindow--;
                 incomingWindow--;
             }
