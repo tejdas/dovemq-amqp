@@ -1,5 +1,7 @@
 package net.dovemq.transport.link;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -9,10 +11,13 @@ import javax.management.MalformedObjectNameException;
 
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.common.JMXProxyWrapper;
-import static org.junit.Assert.assertTrue;
 
 public class LinkTestMultipleSendersSharingOneLink
 {
+    private static final String source = "src";
+    private static final String target = "target";
+    private static int NUM_THREADS = 10;
+    
     private static class LinkTestMessageSender extends CAMQPTestTask implements Runnable
     {
         private final CAMQPLinkSender linkSender;
@@ -43,18 +48,17 @@ public class LinkTestMultipleSendersSharingOneLink
         String brokerIp = args[1];
         String jmxPort = args[2];
         
+        NUM_THREADS = Integer.parseInt(args[3]);
+        int numMessagesToSend = Integer.parseInt(args[4]);
+        
         JMXProxyWrapper jmxWrapper = new JMXProxyWrapper(brokerIp, jmxPort);
         
-        String source = args[3];
-        String target = args[4];
-          
         String brokerContainerId = String.format("broker@%s", brokerIp);
         CAMQPLinkManager.initialize(false, publisherName);
         
         LinkCommandMBean mbeanProxy = jmxWrapper.getLinkBean();
         
         CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target);
-        linkSender.setMaxAvailableLimit(16348);
         System.out.println("Sender Link created between : " + source + "  and: " + target);
         
         String linkName = linkSender.getLinkName();
@@ -67,15 +71,13 @@ public class LinkTestMultipleSendersSharingOneLink
         
         Thread.sleep(2000);
 
-        int numThreads = 10;
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
         CountDownLatch startSignal = new CountDownLatch(1);
-        CountDownLatch doneSignal = new CountDownLatch(numThreads);
-        int numMessagesExpected = 1000;
+        CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
         
-        for (int i = 0; i < numThreads; i++)
+        for (int i = 0; i < NUM_THREADS; i++)
         {
-            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal, doneSignal, linkSender, numMessagesExpected);
+            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal, doneSignal, linkSender, numMessagesToSend);
             executor.submit(sender);
         }
         
@@ -84,14 +86,14 @@ public class LinkTestMultipleSendersSharingOneLink
         {
             long messagesReceived = mbeanProxy.getNumMessagesReceived();
             System.out.println("got messages: " + messagesReceived);
-            if (messagesReceived == numMessagesExpected * numThreads)
+            if (messagesReceived == numMessagesToSend * NUM_THREADS)
             {
                 break;
             }
             Thread.sleep(1000);
         }
         
-        assertTrue(mbeanProxy.getNumMessagesReceived() == numMessagesExpected * numThreads);
+        assertTrue(mbeanProxy.getNumMessagesReceived() == numMessagesToSend * NUM_THREADS);
         
         doneSignal.await();
         Thread.sleep(2000);

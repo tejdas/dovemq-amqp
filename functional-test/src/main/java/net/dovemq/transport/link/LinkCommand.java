@@ -3,10 +3,15 @@ package net.dovemq.transport.link;
 import java.util.Collection;
 
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 public class LinkCommand implements LinkCommandMBean
 {
     private volatile LinkTestTarget linkTargetEndpoint = new LinkTestTarget();
+    private volatile LinkTestTargetReceiver linkTargetReceiver = null;
+    private volatile CAMQPSourceInterface linkSource = null;
+    private final LinkTestTargetReceiver linkTargetSharedReceiver = new LinkTestTargetReceiver();
     
     @Override
     public void registerFactory(String factoryName)
@@ -122,11 +127,44 @@ public class LinkCommand implements LinkCommandMBean
     public void reset()
     {
         linkTargetEndpoint.resetNumberOfMessagesReceived();
+        if (linkTargetReceiver != null)
+            linkTargetReceiver.stop();
+        linkSource = null;
+        linkTargetReceiver = null;
+        linkTargetSharedReceiver.stop();
     }
 
     @Override
-    public void attachTarget(String linkSource, String linkTarget)
+    public void attachTarget(String source, String target)
     {
-        CAMQPEndpointManager.attachTarget(linkSource, linkTarget);
+        linkTargetReceiver = new LinkTestTargetReceiver();
+        CAMQPTargetInterface linkTarget = CAMQPEndpointManager.attachTarget(source, target);
+        linkTarget.registerTargetReceiver(linkTargetReceiver);
+    }
+
+    @Override
+    public long getNumMessagesReceivedAtTargetReceiver()
+    {
+        if (linkTargetReceiver != null)
+            return linkTargetReceiver.getNumberOfMessagesReceived();
+        else
+            return linkTargetSharedReceiver.getNumberOfMessagesReceived();
+    }
+
+    @Override
+    public void createSource(String source,
+            String target,
+            String remoteContainerId)
+    {
+        linkSource = CAMQPEndpointManager.createSource(remoteContainerId, source, target);
+        if (linkTargetReceiver != null)
+            linkTargetReceiver.setSource(linkSource);
+    }
+
+    @Override
+    public void attachSharedTarget(String source, String target)
+    {
+        CAMQPTargetInterface linkTarget = CAMQPEndpointManager.attachTarget(source, target);
+        linkTarget.registerTargetReceiver(linkTargetSharedReceiver);
     }
 }

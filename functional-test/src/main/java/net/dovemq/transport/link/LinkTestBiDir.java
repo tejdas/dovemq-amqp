@@ -6,14 +6,15 @@ import java.util.Random;
 import javax.management.MalformedObjectNameException;
 
 import net.dovemq.transport.common.JMXProxyWrapper;
+import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 
-public class LinkRoundTripTest
+public class LinkTestBiDir
 {
-    private static String source;
-    private static String target;
+    private static final String source = "src";
+    private static final String target = "target";
     private static String brokerContainerId ;
     private static LinkCommandMBean mbeanProxy;
     
@@ -28,31 +29,49 @@ public class LinkRoundTripTest
         
         JMXProxyWrapper jmxWrapper = new JMXProxyWrapper(brokerIp, jmxPort);
         
-        source = args[3];
-        target = args[4];
+        int messagesToSend = Integer.parseInt(args[3]);
           
         brokerContainerId = String.format("broker@%s", brokerIp);
         CAMQPLinkManager.initialize(false, publisherName);
         
+        String containerId = CAMQPConnectionManager.getContainerId();
+        
         mbeanProxy = jmxWrapper.getLinkBean();
         
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, target);
-        
         mbeanProxy.attachTarget(source,  target);
         
+        mbeanProxy.createSource("reverseSrc", "reverseTar", containerId);
+        LinkCommand localLinkCommand = new LinkCommand();
+        localLinkCommand.attachTarget("reverseSrc", "reverseTar");
+        
+        
         Random randomGenerator = new Random();
-        for (int i = 0; i < 1000; i++)
+        for (int i = 0; i < messagesToSend; i++)
         {
             CAMQPMessagePayload message = LinkTestUtils.createMessagePayload(randomGenerator);
             sender.sendMessage(message);
-            Thread.sleep(randomGenerator.nextInt(20) + 10);
+            //Thread.sleep(randomGenerator.nextInt(10) + 10);
         }
         System.out.println("Done sending messages");
         
-        Thread.sleep(10000);
-
+        while (true)
+        {
+            Thread.sleep(1000);
+            long numMessagesReceivedAtRemote = mbeanProxy.getNumMessagesReceivedAtTargetReceiver();
+            System.out.println(numMessagesReceivedAtRemote);
+            long numMessagesReceivedAtLocal = localLinkCommand.getNumMessagesReceivedAtTargetReceiver();
+            System.out.println(numMessagesReceivedAtLocal);            
+            if ((numMessagesReceivedAtRemote == messagesToSend) && (numMessagesReceivedAtLocal == messagesToSend))
+                break;
+        }
+        
+        Thread.sleep(60000);
         CAMQPLinkManager.shutdown();
         mbeanProxy.reset();
         jmxWrapper.cleanup();
+        System.out.println("All done");
+        Thread.sleep(300000);        
+        
     }
 }

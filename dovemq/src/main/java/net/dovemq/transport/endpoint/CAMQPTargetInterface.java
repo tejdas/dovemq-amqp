@@ -6,6 +6,7 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 public interface CAMQPTargetInterface
 {
+    public void registerTargetReceiver(CAMQPTargetReceiver targetReceiver);
     public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode);
     public void messageStateChanged(String deliveryId, int oldState, int newState);
     

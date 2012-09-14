@@ -12,7 +12,7 @@ public final class CAMQPEndpointManager
     public static CAMQPSourceInterface createSource(String containerId, String source, String target)
     {
         CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target);
-        linkSender.setMaxAvailableLimit(16348);
+        //linkSender.setMaxAvailableLimit(16348);
         CAMQPSource dovemqSource = new CAMQPSource(linkSender);
         linkSender.setSource(dovemqSource);
         return dovemqSource;

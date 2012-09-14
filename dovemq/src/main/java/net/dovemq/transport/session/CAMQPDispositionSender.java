@@ -184,6 +184,7 @@ class CAMQPDispositionSender implements Runnable
         {
             for (DispositionRange range : dispositionRanges)
             {
+                System.out.println("disposition: " + range.toString());
                 CAMQPControlDisposition disposition = new CAMQPControlDisposition();
                 disposition.setBatchable(false);
                 disposition.setFirst(range.getMin());

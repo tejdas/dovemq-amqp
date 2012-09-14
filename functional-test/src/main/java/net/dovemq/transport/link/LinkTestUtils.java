@@ -14,7 +14,7 @@ public class LinkTestUtils
         Random randomGenerator = new Random();
         for (int i = 0; i < numMessagesToSend; i++)
         {
-            int randomInt = randomGenerator.nextInt(20);
+            int randomInt = randomGenerator.nextInt(5);
             CAMQPMessage message = createMessage(randomGenerator);
             linkSender.sendMessage(message.getDeliveryTag(), message.getPayload());
             try

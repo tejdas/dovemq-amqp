@@ -18,6 +18,7 @@ class CAMQPTarget implements CAMQPTargetInterface
 
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     private final CAMQPLinkReceiverInterface linkReceiver;
+    private CAMQPTargetReceiver targetReceiver = null;
     
     CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver)
     {
@@ -45,8 +46,12 @@ class CAMQPTarget implements CAMQPTargetInterface
         }
 
         /*
-         * TODO: Process the message here.
+         * Process the message here.
          */
+        if (targetReceiver != null)
+        {
+            targetReceiver.messageReceived(message);
+        }
         
         // send the disposition
         messageProcessingComplete(deliveryId, settled, new CAMQPDefinitionAccepted());
@@ -71,10 +76,10 @@ class CAMQPTarget implements CAMQPTargetInterface
         List<Long> settledDeliveryIds = new ArrayList<Long>();
         for (long deliveryId : deliveryIds)
         {
-            System.out.println("processed and acked deliveryId: " + deliveryId);
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null)
             {
+                //System.out.println("processed and acked deliveryId: " + deliveryId);
                 settledDeliveryIds.add(deliveryId);
             }
         }
@@ -93,5 +98,11 @@ class CAMQPTarget implements CAMQPTargetInterface
          */
         CAMQPLinkEndpoint linkEndpoint = (CAMQPLinkEndpoint) linkReceiver;
         linkEndpoint.sendDisposition(deliveryId, settled, settledState);
+    }
+
+    @Override
+    public void registerTargetReceiver(CAMQPTargetReceiver targetReceiver)
+    {
+        this.targetReceiver = targetReceiver;
     }
 }

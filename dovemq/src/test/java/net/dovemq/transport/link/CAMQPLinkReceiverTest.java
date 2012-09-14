@@ -28,6 +28,7 @@ import static org.junit.Assert.assertFalse;
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
+import net.dovemq.transport.endpoint.CAMQPTargetReceiver;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -85,6 +86,13 @@ public class CAMQPLinkReceiverTest
         {
             // TODO Auto-generated method stub
             return null;
+        }
+
+        @Override
+        public void registerTargetReceiver(CAMQPTargetReceiver targetReceiver)
+        {
+            // TODO Auto-generated method stub
+            
         }      
     }
     

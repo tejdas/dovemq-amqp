@@ -3,14 +3,21 @@
         DoveMQ Functional Tests
     </description>
 
+	  <!-- Add the Sonar task -->
+	  <taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+	    <classpath path="C:/tools/apache-ant-1.8.4-bin/apache-ant-1.8.4/bin/ant/lib" /> 
+	    <!-- This sonar Ant task library can also be put in the ${ANT_HOME\}/lib directory-->
+	    <!-- In such case this classpath node is no more mandatory -->
+	  </taskdef>
+	
 	<!-- set global properties for this build -->
-	<property environment="env"/>	
+	<property environment="env" />
 	<property name="projectName" value="dovemq-functional-test" />
 	<property name="jmxPortNumber" value="8746" />
 	<property name="lib" location="${basedir}/lib" />
 	<property name="mvn.repo.dir" location="${env.MVN_REPO}" />
 	<property name="dovemq.jars.dir" location="${mvn.repo.dir}/net/dovemq" />
-	<property name="dovemq.version" value="1.0-SNAPSHOT" />	
+	<property name="dovemq.version" value="1.0-SNAPSHOT" />
 
 	<path id="dovemq-functest-classpath">
 		<pathelement location="." />
@@ -28,7 +35,7 @@
 		<copy file="${mvn.repo.dir}/commons-lang/commons-lang/2.5/commons-lang-2.5.jar" todir="${lib}" />
 		<copy file="${mvn.repo.dir}/org/jboss/netty/netty/3.2.4.Final/netty-3.2.4.Final.jar" todir="${lib}" />
 		<copy file="${mvn.repo.dir}/log4j/log4j/1.2.15/log4j-1.2.15.jar" todir="${lib}" />
-		<copy file="${dovemq.jars.dir}/dovemq/${dovemq.version}/dovemq-${dovemq.version}.jar" todir="${lib}" />		
+		<copy file="${dovemq.jars.dir}/dovemq/${dovemq.version}/dovemq-${dovemq.version}.jar" todir="${lib}" />
 		<copy file="${dovemq.jars.dir}/dovemq-functional-test/${dovemq.version}/dovemq-functional-test-${dovemq.version}.jar" todir="${lib}" />
 		<copy file="${mvn.repo.dir}/junit/junit/4.8.1/junit-4.8.1.jar" todir="${lib}" />
 	</target>
@@ -45,9 +52,9 @@
 		<echo>To run all Link tests:</echo>
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName LinkTest</echo>
 		<echo>To run Broker standalone:</echo>
-		<echo>ant -Dbroker.ip=FullyQualifiedHostName RunDoveMQBroker</echo>		
+		<echo>ant -Dbroker.ip=FullyQualifiedHostName RunDoveMQBroker</echo>
 	</target>
-	
+
 	<target name="clean" description="clean up">
 		<delete dir="${lib}" />
 	</target>
@@ -66,14 +73,14 @@
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-				
+
 	<target name="ShutdownBroker">
 		<echo>...Shutting down DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.transport.connection.ConnectionSysTestJMXProxy" maxmemory="2048M" failonerror="true">
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<arg value="${broker.ip}" />			
+			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
 			<arg value="shutdown" />
 			<classpath refid="dovemq-functest-classpath" />
@@ -103,14 +110,14 @@
 				<param name="publisherName" value="pub2" />
 			</antcall>
 			<antcall target="RunClient">
-				<param name="publisherName" value="pub3" />				
+				<param name="publisherName" value="pub3" />
 			</antcall>
 			<antcall target="RunClient">
-				<param name="publisherName" value="pub4" />				
+				<param name="publisherName" value="pub4" />
 			</antcall>
 			<antcall target="RunClient">
-				<param name="publisherName" value="pub5" />				
-			</antcall>			
+				<param name="publisherName" value="pub5" />
+			</antcall>
 		</parallel>
 	</target>
 
@@ -124,7 +131,7 @@
 			</sequential>
 		</parallel>
 	</target>
-
+	
 	<target name="RunSessionClient">
 		<echo>...Run DoveMQ Session client</echo>
 		<java fork="true" classname="net.dovemq.transport.session.SessionSysTestJMXClient" maxmemory="2048M" failonerror="true">
@@ -136,13 +143,16 @@
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
-			<arg value="${param1}" />  <!-- Number of concurrent sessions -->
-			<arg value="${param2}" />  <!-- Name of LinkReceiverFactory -->
-			<arg value="${param3}" />  <!-- Perform I/O -->
+			<arg value="${param1}" />
+			<!-- Number of concurrent sessions -->
+			<arg value="${param2}" />
+			<!-- Name of LinkReceiverFactory -->
+			<arg value="${param3}" />
+			<!-- Perform I/O -->
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="RunSessionClientBiDir">
 		<echo>...Run DoveMQ Session client</echo>
 		<java fork="true" classname="net.dovemq.transport.session.SessionSysTestBiDir" maxmemory="2048M" failonerror="true">
@@ -154,13 +164,16 @@
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
-			<arg value="${param1}" />  <!-- Number of concurrent sessions -->
-			<arg value="${param2}" />  <!-- Name of LinkReceiverFactory -->
-			<arg value="${param3}" />  <!-- Perform I/O -->
+			<arg value="${param1}" />
+			<!-- Number of concurrent sessions -->
+			<arg value="${param2}" />
+			<!-- Name of LinkReceiverFactory -->
+			<arg value="${param3}" />
+			<!-- Perform I/O -->
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="RunSessionClientBiDirIO">
 		<echo>...Run DoveMQ Session client</echo>
 		<java fork="true" classname="net.dovemq.transport.session.SessionSysTestBiDirIO" maxmemory="2048M" failonerror="true">
@@ -172,11 +185,12 @@
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
-			<arg value="${param1}" />  <!-- Name of LinkReceiverFactory -->
+			<arg value="${param1}" />
+			<!-- Name of LinkReceiverFactory -->
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="SessionTestMultipleSessionsNoIO" description="running session tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
@@ -191,7 +205,7 @@
 			</sequential>
 		</parallel>
 	</target>
-	
+
 	<target name="SessionTestIO" description="running session tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
@@ -206,7 +220,7 @@
 			</sequential>
 		</parallel>
 	</target>
-	
+
 	<target name="SessionTestIOFlowControl" description="running session tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
@@ -221,7 +235,7 @@
 			</sequential>
 		</parallel>
 	</target>
-	
+
 	<target name="SessionTestMultipleSessionsNoIOBiDir" description="running session tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
@@ -236,7 +250,7 @@
 			</sequential>
 		</parallel>
 	</target>
-	
+
 	<target name="SessionTestBiDirIO" description="running BiDir IO session tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
@@ -249,7 +263,7 @@
 			</sequential>
 		</parallel>
 	</target>
-	
+
 	<target name="RunLinksClient">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
@@ -261,49 +275,51 @@
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
-			<arg value="${param1}" />  <!-- Name of LinkSource -->
-			<arg value="${param2}" />  <!-- Name of LinkTarget -->			
+			<arg value="${param1}" />
+			<!-- Name of LinkSource -->
+			<arg value="${param2}" />
+			<!-- Name of LinkTarget -->
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="LinkSimpleTest" description="running link test">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneLink"/>
-					<param name="param1" value="src" />
-					<param name="param2" value="dest" />
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneLink" />
+					<param name="param1" value="10" />
+					<param name="param2" value="5000" />
 				</antcall>
 				<antcall target="ShutdownBroker" />
 			</sequential>
 		</parallel>
 	</target>
-	
+
 	<target name="LinkTestMultipleLinks" description="running link test">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing"/>
-					<param name="param1" value="src" />
-					<param name="param2" value="dest" />
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing" />
+					<param name="param1" value="5" />
+					<param name="param2" value="5000" />
 				</antcall>
 				<antcall target="ShutdownBroker" />
 			</sequential>
 		</parallel>
 	</target>
-	
+
 	<target name="LinkTestReceiver" description="running link test">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
 				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestReceiver"/>
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestReceiver" />
 					<param name="param1" value="src" />
 					<param name="param2" value="dest" />
 				</antcall>
@@ -311,25 +327,54 @@
 			</sequential>
 		</parallel>
 	</target>
-	
+
+	<target name="LinkTestMultipleSources" description="running link test">
+		<parallel>
+			<antcall target="RunDoveMQBroker" />
+			<sequential>
+				<sleep seconds="5" />
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSources" />
+					<param name="param1" value="5" />
+					<param name="param2" value="50000" />
+				</antcall>
+				<antcall target="ShutdownBroker" />
+			</sequential>
+		</parallel>
+	</target>
+
+	<target name="LinkTestBiDir" description="running link test">
+		<parallel>
+			<antcall target="RunDoveMQBroker" />
+			<sequential>
+				<sleep seconds="5" />
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestBiDir" />
+					<param name="param1" value="1000000" />
+				</antcall>
+				<antcall target="ShutdownBroker" />
+			</sequential>
+		</parallel>
+	</target>
+
 	<target name="SessionTest" description="running all session tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
-				
+
 				<antcall target="RunSessionClient">
 					<param name="param1" value="5" />
 					<param name="param2" value="SysTestCommandReceiver" />
 					<param name="param3" value="false" />
 				</antcall>
-				
+
 				<antcall target="RunSessionClient">
 					<param name="param1" value="1" />
 					<param name="param2" value="SysTestCommandReceiver" />
 					<param name="param3" value="true" />
 				</antcall>
-				
+
 				<antcall target="RunSessionClient">
 					<param name="param1" value="1" />
 					<param name="param2" value="SysTestDelayedAckLinkReceiver" />
@@ -350,39 +395,67 @@
 			</sequential>
 		</parallel>
 	</target>
-	
+
 	<target name="LinkTest" description="running all link tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<sleep seconds="5" />
-				
+
 				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing"/>
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing" />
+					<param name="param1" value="5" />
+					<param name="param2" value="5000" />
+				</antcall>
+
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneLink" />
+					<param name="param1" value="10" />
+					<param name="param2" value="5000" />
+				</antcall>
+
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestReceiver" />
 					<param name="param1" value="src" />
 					<param name="param2" value="dest" />
 				</antcall>
-				
+
 				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneLink"/>
-					<param name="param1" value="src" />
-					<param name="param2" value="dest" />
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestBiDir" />
+					<param name="param1" value="10000" />
 				</antcall>
-				
+
 				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestReceiver"/>
-					<param name="param1" value="src" />
-					<param name="param2" value="dest" />
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSources" />
+					<param name="param1" value="5" />
+					<param name="param2" value="10000" />
 				</antcall>
-				
-				<antcall target="RunLinksClient">
-					<param name="paramClassName" value="net.dovemq.transport.link.LinkRoundTripTest"/>
-					<param name="param1" value="src" />
-					<param name="param2" value="dest" />
-				</antcall>				
 
 				<antcall target="ShutdownBroker" />
 			</sequential>
 		</parallel>
 	</target>
+
+	<target name="LinkTestPerformance" description="running all link tests">
+		<parallel>
+			<antcall target="RunDoveMQBroker" />
+			<sequential>
+				<sleep seconds="5" />
+
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestBiDir" />
+					<param name="param1" value="1000000" />
+				</antcall>
+
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSources" />
+					<param name="param1" value="5" />
+					<param name="param2" value="10000" />
+				</antcall>
+
+				<antcall target="ShutdownBroker" />
+			</sequential>
+		</parallel>
+	</target>
+
 </project>

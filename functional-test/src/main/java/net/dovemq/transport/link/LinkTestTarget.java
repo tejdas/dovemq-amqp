@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
+import net.dovemq.transport.endpoint.CAMQPTargetReceiver;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 public class LinkTestTarget implements CAMQPTargetInterface
@@ -40,5 +41,12 @@ public class LinkTestTarget implements CAMQPTargetInterface
     {
         // TODO Auto-generated method stub
         return null;
-    }    
+    }
+
+    @Override
+    public void registerTargetReceiver(CAMQPTargetReceiver targetReceiver)
+    {
+        // TODO Auto-generated method stub
+        
+    }
 }
