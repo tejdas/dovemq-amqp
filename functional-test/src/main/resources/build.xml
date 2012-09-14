@@ -3,21 +3,25 @@
         DoveMQ Functional Tests
     </description>
 
-	  <!-- Add the Sonar task -->
-	  <taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
-	    <classpath path="C:/tools/apache-ant-1.8.4-bin/apache-ant-1.8.4/bin/ant/lib" /> 
-	    <!-- This sonar Ant task library can also be put in the ${ANT_HOME\}/lib directory-->
-	    <!-- In such case this classpath node is no more mandatory -->
-	  </taskdef>
-	
 	<!-- set global properties for this build -->
 	<property environment="env" />
 	<property name="projectName" value="dovemq-functional-test" />
 	<property name="jmxPortNumber" value="8746" />
 	<property name="lib" location="${basedir}/lib" />
 	<property name="mvn.repo.dir" location="${env.MVN_REPO}" />
+	<property name="dovemq.src.dir" location="${env.DOVEMQ_SRC_DIR}/dovemq/src/main/java" />
 	<property name="dovemq.jars.dir" location="${mvn.repo.dir}/net/dovemq" />
 	<property name="dovemq.version" value="1.0-SNAPSHOT" />
+
+	<!-- Add the Sonar task -->
+	<taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+		<classpath path="${env.ANT_HOME}/lib" />
+	</taskdef>
+
+	<property name="sonar.jdbc.url" value="jdbc:h2:tcp://localhost:9092/sonar" />
+	<property name="sonar.jdbc.driverClassName" value="org.h2.Driver" />
+	<property name="sonar.jdbc.username" value="sonar" />
+	<property name="sonar.jdbc.password" value="sonar" />
 
 	<path id="dovemq-functest-classpath">
 		<pathelement location="." />
@@ -131,7 +135,14 @@
 			</sequential>
 		</parallel>
 	</target>
-	
+
+	<target name="ConnectionTestWithBrokerRunning" description="running connection tests with DoveMQ Broker already running">
+		<sequential>
+			<sleep seconds="5" />
+			<antcall target="RunClients" />
+		</sequential>
+	</target>
+
 	<target name="RunSessionClient">
 		<echo>...Run DoveMQ Session client</echo>
 		<java fork="true" classname="net.dovemq.transport.session.SessionSysTestJMXClient" maxmemory="2048M" failonerror="true">
@@ -396,6 +407,42 @@
 		</parallel>
 	</target>
 
+	<target name="SessionTestWithBrokerRunning" description="running all session tests">
+
+		<sequential>
+			<sleep seconds="5" />
+
+			<antcall target="RunSessionClient">
+				<param name="param1" value="5" />
+				<param name="param2" value="SysTestCommandReceiver" />
+				<param name="param3" value="false" />
+			</antcall>
+
+			<antcall target="RunSessionClient">
+				<param name="param1" value="1" />
+				<param name="param2" value="SysTestCommandReceiver" />
+				<param name="param3" value="true" />
+			</antcall>
+
+			<antcall target="RunSessionClient">
+				<param name="param1" value="1" />
+				<param name="param2" value="SysTestDelayedAckLinkReceiver" />
+				<param name="param3" value="true" />
+			</antcall>
+
+			<antcall target="RunSessionClientBiDir">
+				<param name="param1" value="5" />
+				<param name="param2" value="SysTestCommandReceiver" />
+				<param name="param3" value="false" />
+			</antcall>
+
+			<antcall target="RunSessionClientBiDirIO">
+				<param name="param1" value="SysTestDelayedAckLinkReceiver" />
+			</antcall>
+
+		</sequential>
+	</target>
+
 	<target name="LinkTest" description="running all link tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
@@ -436,6 +483,42 @@
 		</parallel>
 	</target>
 
+	<target name="LinkTestWithBrokerRunning" description="running all link tests">
+		<sequential>
+			<sleep seconds="5" />
+
+			<antcall target="RunLinksClient">
+				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing" />
+				<param name="param1" value="5" />
+				<param name="param2" value="5000" />
+			</antcall>
+
+			<antcall target="RunLinksClient">
+				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneLink" />
+				<param name="param1" value="10" />
+				<param name="param2" value="5000" />
+			</antcall>
+
+			<antcall target="RunLinksClient">
+				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestReceiver" />
+				<param name="param1" value="src" />
+				<param name="param2" value="dest" />
+			</antcall>
+
+			<antcall target="RunLinksClient">
+				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestBiDir" />
+				<param name="param1" value="10000" />
+			</antcall>
+
+			<antcall target="RunLinksClient">
+				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSources" />
+				<param name="param1" value="5" />
+				<param name="param2" value="10000" />
+			</antcall>
+
+		</sequential>
+	</target>
+
 	<target name="LinkTestPerformance" description="running all link tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
@@ -456,6 +539,22 @@
 				<antcall target="ShutdownBroker" />
 			</sequential>
 		</parallel>
+	</target>
+
+	<target name="SonarRunDoveMQBroker">
+		<property name="sonar.jacoco.antTargets" value="RunDoveMQBroker" />
+		<property name="sonar.core.codeCoveragePlugin" value="jacoco" />
+		<property name="sonar.dynamicAnalysis" value="true" />
+		<property name="sonar.surefire.reportsPath" value="test-reports" />
+		<property name="sonar.jacoco.reportPath" value="jacoco.exec" />
+
+		<!-- list of mandatories Sonar properties -->
+		<property name="sonar.sources" value="${dovemq.src.dir}" />
+
+		<!-- list of optional Sonar properties -->
+		<property name="sonar.projectName" value="dovemq-functional-test" />
+		<property name="sonar.binaries" value="${dovemq.jars.dir}/dovemq/${dovemq.version}/dovemq-${dovemq.version}.jar,${mvn.repo.dir}/commons-lang/commons-lang/2.5/commons-lang-2.5.jar,${mvn.repo.dir}/org/jboss/netty/netty/3.2.4.Final/netty-3.2.4.Final.jar,${mvn.repo.dir}/log4j/log4j/1.2.15/log4j-1.2.15.jar" />
+		<sonar:sonar key="net.dovemq" version="1.0-SNAPSHOT" xmlns:sonar="antlib:org.sonar.ant" />
 	</target>
 
 </project>
