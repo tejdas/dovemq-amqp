@@ -65,13 +65,11 @@ public class LinkTestBiDir
             if ((numMessagesReceivedAtRemote == messagesToSend) && (numMessagesReceivedAtLocal == messagesToSend))
                 break;
         }
-        
+ 
+        System.out.println("Done: sleeping for 1 minute");
         Thread.sleep(60000);
         CAMQPLinkManager.shutdown();
         mbeanProxy.reset();
         jmxWrapper.cleanup();
-        System.out.println("All done");
-        Thread.sleep(300000);        
-        
     }
 }
