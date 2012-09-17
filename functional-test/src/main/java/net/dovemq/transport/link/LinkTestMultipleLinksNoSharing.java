@@ -115,7 +115,9 @@ public class LinkTestMultipleLinksNoSharing
             /*
              * Receiver-driven link-credit
              */
-            mbeanProxy.issueLinkCredit(sender.getLinkSender().getLinkName(), randomInt);            
+            CAMQPLinkSender linksender = sender.getLinkSender();
+            if (linksender != null)
+                mbeanProxy.issueLinkCredit(sender.getLinkSender().getLinkName(), randomInt);            
         }
         
         startSignal.countDown();
