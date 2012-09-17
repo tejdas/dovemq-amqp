@@ -3,10 +3,6 @@ package net.dovemq.transport.link;
 import java.math.BigInteger;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
-
-import net.jcip.annotations.GuardedBy;
-
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
@@ -18,6 +14,9 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionSource;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionTarget;
 import net.dovemq.transport.session.CAMQPSessionInterface;
+import net.jcip.annotations.GuardedBy;
+
+import org.apache.log4j.Logger;
 
 /**
  * This class is extended by Link Sender and Link Receiver

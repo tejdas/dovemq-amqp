@@ -9,6 +9,8 @@ import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
+import org.apache.log4j.Logger;
+
 /**
  * ReceiverLinkCreditPolicy determines how the Link credit
  * is increased when it drops to (below) zero.
@@ -42,6 +44,9 @@ enum ReceiverLinkCreditPolicy
  */
 public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverInterface
 {
+    private static final Logger log = Logger.getLogger(CAMQPLinkReceiver.class);
+    
+    private long targetIssuedLinkCredit = -1;
     private CAMQPTargetInterface target = null;
     public void setTarget(CAMQPTargetInterface target)
     {
@@ -99,6 +104,12 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
             deliveryCount++;
             linkCredit--;
             
+            if ((linkCredit < 0) && (targetIssuedLinkCredit > 0))
+            {
+                linkCredit = targetIssuedLinkCredit;
+                targetIssuedLinkCredit = -1;
+            }
+                    
             if ((linkCredit < 0) && (-linkCredit > CAMQPLinkConstants.LINK_CREDIT_VIOLATION_LIMIT))
             {
                 /*
@@ -106,6 +117,8 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                  * with error code: LINK_ERROR_TRANSFER_LIMIT_EXCEEDED
                  */
                 violatedLinkCredit = true;
+                System.out.println("violated link credit: closing link. Link credit should not have gone below -" + CAMQPLinkConstants.LINK_CREDIT_VIOLATION_LIMIT + " but is now " + linkCredit);
+                log.fatal("violated link credit: closing link. Link credit should not have gone below -" + CAMQPLinkConstants.LINK_CREDIT_VIOLATION_LIMIT + " but is now " + linkCredit);
             }
             else
             {
@@ -216,13 +229,39 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         // TODO Auto-generated method stub
     }
 
-    private void boostLinkCredit(long linkCreditBoost, boolean drain)
+    /**
+     * Called by target to alter linkCredit of receiver.
+     * Note that the linkCredit is not changed right away.
+     * The reason is that the Link sender might be sending
+     * messages with the last known link credit, and if we
+     * suddenly reduce the linkCredit of the receiver, the
+     * sender might appear to overrun the link credit, if it
+     * does not get the new flow frame until it has sent
+     * enough messages to appear to have breached the link credit.
+     * 
+     * So, we store the newLinkCredit in a member attribute
+     * targetIssuedLinkCredit. The linkCredit is altered only
+     * after it has been exhausted. In other words, the sender
+     * is provided with a new link credit only after it has used
+     * up its current linkCredit.
+     * 
+     * @param newLinkCredit
+     * @param drain
+     */
+    private void modifyLinkCredit(long newLinkCredit, boolean drain)
     {
+        if (newLinkCredit <= 0)
+            return;
         CAMQPControlFlow flow = null;
         synchronized (this)
         {
             linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_OFFERED_BY_TARGET;
-            linkCredit = linkCreditBoost;
+            targetIssuedLinkCredit = newLinkCredit;
+            if (linkCredit <= 0)
+            {
+                linkCredit = targetIssuedLinkCredit;
+                targetIssuedLinkCredit = -1;
+            }
             flow = populateFlowFrame();
             flow.setDrain(drain);
         }
@@ -233,7 +272,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
     @Override
     public void issueLinkCredit(long linkCreditBoost)
     {
-        boostLinkCredit(linkCreditBoost, false);
+        modifyLinkCredit(linkCreditBoost, false);
     }    
 
     /**
@@ -247,7 +286,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
     @Override
     public void getMessages(int messageCount)
     {
-        boostLinkCredit(messageCount, true);
+        modifyLinkCredit(messageCount, true);
     }
 
     /**

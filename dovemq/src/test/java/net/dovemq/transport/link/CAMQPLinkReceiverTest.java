@@ -1,5 +1,9 @@
 package net.dovemq.transport.link;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
 import java.util.Random;
 import java.util.UUID;
@@ -11,19 +15,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jmock.Mockery;
-import org.jmock.lib.legacy.ClassImposteriser;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
@@ -42,6 +33,15 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
 import net.dovemq.transport.session.CAMQPSessionSenderTest;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jmock.Mockery;
+import org.jmock.lib.legacy.ClassImposteriser;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class CAMQPLinkReceiverTest
 {
@@ -242,7 +242,7 @@ public class CAMQPLinkReceiverTest
         CAMQPDefinitionError error = detachControl.getError();
         assertTrue(error != null);
         assertEquals(error.getCondition(), CAMQPConstants.LINK_ERROR_TRANSFER_LIMIT_EXCEEDED);
-        assertEquals(target.numMessagesReceived.get(), 5);
+        assertEquals(target.numMessagesReceived.get(), CAMQPLinkConstants.LINK_CREDIT_VIOLATION_LIMIT);
         
         ChannelBuffer detachBuf = CAMQPSessionSenderTest.createDetachFrame(linkHandle);
         CAMQPFrameHeader frameHeader = CAMQPFrameHeader.createFrameHeader(sessionIncomingChannelId, detachBuf.readableBytes());
