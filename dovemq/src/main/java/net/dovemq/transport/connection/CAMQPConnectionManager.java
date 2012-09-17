@@ -1,5 +1,6 @@
 package net.dovemq.transport.connection;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -105,8 +106,9 @@ public final class CAMQPConnectionManager
         String hostName = "localhost";
         try
         {
-            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            hostName = localMachine.getCanonicalHostName();
+            InetAddress localMachine = InetAddress.getLocalHost();
+            //hostName = localMachine.getCanonicalHostName();
+            hostName = localMachine.getHostAddress();
             log.debug("hostName: " + hostName);
         }
         catch (java.net.UnknownHostException uhe)
@@ -115,6 +117,7 @@ public final class CAMQPConnectionManager
             // handle exception
         }
         this.containerId = String.format("%s@%s", containerId, hostName);
+        System.out.println("DoveMQ endpoint ID: " + this.containerId);
     }
 
     public static String getContainerId()

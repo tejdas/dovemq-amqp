@@ -46,6 +46,7 @@ public final class CAMQPListener
         bootstrap.setPipelineFactory(pipelineFactory);
         serverChannel = bootstrap.bind(new InetSocketAddress(listenAddress, CAMQPConnectionConstants.AMQP_IANA_PORT));
         log.info("CAMQP Listener on port: " + CAMQPConnectionConstants.AMQP_IANA_PORT);
+        System.out.println("DoveMQ Listener on port: " + CAMQPConnectionConstants.AMQP_IANA_PORT);       
     }
 
     public void shutdown()
