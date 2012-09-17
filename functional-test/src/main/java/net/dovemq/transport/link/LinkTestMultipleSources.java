@@ -23,7 +23,7 @@ public class LinkTestMultipleSources
     private static LinkCommandMBean mbeanProxy;
     
     private static final CountDownLatch startSignal = new CountDownLatch(1);
-    private static final CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
+    private static volatile CountDownLatch doneSignal = null;
     
     private static class LinkSourceDriver implements Runnable
     {
@@ -75,6 +75,8 @@ public class LinkTestMultipleSources
         
         NUM_THREADS = Integer.parseInt(args[3]);
         int numMessagesToSend = Integer.parseInt(args[4]);
+        
+        doneSignal = new CountDownLatch(NUM_THREADS);
           
         brokerContainerId = String.format("broker@%s", brokerIp);
         CAMQPLinkManager.initialize(false, publisherName);
@@ -110,8 +112,8 @@ public class LinkTestMultipleSources
                 break;
         }
         
-        System.out.println("Got all messages: sleeping for 1 min");
-        Thread.sleep(60000);
+        System.out.println("Got all messages: sleeping for 10 secs");
+        Thread.sleep(10000);
         executor.shutdown();
         CAMQPLinkManager.shutdown();
         System.out.println("Shutdown linkManager");
