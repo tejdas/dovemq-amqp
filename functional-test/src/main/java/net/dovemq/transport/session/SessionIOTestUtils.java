@@ -18,8 +18,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
@@ -28,6 +26,8 @@ import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 class FileHeader implements Serializable
 {
@@ -284,5 +284,12 @@ public class SessionIOTestUtils
         CAMQPSessionManager.shutdown();
         CAMQPConnectionManager.shutdown();
         CAMQPConnectionFactory.shutdown();
+    }
+    
+    public static String convertToLocalFileName(String inputFileFQName)
+    {
+        int idx = inputFileFQName.lastIndexOf('/');
+        String inputFileName = inputFileFQName.substring(idx+1);
+        return String.format("%s/%s", System.getenv("DOVEMQ_TEST_DIR"), inputFileName);
     }
 }

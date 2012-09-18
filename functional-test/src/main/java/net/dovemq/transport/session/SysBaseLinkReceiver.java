@@ -88,9 +88,10 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
             System.out.println("Target fileName: " + fh.getFileName());
             System.out.println("Target fileSize: " + expectedBytes);
 
+            String localFileName = SessionIOTestUtils.convertToLocalFileName(fh.getFileName());
             try
             {
-                outputStream = new FileOutputStream(fh.getFileName(), false);
+                outputStream = new FileOutputStream(localFileName, false);
             } catch (FileNotFoundException e)
             {
                 // TODO Auto-generated catch block

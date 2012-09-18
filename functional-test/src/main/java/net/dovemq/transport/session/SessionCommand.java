@@ -53,10 +53,12 @@ public class SessionCommand implements SessionCommandMBean
                 System.out.println("Null session for channel: " + channelId);
                 return;
             }
+            
+            String sourceFileName = SessionIOTestUtils.convertToLocalFileName(source);
             String destfile = String.format("%s.%d", dest, channelId);
             try
             {
-                SessionIOTestUtils.transmitFile(session, source, destfile);
+                SessionIOTestUtils.transmitFile(session, sourceFileName, destfile);
             }
             catch (InterruptedException e)
             {
