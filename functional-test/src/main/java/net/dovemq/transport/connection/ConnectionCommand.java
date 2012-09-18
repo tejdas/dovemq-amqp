@@ -33,7 +33,6 @@ public class ConnectionCommand implements ConnectionCommandMBean
     @Override
     public void shutdown()
     {
-        CAMQPConnectionManager.shutdown();
         shutdown = true;
     }
     
