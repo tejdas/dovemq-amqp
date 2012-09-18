@@ -5,10 +5,10 @@ import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
 public final class CAMQPListener
 {
@@ -63,6 +63,7 @@ public final class CAMQPListener
         ChannelFuture future = serverChannel.close();
         future.awaitUninterruptibly();
         factory.releaseExternalResources();
-        log.info("CAMQP Listener shut down");
+        log.info("DoveMQ Listener shut down");
+        System.out.println("DoveMQ Listener shut down");        
     }
 }

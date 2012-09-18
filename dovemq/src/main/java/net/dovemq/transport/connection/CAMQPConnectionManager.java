@@ -117,7 +117,8 @@ public final class CAMQPConnectionManager
             // handle exception
         }
         this.containerId = String.format("%s@%s", containerId, hostName);
-        System.out.println("DoveMQ endpoint ID: " + this.containerId);
+        log.info("Initialized DoveMQ endpoint ID: " + this.containerId);        
+        System.out.println("Initialized DoveMQ endpoint ID: " + this.containerId);
     }
 
     public static String getContainerId()
@@ -259,5 +260,7 @@ public final class CAMQPConnectionManager
                 Thread.currentThread().interrupt();
             }
         }
+        log.info("Shutdown DoveMQ endpoint ID: " + containerId);
+        System.out.println("Shutdown DoveMQ endpoint ID: " + containerId);        
     }
 }
