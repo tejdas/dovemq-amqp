@@ -127,7 +127,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                  * and send a flow-frame to the Link sender, if the link credit drops
                  * below minLinkCreditThreshold.
                  */
-                if ((linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE) && (linkCredit < minLinkCreditThreshold))
+                if ((linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE) && (linkCredit <= minLinkCreditThreshold))
                 {
                     linkCredit = minLinkCreditThreshold + linkCreditBoost;
                     flow = populateFlowFrame();
