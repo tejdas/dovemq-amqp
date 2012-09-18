@@ -66,8 +66,8 @@ public class LinkTestBiDir
                 break;
         }
  
-        System.out.println("Done: sleeping for 1 minute");
-        Thread.sleep(60000);
+        System.out.println("Done: sleeping for 20 seconds");
+        Thread.sleep(20000);
         CAMQPLinkManager.shutdown();
         mbeanProxy.reset();
         jmxWrapper.cleanup();
