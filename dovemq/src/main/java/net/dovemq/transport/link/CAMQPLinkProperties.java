@@ -1,22 +1,16 @@
 package net.dovemq.transport.link;
 
+import net.dovemq.transport.endpoint.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
-
-enum MessageDeliveryPolicy
-{
-    AtleastOnce,
-    AtmostOnce,
-    ExactlyOnce
-}
 
 public class CAMQPLinkProperties
 {
     private final long maxMessageSize;
     private final String senderSettleMode;
     private final String receiverSettleMode;
-    private final MessageDeliveryPolicy deliveryPolicy;
+    private final CAMQPMessageDeliveryPolicy deliveryPolicy;
     
-    public MessageDeliveryPolicy getDeliveryPolicy()
+    public CAMQPMessageDeliveryPolicy getDeliveryPolicy()
     {
         return deliveryPolicy;
     }
@@ -35,7 +29,7 @@ public class CAMQPLinkProperties
     public CAMQPLinkProperties(long maxMessageSize,
             String senderSettleMode,
             String receiverSettleMode,
-            MessageDeliveryPolicy deliveryPolicy)
+            CAMQPMessageDeliveryPolicy deliveryPolicy)
     {
         super();
         this.maxMessageSize = maxMessageSize;
@@ -50,6 +44,6 @@ public class CAMQPLinkProperties
         this.maxMessageSize = 0L;
         this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_MIXED_STR;
         this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND_STR;
-        deliveryPolicy = MessageDeliveryPolicy.ExactlyOnce;
+        deliveryPolicy = CAMQPMessageDeliveryPolicy.ExactlyOnce;
     }    
 }

@@ -2,12 +2,11 @@ package net.dovemq.transport.link;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.log4j.Logger;
 
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
@@ -17,11 +16,14 @@ import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
 
+import org.apache.log4j.Logger;
+
 enum LinkSenderType
 {
     PUSH,
     PULL
 }
+
 /**
  * This class is used
  * @author tejdas
@@ -29,6 +31,29 @@ enum LinkSenderType
  */
 public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
 {
+    static final class LinkHandshakeTracker
+    {
+        private final Map<String, CAMQPLinkMessageHandler> outstandingLinks = new ConcurrentHashMap<String, CAMQPLinkMessageHandler>();
+        
+        /**
+         * If we are the initiators of the Link establishment handshake, we first register
+         * the link end-point here. It will be removed in linkAccepted, upon completion of
+         * the link establishment.
+         * 
+         * @param linkName
+         * @param linkEndpoint
+         */
+        void registerOutstandingLink(String linkName, CAMQPLinkMessageHandler linkEndpoint)
+        {
+            outstandingLinks.put(linkName, linkEndpoint);
+        }
+        
+        CAMQPLinkMessageHandler unregisterOutstandingLink(String linkName)
+        {
+            return outstandingLinks.remove(linkName);
+        }
+    }
+
     private static final Logger log = Logger.getLogger(CAMQPLinkManager.class);
 
     private static final AtomicLong nextLinkHandle = new AtomicLong(0);

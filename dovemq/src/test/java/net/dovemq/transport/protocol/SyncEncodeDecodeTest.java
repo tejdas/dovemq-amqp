@@ -1,21 +1,22 @@
 package net.dovemq.transport.protocol;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
-import org.jboss.netty.buffer.ChannelBuffer;
-
-import net.dovemq.transport.protocol.data.CAMQPFormatCodes;
 
 import junit.framework.TestCase;
+import net.dovemq.transport.protocol.data.CAMQPFormatCodes;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 public class SyncEncodeDecodeTest extends TestCase
 {
-    private static final String testFileName = System.getenv("HOME") + "/camqptest.jar";
+    private static final String testFileName = System.getenv("HOME") + "/testfile.tar";
     
     public SyncEncodeDecodeTest()
     {

@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.UUID;
 
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.dovemq.transport.endpoint.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
@@ -323,7 +324,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         transferFrame.setHandle(linkHandle);
         transferFrame.setDeliveryTag(deliveryTag.getBytes());
 
-        boolean settled = (linkProperties.getDeliveryPolicy() == MessageDeliveryPolicy.AtmostOnce);
+        boolean settled = (linkProperties.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.AtmostOnce);
         transferFrame.setSettled(settled);
         
         int receiverSettleMode = settled? CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST : CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;

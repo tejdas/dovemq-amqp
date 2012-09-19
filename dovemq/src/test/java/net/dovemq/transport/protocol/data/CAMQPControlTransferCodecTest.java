@@ -7,17 +7,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.junit.Test;
-
+import junit.framework.TestCase;
 import net.dovemq.testutils.CAMQPTestUtils;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.CAMQPSyncDecoder;
-import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
-import net.dovemq.transport.protocol.data.CAMQPDefinitionModified;
 
-import junit.framework.TestCase;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.junit.Test;
 
 public class CAMQPControlTransferCodecTest extends TestCase
 {
@@ -156,7 +153,7 @@ public class CAMQPControlTransferCodecTest extends TestCase
         CAMQPEncoder outstream = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlTransfer.encode(outstream, data);
         
-        String testFileName = System.getenv("HOME") + "/camqptest.jar";
+        String testFileName = System.getenv("HOME") + "/testfile.tar";
         BufferedInputStream inputStream =
             new BufferedInputStream(new FileInputStream(testFileName));
 
