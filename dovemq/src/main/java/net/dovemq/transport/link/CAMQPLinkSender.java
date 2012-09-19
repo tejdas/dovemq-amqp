@@ -181,7 +181,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
             unsentMessagesAtSession++;
         }
     
-        send(deliveryTag, message, this, source);
+        send(deliveryTag, message, source);
 
         boolean parkedMessages = false;
         synchronized (this)
@@ -311,7 +311,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
                 }
             }
             
-            send(message.getDeliveryTag(), message.getPayload(), this, source);
+            send(message.getDeliveryTag(), message.getPayload(), source);
         }
         
         if (flow != null)

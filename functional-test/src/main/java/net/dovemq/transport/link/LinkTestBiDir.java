@@ -8,6 +8,7 @@ import javax.management.MalformedObjectNameException;
 import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 
@@ -38,7 +39,7 @@ public class LinkTestBiDir
         
         mbeanProxy = jmxWrapper.getLinkBean();
         
-        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, target);
+        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, target, new CAMQPEndpointPolicy());
         mbeanProxy.attachTarget(source,  target);
         
         mbeanProxy.createSource("reverseSrc", "reverseTar", containerId);

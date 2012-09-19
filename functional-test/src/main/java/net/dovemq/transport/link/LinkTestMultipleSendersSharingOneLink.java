@@ -11,6 +11,7 @@ import javax.management.MalformedObjectNameException;
 
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.common.JMXProxyWrapper;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 
 public class LinkTestMultipleSendersSharingOneLink
 {
@@ -58,7 +59,7 @@ public class LinkTestMultipleSendersSharingOneLink
         
         LinkCommandMBean mbeanProxy = jmxWrapper.getLinkBean();
         
-        CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target);
+        CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target, new CAMQPEndpointPolicy());
         System.out.println("Sender Link created between : " + source + "  and: " + target);
         
         String linkName = linkSender.getLinkName();

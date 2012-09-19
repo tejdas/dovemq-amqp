@@ -3,8 +3,9 @@ package net.dovemq.transport.link;
 import java.math.BigInteger;
 import java.util.UUID;
 
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.endpoint.CAMQPMessageDeliveryPolicy;
+import static net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
@@ -60,7 +61,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     
     protected final CAMQPSessionInterface session;
     
-    private final CAMQPLinkProperties linkProperties = new CAMQPLinkProperties();
+    protected CAMQPEndpointPolicy endpointPolicy = null;
 
     public CAMQPLinkEndpoint(CAMQPSessionInterface session)
     {
@@ -75,8 +76,9 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
      * @param sourceName
      * @param targetName
      */
-    void createLink(String sourceName, String targetName)
+    void createLink(String sourceName, String targetName, CAMQPEndpointPolicy endpointPolicy)
     {
+        this.endpointPolicy = endpointPolicy;
         sourceAddress = sourceName;
         targetAddress = targetName;
 
@@ -102,7 +104,9 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         {
             data.setInitialDeliveryCount(deliveryCount);
         }
-        data.setMaxMessageSize(BigInteger.valueOf(CAMQPLinkConstants.DEFAULT_MAX_MESSAGE_SIZE));
+        data.setMaxMessageSize(BigInteger.valueOf(endpointPolicy.getMaxMessageSize()));
+        data.setSndSettleMode(endpointPolicy.getSenderSettleMode());
+        data.setRcvSettleMode(endpointPolicy.getReceiverSettleMode());
         
         linkStateActor.sendAttach(data);
         linkStateActor.waitForAttached();
@@ -308,9 +312,9 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
      * 
      * @param deliveryTag
      * @param message
-     * @param linkSender
+     * @param messageSource
      */
-    void send(String deliveryTag, CAMQPMessagePayload message, CAMQPLinkSenderInterface linkSender, CAMQPSourceInterface messageSource)
+    void send(String deliveryTag, CAMQPMessagePayload message, CAMQPSourceInterface messageSource)
     {
         /*
          * TODO: fragment the message into multiple transfer frames
@@ -324,7 +328,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         transferFrame.setHandle(linkHandle);
         transferFrame.setDeliveryTag(deliveryTag.getBytes());
 
-        boolean settled = (linkProperties.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.AtmostOnce);
+        boolean settled = (endpointPolicy.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.AtmostOnce);
         transferFrame.setSettled(settled);
         
         int receiverSettleMode = settled? CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST : CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
@@ -335,6 +339,13 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
             messageSource.messageSent(deliveryId, new CAMQPMessage(deliveryTag, message));
         }
  
-        session.sendTransfer(transferFrame, message, linkSender);
-    }    
+        assert(this instanceof CAMQPLinkSenderInterface);
+        session.sendTransfer(transferFrame, message, (CAMQPLinkSenderInterface) this);
+    }
+    
+    private static void populateTransferFrameWithDispositionInfo(CAMQPControlTransfer transferFrame, CAMQPMessageDeliveryPolicy deliveryPolicy)
+    {
+        boolean senderSettled = (deliveryPolicy == CAMQPMessageDeliveryPolicy.AtmostOnce);
+
+    }
 }

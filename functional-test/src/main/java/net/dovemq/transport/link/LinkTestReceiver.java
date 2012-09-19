@@ -6,6 +6,7 @@ import java.util.Random;
 
 import javax.management.MalformedObjectNameException;
 import net.dovemq.transport.common.JMXProxyWrapper;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 
 public class LinkTestReceiver
 {
@@ -28,7 +29,7 @@ public class LinkTestReceiver
         
         LinkCommandMBean mbeanProxy = jmxWrapper.getLinkBean();
         
-        CAMQPLinkReceiver linkReceiver = CAMQPLinkFactory.createLinkReceiver(brokerContainerId, source, target);
+        CAMQPLinkReceiver linkReceiver = CAMQPLinkFactory.createLinkReceiver(brokerContainerId, source, target, new CAMQPEndpointPolicy());
         System.out.println("Receiver Link created between : " + source + "  and: " + target);
         long expectedMessageCount = 500;
         

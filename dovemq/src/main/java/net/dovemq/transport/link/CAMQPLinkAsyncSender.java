@@ -212,7 +212,7 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
             {
                 deliveryTag = message.getDeliveryTag();
                 messageOutstanding.set(true);
-                send(deliveryTag, message.getPayload(), this, source);
+                send(deliveryTag, message.getPayload(), source);
             }
             
             synchronized (this)

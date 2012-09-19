@@ -12,6 +12,7 @@ import javax.management.MalformedObjectNameException;
 
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.common.JMXProxyWrapper;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.session.SessionCommand;
 
 public class LinkTestMultipleLinksNoSharing
@@ -44,7 +45,7 @@ public class LinkTestMultipleLinksNoSharing
             String linkSource = String.format("%s%d", source, Thread.currentThread().getId());
             String linkTarget = String.format("%s%d", target, Thread.currentThread().getId());
             
-            CAMQPLinkSender sender = CAMQPLinkFactory.createLinkSender(brokerContainerId, linkSource, linkTarget);
+            CAMQPLinkSender sender = CAMQPLinkFactory.createLinkSender(brokerContainerId, linkSource, linkTarget, new CAMQPEndpointPolicy());
             linkSender = sender;
             System.out.println("Sender Link created between : " + linkSource + "  and: " + linkTarget);
             

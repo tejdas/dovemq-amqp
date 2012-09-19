@@ -3,6 +3,7 @@ package net.dovemq.transport.link;
 import java.util.Collection;
 
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
@@ -156,7 +157,7 @@ public class LinkCommand implements LinkCommandMBean
             String target,
             String remoteContainerId)
     {
-        linkSource = CAMQPEndpointManager.createSource(remoteContainerId, source, target);
+        linkSource = CAMQPEndpointManager.createSource(remoteContainerId, source, target, new CAMQPEndpointPolicy());
         if (linkTargetReceiver != null)
             linkTargetReceiver.setSource(linkSource);
     }

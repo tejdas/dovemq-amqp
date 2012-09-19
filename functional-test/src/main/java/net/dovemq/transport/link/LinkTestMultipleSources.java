@@ -10,6 +10,7 @@ import javax.management.MalformedObjectNameException;
 
 import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.session.SessionCommand;
@@ -49,7 +50,7 @@ public class LinkTestMultipleSources
             }
             String localSource = String.format("%s%d", source, Thread.currentThread().getId());
             String localTarget = String.format("%s%d", target, Thread.currentThread().getId());
-            CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, localSource, localTarget);
+            CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, localSource, localTarget, new CAMQPEndpointPolicy());
             mbeanProxy.attachSharedTarget(localSource,  localTarget);
             
             Random randomGenerator = new Random();

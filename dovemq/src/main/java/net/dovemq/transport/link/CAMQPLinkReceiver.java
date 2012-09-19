@@ -4,39 +4,13 @@ import java.util.Collection;
 
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
+import static net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
 import org.apache.log4j.Logger;
-
-/**
- * ReceiverLinkCreditPolicy determines how the Link credit
- * is increased when it drops to (below) zero.
- * 
- * @author tejdas
- */
-enum ReceiverLinkCreditPolicy
-{
-    /*
-     * Link credit is offered by the target receiver, whenever
-     * it wants to get message(s).
-     */
-    CREDIT_OFFERED_BY_TARGET,
-    /*
-     * When the Link receiver's computed link credit goes below
-     * a certain threshold, it automatically increases the link
-     * credit. This enables messages to flow at a steady state,
-     * and the Link sender never runs out of link-credit.
-     */
-    CREDIT_STEADY_STATE,
-    /*
-     * Link credit is incremented whenever Link sender has no
-     * more credit, and sends a flow-frame to ask for more credit.
-     */
-    CREDIT_AS_DEMANDED_BY_SENDER
-}
 
 /**
  * Implementation of AMQP Link Receiver.
