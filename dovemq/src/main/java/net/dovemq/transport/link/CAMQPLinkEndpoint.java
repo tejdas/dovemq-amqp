@@ -3,6 +3,7 @@ package net.dovemq.transport.link;
 import java.math.BigInteger;
 import java.util.UUID;
 
+import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import static net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
@@ -61,7 +62,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     
     protected final CAMQPSessionInterface session;
     
-    protected CAMQPEndpointPolicy endpointPolicy = null;
+    protected CAMQPEndpointPolicy endpointPolicy = CAMQPEndpointManager.getDefaultEndpointPolicy();
 
     public CAMQPLinkEndpoint(CAMQPSessionInterface session)
     {
@@ -104,6 +105,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         {
             data.setInitialDeliveryCount(deliveryCount);
         }
+ 
         data.setMaxMessageSize(BigInteger.valueOf(endpointPolicy.getMaxMessageSize()));
         data.setSndSettleMode(endpointPolicy.getSenderSettleMode());
         data.setRcvSettleMode(endpointPolicy.getReceiverSettleMode());
@@ -219,6 +221,29 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
                 deliveryCount = data.getInitialDeliveryCount();
         }
         
+        /*
+         * Override endpointPolicy with that received from peer
+         */
+        long maxMessageSize = CAMQPLinkConstants.DEFAULT_MAX_MESSAGE_SIZE;
+        if (data.isSetMaxMessageSize())
+        {
+            maxMessageSize = data.getMaxMessageSize().longValue();
+        }
+        
+        int sndSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_MIXED;
+        if (data.isSetSndSettleMode())
+        {
+            sndSettleMode = data.getSndSettleMode();
+        }
+        
+        int rcvSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
+        if (data.isSetRcvSettleMode())
+        {
+            rcvSettleMode = data.getRcvSettleMode();
+        }
+        
+        endpointPolicy = new CAMQPEndpointPolicy(maxMessageSize, sndSettleMode, rcvSettleMode, endpointPolicy);
+
         CAMQPControlAttach responseData = new CAMQPControlAttach();
         responseData.setHandle(linkHandle);
         responseData.setName(linkName);

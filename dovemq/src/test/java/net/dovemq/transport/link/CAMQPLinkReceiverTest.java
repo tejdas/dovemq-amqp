@@ -224,6 +224,7 @@ public class CAMQPLinkReceiverTest
     @Test
     public void testSendMessageExceedLinkCredit() throws InterruptedException
     {   
+        linkReceiver.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_OFFERED_BY_TARGET);
         MessageSender sender = new MessageSender((int) CAMQPLinkConstants.LINK_CREDIT_VIOLATION_LIMIT + 1, true, false);
         executor.submit(sender);
 

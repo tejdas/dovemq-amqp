@@ -112,6 +112,22 @@ public final class CAMQPEndpointPolicy
             this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
     }
     
+    public CAMQPEndpointPolicy(long maxMessageSize,
+            int senderSettleMode,
+            int receiverSettleMode,
+            CAMQPEndpointPolicy that)
+    {
+        super();
+        this.maxMessageSize = maxMessageSize;
+        this.maxAvailableLimit = that.maxAvailableLimit;
+        this.senderSettleMode = senderSettleMode;
+        this.receiverSettleMode = receiverSettleMode;
+        deliveryPolicy = that.deliveryPolicy;
+        linkCreditPolicy = that.linkCreditPolicy;
+        minLinkCreditThreshold = that.minLinkCreditThreshold;
+        linkCreditBoost = that.linkCreditBoost;
+    }
+    
     public CAMQPEndpointPolicy()
     {
         super();

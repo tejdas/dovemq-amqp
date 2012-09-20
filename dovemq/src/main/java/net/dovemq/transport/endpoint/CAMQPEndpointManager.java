@@ -9,10 +9,21 @@ import net.dovemq.transport.link.LinkRole;
 
 public final class CAMQPEndpointManager
 {
+    private static CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
+    
+    public static CAMQPEndpointPolicy getDefaultEndpointPolicy()
+    {
+        return defaultEndpointPolicy;
+    }
+
+    public static void setDefaultEndpointPolicy(CAMQPEndpointPolicy defaultEndpointPolicy)
+    {
+        CAMQPEndpointManager.defaultEndpointPolicy = defaultEndpointPolicy;
+    }
+
     public static CAMQPSourceInterface createSource(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
         CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target, endpointPolicy);
-        //linkSender.setMaxAvailableLimit(16348);
         CAMQPSource dovemqSource = new CAMQPSource(linkSender);
         linkSender.setSource(dovemqSource);
         return dovemqSource;

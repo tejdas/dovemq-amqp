@@ -334,4 +334,16 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         }
         return deliveryIds;
     }
+    
+    @Override
+    public void attached(boolean isInitiator)
+    {
+        super.attached(isInitiator);
+        synchronized (this)
+        {
+            linkCreditPolicy = endpointPolicy.getLinkCreditPolicy();
+            minLinkCreditThreshold = endpointPolicy.getMinLinkCreditThreshold();
+            linkCreditBoost = endpointPolicy.getLinkCreditBoost();
+        }
+    }
 }
