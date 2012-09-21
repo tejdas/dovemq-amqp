@@ -367,6 +367,31 @@
 			</sequential>
 		</parallel>
 	</target>
+	
+	<target name="LinkTestSimple" description="running link test">
+		<parallel>
+			<antcall target="RunDoveMQBroker" />
+			<sequential>
+				<sleep seconds="5" />
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestSimple" />
+					<param name="param1" value="1000" />
+					<param name="param2" value="ExactlyOnce" />
+				</antcall>
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestSimple" />
+					<param name="param1" value="1000" />
+					<param name="param2" value="AtleastOnce" />
+				</antcall>
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestSimple" />
+					<param name="param1" value="1000" />
+					<param name="param2" value="AtmostOnce" />
+				</antcall>
+				<antcall target="ShutdownBroker" />
+			</sequential>
+		</parallel>
+	</target>	
 
 	<target name="SessionTest" description="running all session tests">
 		<parallel>
@@ -477,7 +502,22 @@
 					<param name="param1" value="5" />
 					<param name="param2" value="10000" />
 				</antcall>
-
+				
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestSimple" />
+					<param name="param1" value="1000" />
+					<param name="param2" value="ExactlyOnce" />
+				</antcall>
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestSimple" />
+					<param name="param1" value="1000" />
+					<param name="param2" value="AtleastOnce" />
+				</antcall>
+				<antcall target="RunLinksClient">
+					<param name="paramClassName" value="net.dovemq.transport.link.LinkTestSimple" />
+					<param name="param1" value="1000" />
+					<param name="param2" value="AtmostOnce" />
+				</antcall>
 				<antcall target="ShutdownBroker" />
 			</sequential>
 		</parallel>
