@@ -184,7 +184,7 @@ class CAMQPDispositionSender implements Runnable
         {
             for (DispositionRange range : dispositionRanges)
             {
-                String roleStr = (role)? "receiver" : "sender";
+                //String roleStr = (role)? "receiver" : "sender";
                 //System.out.println("disposition: role: " + roleStr + " details: " + range.toString() + "  current time: " + System.currentTimeMillis());
                 CAMQPControlDisposition disposition = new CAMQPControlDisposition();
                 disposition.setBatchable(false);
