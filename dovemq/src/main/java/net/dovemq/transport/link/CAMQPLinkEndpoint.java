@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import static net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
@@ -63,6 +63,11 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     protected final CAMQPSessionInterface session;
     
     protected CAMQPEndpointPolicy endpointPolicy = CAMQPEndpointManager.getDefaultEndpointPolicy();
+
+    public CAMQPEndpointPolicy getEndpointPolicy()
+    {
+        return endpointPolicy;
+    }
 
     public CAMQPLinkEndpoint(CAMQPSessionInterface session)
     {
@@ -353,11 +358,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         transferFrame.setHandle(linkHandle);
         transferFrame.setDeliveryTag(deliveryTag.getBytes());
 
-        boolean settled = (endpointPolicy.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.AtmostOnce);
-        transferFrame.setSettled(settled);
-        
-        int receiverSettleMode = settled? CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST : CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
-        transferFrame.setRcvSettleMode(receiverSettleMode);
+        populateTransferFrameWithDispositionPolicy(transferFrame, endpointPolicy.getDeliveryPolicy());
         
         if (messageSource != null)
         {
@@ -368,9 +369,11 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         session.sendTransfer(transferFrame, message, (CAMQPLinkSenderInterface) this);
     }
     
-    private static void populateTransferFrameWithDispositionInfo(CAMQPControlTransfer transferFrame, CAMQPMessageDeliveryPolicy deliveryPolicy)
+    private static void populateTransferFrameWithDispositionPolicy(CAMQPControlTransfer transferFrame, CAMQPMessageDeliveryPolicy deliveryPolicy)
     {
         boolean senderSettled = (deliveryPolicy == CAMQPMessageDeliveryPolicy.AtmostOnce);
-
+        int receiverSettledMode = (deliveryPolicy == CAMQPMessageDeliveryPolicy.ExactlyOnce)? CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND : CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST;
+        transferFrame.setSettled(senderSettled);
+        transferFrame.setRcvSettleMode(receiverSettledMode);
     }
 }

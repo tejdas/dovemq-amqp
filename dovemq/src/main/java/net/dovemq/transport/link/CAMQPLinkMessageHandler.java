@@ -18,7 +18,7 @@ public interface CAMQPLinkMessageHandler
     
     public void flowReceived(CAMQPControlFlow flow);
     
-    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean settleMode, Object newState);
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
 
     public void sessionClosed();
     

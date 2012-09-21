@@ -12,14 +12,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import net.jcip.annotations.GuardedBy;
-import net.jcip.annotations.Immutable;
-import net.jcip.annotations.ThreadSafe;
-
-import org.apache.log4j.Logger;
-import org.jboss.netty.buffer.ChannelBuffer;
-
-import net.dovemq.transport.session.CAMQPSessionManager;
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
 import net.dovemq.transport.frame.CAMQPFrame;
@@ -38,7 +30,14 @@ import net.dovemq.transport.protocol.data.CAMQPControlDisposition;
 import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionDeliveryState;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
+import net.jcip.annotations.GuardedBy;
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
+
+import org.apache.log4j.Logger;
+import org.jboss.netty.buffer.ChannelBuffer;
 
 /**
  * AMQP Session implementation
@@ -966,8 +965,15 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         CAMQPControlDisposition data = CAMQPControlDisposition.decode(decoder);
         Collection<Long> disposedIds = new LinkedList<Long>();
         
-        Object newState = data.isSetState()? data.getState() : null;
-        boolean settleMode = data.isSetSettled()? data.getSettled() : null;
+        //Object newState = data.isSetState()? data.getState() : null;
+        Object newState = data.getState();
+        Object outcome = null;
+        if (newState instanceof CAMQPDefinitionDeliveryState)
+        {
+            CAMQPDefinitionDeliveryState deliveryState = (CAMQPDefinitionDeliveryState) newState;
+            outcome = deliveryState.getOutcome();
+        }
+        boolean isMessageSettledByPeer = data.isSetSettled()? data.getSettled() : null;
         boolean role = data.getRole();
         long firstDisposedId = data.getFirst();
         long lastDisposedId = data.isSetLast()? data.getLast() : data.getFirst();
@@ -988,7 +994,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(linkReceiverKey);
             if ((linkReceiver != null) && linkReceiver.getRole() == expectedRole)
             {
-                disposedIds = linkReceiver.dispositionReceived(disposedIds, settleMode, newState);
+                disposedIds = linkReceiver.dispositionReceived(disposedIds, isMessageSettledByPeer, outcome);
             }
         }
     }

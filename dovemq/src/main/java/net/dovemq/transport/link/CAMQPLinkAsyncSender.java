@@ -266,11 +266,11 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     }
 
     @Override
-    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean settleMode, Object newState)
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
     {
         if (source != null)
         {
-            return source.processDisposition(deliveryIds, settleMode, newState);
+            return source.processDisposition(deliveryIds, isMessageSettledByPeer, newState);
         }
         return deliveryIds;
     }

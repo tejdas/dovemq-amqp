@@ -7,20 +7,24 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkEndpoint;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.link.CAMQPMessage;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
 
 class CAMQPSource implements CAMQPSourceInterface
 {
     private final CAMQPLinkSenderInterface linkSender;
+    private final CAMQPEndpointPolicy endpointPolicy;
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     
-    CAMQPSource(CAMQPLinkSenderInterface linkSender)
+    CAMQPSource(CAMQPLinkSenderInterface linkSender, CAMQPEndpointPolicy endpointPolicy)
     {
         super();
         this.linkSender = linkSender;
+        this.endpointPolicy = endpointPolicy;
     }
 
     @Override
@@ -49,22 +53,30 @@ class CAMQPSource implements CAMQPSourceInterface
     @Override
     public void messageSent(long deliveryId, CAMQPMessage message)
     {
-        unsettledDeliveries.put(deliveryId, message);
+        if (endpointPolicy.getDeliveryPolicy() != CAMQPMessageDeliveryPolicy.AtmostOnce)
+            unsettledDeliveries.put(deliveryId, message);
     }
 
     @Override
-    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean settleMode, Object newState)
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
     {
-        if (settleMode)
+        if (endpointPolicy.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.AtmostOnce)
         {
             return deliveryIds;
         }
+        
+        if (isMessageSettledByPeer && (endpointPolicy.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.ExactlyOnce))
+        {
+            return deliveryIds;
+        }        
+
         List<Long> settledDeliveryIds = new ArrayList<Long>();
         for (long deliveryId : deliveryIds)
         {
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null)
             {
+                //System.out.println("SOURCE processed disposition, settled deliveryId and acking: " + deliveryId + "  current time: " + System.currentTimeMillis());
                 settledDeliveryIds.add(deliveryId);
             }
         }
@@ -72,7 +84,7 @@ class CAMQPSource implements CAMQPSourceInterface
         for (long settledDeliveryId : settledDeliveryIds)
         {
             CAMQPLinkEndpoint linkEndpoint = (CAMQPLinkEndpoint) linkSender;
-            linkEndpoint.sendDisposition(settledDeliveryId, true, newState);
+            linkEndpoint.sendDisposition(settledDeliveryId, true, new CAMQPDefinitionAccepted());
         }
         
         if (!settledDeliveryIds.isEmpty())

@@ -21,10 +21,15 @@ public final class CAMQPEndpointManager
         CAMQPEndpointManager.defaultEndpointPolicy = defaultEndpointPolicy;
     }
 
+    public static CAMQPSourceInterface createSource(String containerId, String source, String target)
+    {
+        return createSource(containerId, source, target, defaultEndpointPolicy);
+    }
+    
     public static CAMQPSourceInterface createSource(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
         CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target, endpointPolicy);
-        CAMQPSource dovemqSource = new CAMQPSource(linkSender);
+        CAMQPSource dovemqSource = new CAMQPSource(linkSender, linkSender.getEndpointPolicy());
         linkSender.setSource(dovemqSource);
         return dovemqSource;
     }
@@ -44,7 +49,7 @@ public final class CAMQPEndpointManager
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
         {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
-            CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver);
+            CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkEndpoint.getEndpointPolicy());
             linkReceiver.setTarget(dovemqTarget);
             linkReceiver.flowMessages(10, 100);
             return dovemqTarget;

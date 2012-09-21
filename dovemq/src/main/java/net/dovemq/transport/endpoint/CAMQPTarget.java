@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkEndpoint;
 import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
@@ -18,12 +19,14 @@ class CAMQPTarget implements CAMQPTargetInterface
 
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     private final CAMQPLinkReceiverInterface linkReceiver;
+    private final CAMQPEndpointPolicy endpointPolicy;
     private CAMQPTargetReceiver targetReceiver = null;
     
-    CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver)
+    CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver,  CAMQPEndpointPolicy endpointPolicy)
     {
         super();
         this.linkReceiver = linkReceiver;
+        this.endpointPolicy = endpointPolicy;
     }
 
     @Override
@@ -53,8 +56,11 @@ class CAMQPTarget implements CAMQPTargetInterface
             targetReceiver.messageReceived(message);
         }
         
-        // send the disposition
-        messageProcessingComplete(deliveryId, settled, new CAMQPDefinitionAccepted());
+        if (endpointPolicy.getDeliveryPolicy() != CAMQPMessageDeliveryPolicy.AtmostOnce)
+        {
+            // send the disposition
+            messageProcessingComplete(deliveryId, settled, new CAMQPDefinitionAccepted());
+        }
     }
 
     @Override
@@ -67,9 +73,9 @@ class CAMQPTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean settleMode, Object newState)
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
     {
-        if (!settleMode)
+        if (!isMessageSettledByPeer)
         {
             return deliveryIds;
         }
@@ -79,7 +85,7 @@ class CAMQPTarget implements CAMQPTargetInterface
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null)
             {
-                //System.out.println("processed and acked deliveryId: " + deliveryId);
+                //System.out.println("TARGET processed disposition, settled deliveryId: " + deliveryId + "  current time: " + System.currentTimeMillis());
                 settledDeliveryIds.add(deliveryId);
             }
         }

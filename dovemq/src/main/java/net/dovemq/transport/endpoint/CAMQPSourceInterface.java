@@ -13,5 +13,5 @@ public interface CAMQPSourceInterface
     public void messageStateChanged(String deliveryId, int oldState, int newState);
     
     public void messageSent(long deliveryId, CAMQPMessage message);
-    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean settleMode, Object newState);
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
 }

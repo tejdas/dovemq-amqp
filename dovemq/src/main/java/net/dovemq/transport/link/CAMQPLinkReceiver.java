@@ -326,11 +326,11 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
     }
 
     @Override
-    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean settleMode, Object newState)
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
     {
         if (target != null)
         {
-            return target.processDisposition(deliveryIds, settleMode, newState);
+            return target.processDisposition(deliveryIds, isMessageSettledByPeer, newState);
         }
         return deliveryIds;
     }

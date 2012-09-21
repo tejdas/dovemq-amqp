@@ -122,10 +122,53 @@ public final class CAMQPEndpointPolicy
         this.maxAvailableLimit = that.maxAvailableLimit;
         this.senderSettleMode = senderSettleMode;
         this.receiverSettleMode = receiverSettleMode;
-        deliveryPolicy = that.deliveryPolicy;
         linkCreditPolicy = that.linkCreditPolicy;
         minLinkCreditThreshold = that.minLinkCreditThreshold;
         linkCreditBoost = that.linkCreditBoost;
+        
+        if ((senderSettleMode == CAMQPConstants.SENDER_SETTLE_MODE_SETTLED) &&
+            (receiverSettleMode == CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST))
+        {
+            deliveryPolicy = CAMQPMessageDeliveryPolicy.AtmostOnce;
+        }
+        else if ((senderSettleMode == CAMQPConstants.SENDER_SETTLE_MODE_UNSETTLED) &&
+                 (receiverSettleMode == CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST))
+        {
+            deliveryPolicy = CAMQPMessageDeliveryPolicy.AtleastOnce;
+        }
+        else
+        {
+            deliveryPolicy = that.deliveryPolicy;
+        }
+    }
+
+    public CAMQPEndpointPolicy(CAMQPMessageDeliveryPolicy deliveryPolicy)
+    {
+        super();
+        this.maxMessageSize = CAMQPLinkConstants.DEFAULT_MAX_MESSAGE_SIZE;
+        this.maxAvailableLimit = CAMQPLinkConstants.DEFAULT_MAX_AVAILABLE_MESSAGES_AT_SENDER;
+        linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE;
+        minLinkCreditThreshold = 10;
+        linkCreditBoost = 100;
+        this.deliveryPolicy = deliveryPolicy;
+        switch (deliveryPolicy)
+        {
+        case AtmostOnce:
+            this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_SETTLED;
+            this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST;
+            break;
+            
+        case AtleastOnce:
+            this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_UNSETTLED;
+            this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST;
+            break;
+            
+        case ExactlyOnce:
+        default:
+            this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_UNSETTLED;
+            this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
+            break;
+        }
     }
     
     public CAMQPEndpointPolicy()
@@ -139,5 +182,5 @@ public final class CAMQPEndpointPolicy
         linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE;
         minLinkCreditThreshold = 10;
         linkCreditBoost = 100;
-    }  
+    } 
 }
