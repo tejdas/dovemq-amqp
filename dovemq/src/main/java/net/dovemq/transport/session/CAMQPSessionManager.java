@@ -29,6 +29,27 @@ public class CAMQPSessionManager
 
     private static ExecutorService executor = null;
 
+    private static volatile long maxOutgoingWindowSize = CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE;
+
+    public static long getMaxOutgoingWindowSize()
+    {
+        return maxOutgoingWindowSize;
+    }
+
+    public static long getMaxIncomingWindowSize()
+    {
+        return maxIncomingWindowSize;
+    }
+
+    private static volatile long maxIncomingWindowSize = CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE;
+
+    public static void setMaxSessionWindowSize(long maxOutgoingWindowSize,
+            long maxIncomingWindowSize)
+    {
+        CAMQPSessionManager.maxOutgoingWindowSize = maxOutgoingWindowSize;
+        CAMQPSessionManager.maxIncomingWindowSize = maxIncomingWindowSize;
+    }
+
     public static synchronized ExecutorService getExecutor()
     {
         if (executor == null)
@@ -160,7 +181,7 @@ public class CAMQPSessionManager
             return sessionList;
         }
     }
-    
+
     private void closeSessions()
     {
         Set<String> containerIds = null;
@@ -168,7 +189,7 @@ public class CAMQPSessionManager
         {
             containerIds = mappedSessions.keySet();
         }
-        
+
         for (String containerId : containerIds)
         {
             List<CAMQPSession> sessions = getAllSessions(containerId);

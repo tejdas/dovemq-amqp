@@ -60,7 +60,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         final CAMQPMessagePayload payload;
         final CAMQPLinkSenderInterface linkSender;
     }
-    
+
     private static class CAMQPFlowFrameSender implements Runnable
     {
         private final CAMQPSession session;
@@ -73,10 +73,10 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         @Override
         public void run()
         {
-            session.sendFlowInternal();         
+            session.sendFlowInternal();
         }
     }
-    
+
     @Immutable
     static class CAMQPChannel
     {
@@ -97,20 +97,19 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         private final CAMQPConnection amqpConnection;
         private final int channelId;
     }
-    
+
     private static final Logger log = Logger.getLogger(CAMQPSession.class);
-    
+
     /*
-     * The following attributes are used to schedule a recurring send of flow-frame
-     * until the session is not under flow-control state any longer.
+     * The following attributes are used to schedule a recurring send of
+     * flow-frame until the session is not under flow-control state any longer.
      */
-    private static final long FLOW_SENDER_INTERVAL = 1000L;
     final ScheduledExecutorService flowSendScheduler = Executors.newScheduledThreadPool(2);
     @GuardedBy("this")
     private Date lastFlowSent = new Date();
     @GuardedBy("this")
     private boolean isFlowSendScheduled = false;
-    
+
     private final Map<Long, CAMQPLinkMessageHandler> linkReceivers = new ConcurrentHashMap<Long, CAMQPLinkMessageHandler>();
 
     private CAMQPSessionStateActor stateActor = null;
@@ -126,7 +125,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     private int incomingChannelNumber = 0;
     @GuardedBy("stateActor")
     private CAMQPConnection connection = null;
-    
+
     private CAMQPDispositionSender dispositionSender = null;
 
     CAMQPConnection getConnection()
@@ -138,7 +137,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
      * I/O state
      */
     private final AtomicLong deliveryId = new AtomicLong(0L);
-    
+
     @GuardedBy("this")
     private boolean sendInProgress = false;
     @GuardedBy("this")
@@ -150,10 +149,10 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     @GuardedBy("this")
     private long nextOutgoingTransferId = 0;
     @GuardedBy("this")
-    private long outgoingWindow = CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE;
+    private long outgoingWindow;
     @GuardedBy("this")
-    private long incomingWindow = CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE;
-    
+    private long incomingWindow;
+
     /*
      * computed after begin, transfer and flow frames received from peer
      */
@@ -172,6 +171,8 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         super();
         this.connection = connection;
         this.stateActor = stateActor;
+        outgoingWindow = CAMQPSessionManager.getMaxOutgoingWindowSize();
+        incomingWindow = CAMQPSessionManager.getMaxIncomingWindowSize();
     }
 
     /*
@@ -181,6 +182,8 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     {
         super();
         stateActor = new CAMQPSessionStateActor(this);
+        outgoingWindow = CAMQPSessionManager.getMaxOutgoingWindowSize();
+        incomingWindow = CAMQPSessionManager.getMaxIncomingWindowSize();
     }
 
     public void transferExecuteFailed(long failedTransferId)
@@ -194,7 +197,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
      * Called by AMQP session initiator to send a BEGIN frame,
      * and wait for the BEGIN frame from the AMQP peer, after
      * which it transitions to MAPPED state.
-     * 
+     *
      * @param targetContainerId
      * @throws CAMQPSessionBeginException
      */
@@ -220,14 +223,14 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         stateActor.sendBegin(beginContext);
         stateActor.waitForMapped();
     }
-    
+
     private synchronized void setFlowControlAttributes(CAMQPControlBegin beginControl)
     {
         beginControl.setIncomingWindow(incomingWindow);
         beginControl.setOutgoingWindow(outgoingWindow);
-        beginControl.setNextOutgoingId(nextOutgoingTransferId);        
+        beginControl.setNextOutgoingId(nextOutgoingTransferId);
     }
-    
+
     /**
      * Called after the Session accepter receives BEGIN frame.
      * It responds by sending a BEGIN frame to the initiator,
@@ -244,7 +247,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         incomingChannelNumber = receivedData.getChannelNumber();
         outgoingChannelNumber = connection.reserveOutgoingChannel();
         connection.register(incomingChannelNumber, this);
-        
+
         CAMQPControlBegin peerBeginControl = (CAMQPControlBegin) receivedData.getSessionControl();
         retrieveRemoteFlowControlAttributes(peerBeginControl);
 
@@ -255,13 +258,13 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
 
         stateActor.sendBegin(beginContext);
     }
-    
+
     private synchronized void retrieveRemoteFlowControlAttributes(CAMQPControlBegin peerBeginControl)
     {
         retrieveAndSetRemoteFlowControlAttributes(peerBeginControl.getOutgoingWindow(),
                 peerBeginControl.getNextOutgoingId(), peerBeginControl.getIncomingWindow());
     }
-    
+
     @GuardedBy("this")
     void retrieveAndSetRemoteFlowControlAttributes(long remoteOutgoingWindow, long nextIncomingTransferId, long remoteIncomingWindow)
     {
@@ -269,7 +272,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         this.nextIncomingTransferId = nextIncomingTransferId;
         this.remoteIncomingWindow = remoteIncomingWindow;
     }
-    
+
     /*
      * Begin received by the Session initiator
      */
@@ -281,7 +284,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
          */
         incomingChannelNumber = frameHeader.getChannelNumber();
         retrieveRemoteFlowControlAttributes(peerBeginControl);
-        
+
         connection.register(incomingChannelNumber, this);
         CAMQPSessionControlWrapper beginContext = new CAMQPSessionControlWrapper(outgoingChannelNumber, peerBeginControl);
         stateActor.beginReceived(beginContext);
@@ -293,7 +296,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         String logInfo = String.format("Session is attached to txChannel: %d and rxChannel: %d", outgoingChannelNumber, incomingChannelNumber);
         log.info(logInfo);
         dispositionSender = new CAMQPDispositionSender(this);
-        flowSendScheduler.schedule(dispositionSender, CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL, TimeUnit.MILLISECONDS);   
+        flowSendScheduler.schedule(dispositionSender, CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -313,7 +316,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 log.info("Session already closed or closing in progress");
                 return;
             }
-                
+
             closePending = true;
         }
         log.debug("Sleeping for 1 sec before session close");
@@ -335,7 +338,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         stateActor.sendEnd(endContext);
         stateActor.waitForUnmapped();
     }
-    
+
     void endReceived(CAMQPControlEnd receivedData)
     {
         CAMQPControlEnd endControl = new CAMQPControlEnd();
@@ -355,7 +358,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         }
 
         flowSendScheduler.shutdown();
-        
+
         for (Long linkHandle : linkReceivers.keySet())
         {
             CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(linkHandle);
@@ -370,7 +373,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         log.warn("Session abruptly closed");
         stateActor.channelAbruptlyDetached();
     }
-    
+
     @Override
     public void sendLinkControlFrame(ChannelBuffer encodedLinkControlFrame)
     {
@@ -378,9 +381,9 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         if (channel != null)
         {
             channel.getAmqpConnection().sendFrame(encodedLinkControlFrame, channel.getChannelId());;
-        }   
+        }
     }
-    
+
     /**
      * Called by Link layer to get the delivery Id for the next
      * transfer frame.
@@ -390,30 +393,30 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     {
         return deliveryId.getAndIncrement();
     }
-    
+
     @GuardedBy("this")
     private boolean canSendTransfer()
     {
         return (!unsentTransfers.isEmpty()) && (remoteIncomingWindow > 0);
     }
-    
+
     /**
      * Sends the transfer frame to the peer AMQP session.
-     * 
+     *
      * If the sending transfer frames is in progress by another thread
      * the calling thread enqueues the transfer frame (to be picked up
      * by the sender thread) and returns.
-     * 
+     *
      * If the remote session's incoming window is closed, the calling
      * thread just enqueues the transfer frame and returns.
-     * 
+     *
      * Otherwise, the calling thread sends the transfer frame and decrements the
-     * remote session's incoming window size. 
-     * 
+     * remote session's incoming window size.
+     *
      * If the remoteIncomingWindow falls below a configurable threshold,
      * the calling thread sends a flow-frame (with echo), notifying the peer
      * to send a flow response with an updated remoteIncomingWindow, if possible.
-     * 
+     *
      * Finally, if there are outstanding transfer frames waiting to be sent,
      * the called thread enqueues a runnable to send the transfer frames.
      */
@@ -426,7 +429,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         {
             throw new CAMQPSessionClosedException("Underlying channel is detached");
         }
-        
+
         /*
          * TODO: if unsentTransfers.add() fails, throw an exception
          * indicating to the Link layer that the outgoing-window is full.
@@ -445,7 +448,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 unsentTransfers.add(new Transfer(transferFrame, payload, linkSender));
                 return;
             }
-           
+
             sendInProgress = true;
             nextOutgoingTransferId++;
             /*
@@ -459,13 +462,13 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 flow = createFlowFrameIfNotScheduled();
             }
         }
-        
+
         sendTransferFrame(transferFrame, payload, channel);
         /*
          * Notify the link layer that the transfer frame has been sent
          */
         linkSender.messageSent(transferFrame);
-        
+
         if (flow != null)
         {
             sendFlowFrame(flow, channel);
@@ -473,9 +476,9 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
              * Schedule another flow-frame in the future, if the a flow response
              * hasn't been received from the peer session yet.
              */
-            flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);
+            flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), CAMQPSessionConstants.FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);
         }
-           
+
         synchronized (this)
         {
             /*
@@ -489,7 +492,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 return;
             }
         }
-   
+
         CAMQPSessionManager.getExecutor().execute(this);
     }
 
@@ -510,7 +513,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             sendFlowFrame(flow, channel);
         }
     }
-    
+
     @GuardedBy("this")
     private CAMQPControlFlow createFlowFrameIfNotScheduled()
     {
@@ -525,17 +528,17 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         }
         return flow;
     }
-    
+
     /**
      * Flow frame is sent in the following cases:
-     * 
+     *
      * From Link layer: sendFlow() : send right away : do not schedule a flow re-send.
-     * 
+     *
      * From session layer: in response to peer's flow frame (echo flag true) : send right away : do not schedule a flow re-send.
-     * 
+     *
      * From session layer: after detecting a flow control: send only if the last send was done before FLOW_SENDER_INTERVAL. Also
      * schedule for a flow-frame send after FLOW_SENDER_INTERVAL.
-     * 
+     *
      * From session layer : a scheduled timer :
      *      If a flow control frame has been sent in the past within FLOW_SENDER_INTERVAL,  do not send flow control frame, but schedule
      *      another one in the future after time left.
@@ -552,12 +555,12 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             return;
         }
         CAMQPControlFlow flow = null;
-        long scheduleAfter = FLOW_SENDER_INTERVAL;
+        long scheduleAfter = CAMQPSessionConstants.FLOW_SENDER_INTERVAL;
         synchronized (this)
         {
             if (!isFlowSendScheduled)
                 log.error("Assert failed isFlowSendScheduled");
-            
+
             if (!isSenderUnderFlowControl() && !isRemoteSenderUnderFlowControl())
             {
                 /*
@@ -567,15 +570,15 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 isFlowSendScheduled = false;
                 return;
             }
- 
+
             Date now = new Date();
-            if ((now.getTime() - lastFlowSent.getTime()) < FLOW_SENDER_INTERVAL)
+            if ((now.getTime() - lastFlowSent.getTime()) < CAMQPSessionConstants.FLOW_SENDER_INTERVAL)
             {
                 /*
                  * Still too early to send a flow frame. Defer it until
                  * scheduleAfter
                  */
-                scheduleAfter = FLOW_SENDER_INTERVAL - (now.getTime() - lastFlowSent.getTime());
+                scheduleAfter = CAMQPSessionConstants.FLOW_SENDER_INTERVAL - (now.getTime() - lastFlowSent.getTime());
             }
             else
             {
@@ -585,16 +588,16 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 lastFlowSent = now;
             }
         }
-        
+
         if (flow != null)
         {
             sendFlowFrame(flow, channel);
-            flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);
+            flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), CAMQPSessionConstants.FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);
         }
-        else       
+        else
             flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), scheduleAfter, TimeUnit.MILLISECONDS);
     }
- 
+
     /**
      * If there are outstanding transfer frames to be sent, but the remoteIncomingWindow falls below
      * a threshold, we want to proactively send a flow frame, to get an updated remoteIncomingWindow
@@ -605,7 +608,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     {
         return (!unsentTransfers.isEmpty() && remoteIncomingWindow < CAMQPSessionConstants.MIN_INCOMING_WINDOW_SIZE_THRESHOLD);
     }
-    
+
     @GuardedBy("this")
     private boolean isRemoteSenderUnderFlowControl()
     {
@@ -626,7 +629,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             Transfer transfer = null;
             CAMQPControlFlow flow = null;
             CAMQPChannel channel = getChannel();
-            
+
             synchronized (this)
             {
                 if ((channel != null) && canSendTransfer())
@@ -663,11 +666,11 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             if (flow != null)
             {
                 sendFlowFrame(flow, channel);
-                flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);
+                flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), CAMQPSessionConstants.FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);
             }
         }
     }
-    
+
     @GuardedBy("this")
     private void populateFlowFrame(CAMQPControlFlow flow)
     {
@@ -676,7 +679,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         flow.setNextOutgoingId(nextOutgoingTransferId);
         flow.setNextIncomingId(nextIncomingTransferId);
     }
-    
+
     private static void sendFlowFrame(CAMQPControlFlow flow, CAMQPChannel channel)
     {
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
@@ -684,7 +687,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         ChannelBuffer encodedTransfer = encoder.getEncodedBuffer();
         channel.getAmqpConnection().sendFrame(encodedTransfer, channel.getChannelId());
     }
-    
+
     private static void sendTransferFrame(CAMQPControlTransfer transfer, CAMQPMessagePayload payload, CAMQPChannel channel)
     {
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
@@ -693,7 +696,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         ChannelBuffer encodedTransfer = encoder.getEncodedBuffer();
         channel.getAmqpConnection().sendFrame(encodedTransfer, channel.getChannelId());
     }
-    
+
     CAMQPChannel getChannel()
     {
         synchronized (stateActor)
@@ -705,7 +708,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             return null;
         }
     }
-    
+
     @GuardedBy("stateActor")
     private boolean isSessionActive()
     {
@@ -746,14 +749,14 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     {
         return ((controlName.equalsIgnoreCase(CAMQPControlBegin.descriptor)) || (controlName.equalsIgnoreCase(CAMQPControlEnd.descriptor)));
     }
-    
+
     private static boolean isLinkControlFrame(String controlName)
     {
         return ((controlName.equalsIgnoreCase(CAMQPControlAttach.descriptor)) ||
                 (controlName.equalsIgnoreCase(CAMQPControlDetach.descriptor)) ||
                 (controlName.equalsIgnoreCase(CAMQPControlDisposition.descriptor)));
     }
-    
+
     private static boolean isFlowFrame(String controlName)
     {
         return (controlName.equalsIgnoreCase(CAMQPControlFlow.descriptor));
@@ -763,13 +766,13 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     {
         return (controlName.equalsIgnoreCase(CAMQPControlTransfer.descriptor));
     }
-    
+
     /**
      * Processes an incoming flow-frame. Updates the flow-control attributes.
      * If the remoteIncomingWindow opens up (becomes non-zero), and there
      * are outstanding unsent transfer frames because of flow-control, it creates
      * a Runnable to send the unsent transfer frames.
-     * 
+     *
      * @param frame
      */
     private void processFlowFrame(CAMQPFrame frame)
@@ -782,24 +785,24 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
         decoder.take(body);
         CAMQPControlFlow flowFrame = CAMQPControlFlow.decode(decoder);
-        
+
         boolean unsentTransferFramesPending = false;
         CAMQPControlFlow echoedFlowFrame = null;
-        
+
         CAMQPChannel channel = (needFlowFrameEcho(flowFrame))? getChannel() : null;
         synchronized (this)
         {
             if (flowFrame.getNextOutgoingId() > nextIncomingTransferId)
                 nextIncomingTransferId = flowFrame.getNextOutgoingId();
- 
+
             /*
              * update remote outgoing and incoming windows
              */
             remoteOutgoingWindow = flowFrame.getOutgoingWindow();
-            
+
             remoteIncomingWindow =
                 flowFrame.getIncomingWindow() - (nextOutgoingTransferId - flowFrame.getNextIncomingId());
-            
+
             if (!sendInProgress && canSendTransfer())
             {
                 /*
@@ -809,7 +812,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 sendInProgress = true;
                 unsentTransferFramesPending = true;
             }
-            
+
             /*
              * Send back a echo Flow frame if it is a session Flow only.
              * Otherwise, let the Link layer send it.
@@ -822,7 +825,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 echoedFlowFrame.setEcho(false); // we do not want echo flow frame ping-pong
             }
         }
-       
+
         if (echoedFlowFrame != null)
         {
             sendFlowFrame(echoedFlowFrame, channel);
@@ -837,18 +840,18 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             if (linkReceiver != null)
                 linkReceiver.flowReceived(flowFrame);
         }
-        
+
         if (unsentTransferFramesPending)
         {
             CAMQPSessionManager.getExecutor().execute(this);
         }
     }
- 
+
     /**
      * We need to send a flow-frame in response to an incoming flow-frame if
      * the incoming flow-frame has echo flag set to true, and it is not targeted
      * for the link layer.
-     * 
+     *
      * @param flowFrame
      * @return
      */
@@ -859,7 +862,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
 
     /**
      * Processes an incoming transfer frame (AMQP session receiver)
-     * 
+     *
      * @param controlName
      * @param frame
      */
@@ -906,10 +909,10 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
                 }
             }
         }
-        
+
         if (needScheduleFlowFrame)
         {
-            flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);            
+            flowSendScheduler.schedule(new CAMQPFlowFrameSender(this), CAMQPSessionConstants.FLOW_SENDER_INTERVAL, TimeUnit.MILLISECONDS);
         }
 
         /*
@@ -918,7 +921,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(transferFrame.getHandle());
         if (linkReceiver != null)
             linkReceiver.transferReceived(transferFrame.getDeliveryId(), transferFrame, payload);
-        
+
         return;
     }
 
@@ -934,7 +937,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         {
             return;
         }
-        
+
         CAMQPLinkMessageHandler linkReceiver = null;
         CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
         decoder.take(body);
@@ -957,18 +960,32 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         else if (controlName.equalsIgnoreCase(CAMQPControlDisposition.descriptor))
         {
             dispatchDispositionFrame(decoder);
-         }        
+         }
     }
 
+    /**
+     * Processes incoming disposition frame, and dispatch it to Link layer. The
+     * DispositionRange could contain transferIds means for different link
+     * end-points. So, it first builds a collection of the transferIds. Then it
+     * iterates through all the registered link end-points (with the same role)
+     * passing the collection. Each link end-point processes the transferIds
+     * that originated from it, and removes it from the collection and returns
+     * the collection back to this method.
+     *
+     * @param decoder
+     */
     private void dispatchDispositionFrame(CAMQPSyncDecoder decoder)
     {
         CAMQPControlDisposition data = CAMQPControlDisposition.decode(decoder);
         Collection<Long> disposedIds = new LinkedList<Long>();
-        
-        //Object newState = data.isSetState()? data.getState() : null;
+
+        /*
+         * Read the role, outcome, range and settled flag from the disposition
+         * frame.
+         */
         Object newState = data.getState();
         Object outcome = null;
-        if (newState instanceof CAMQPDefinitionDeliveryState)
+        if ((newState != null) && (newState instanceof CAMQPDefinitionDeliveryState))
         {
             CAMQPDefinitionDeliveryState deliveryState = (CAMQPDefinitionDeliveryState) newState;
             outcome = deliveryState.getOutcome();
@@ -977,13 +994,13 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         boolean role = data.getRole();
         long firstDisposedId = data.getFirst();
         long lastDisposedId = data.isSetLast()? data.getLast() : data.getFirst();
-        
+
         for (long disposedId = firstDisposedId; disposedId <= lastDisposedId; disposedId++)
         {
             disposedIds.add(disposedId);
         }
-        
-        LinkRole expectedRole = role? LinkRole.LinkSender : LinkRole.LinkReceiver; 
+
+        LinkRole expectedRole = role? LinkRole.LinkSender : LinkRole.LinkReceiver;
         Set<Long> linkReceiverKeys = linkReceivers.keySet();
         for (long linkReceiverKey : linkReceiverKeys)
         {
@@ -994,11 +1011,15 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(linkReceiverKey);
             if ((linkReceiver != null) && linkReceiver.getRole() == expectedRole)
             {
+                /*
+                 * Pass the dispositionIds collection to the link endpoint, and
+                 * get back the collection containing the unprocessed Ids.
+                 */
                 disposedIds = linkReceiver.dispositionReceived(disposedIds, isMessageSettledByPeer, outcome);
             }
         }
     }
-    
+
     private void processSessionControlFrame(String controlName, CAMQPFrame frame)
     {
         CAMQPFrameHeader frameHeader = frame.getHeader();
@@ -1021,14 +1042,14 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     @Override
     public void registerLinkReceiver(Long linkHandle, CAMQPLinkMessageHandler linkReceiver)
     {
-        linkReceivers.put(linkHandle, linkReceiver);   
+        linkReceivers.put(linkHandle, linkReceiver);
     }
 
     /**
      * Called by the Link layer to acknowledge completion
      * of processing of transfer frame. Results in incomingWindow
      * incrementing by 1.
-     * 
+     *
      * This mechanism allows throttling
      * if the link receiver is not able to process the transfer frames
      * at the same rate as the link sender is sending the frames.
@@ -1039,9 +1060,13 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         synchronized (this)
         {
             incomingWindow++;
-        }      
+        }
     }
 
+    /**
+     * Parks the deliveryId with CAMQPDispositionSender for a scheduled sending
+     * of batched dispositions.
+     */
     @Override
     public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState)
     {
