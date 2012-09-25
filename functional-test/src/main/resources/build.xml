@@ -72,7 +72,7 @@
 			<sysproperty key="com.sun.management.jmxremote.port" value="${jmxPortNumber}" />
 			<sysproperty key="com.sun.management.jmxremote.authenticate" value="false" />
 			<sysproperty key="com.sun.management.jmxremote.ssl" value="false" />
-			<sysproperty key="dovemq.testpath" value="${basedir}/server.log" />
+			<sysproperty key="dovemq.dir" value="${basedir}/server.log" />
 			<!-- sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
@@ -96,7 +96,7 @@
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.testpath" value="${basedir}/client.log" />
+			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
 			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="${publisherName}" />
 			<arg value="${broker.ip}" />
@@ -149,7 +149,7 @@
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.testpath" value="${basedir}/client.log" />
+			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
 			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
@@ -170,7 +170,7 @@
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.testpath" value="${basedir}/client.log" />
+			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
 			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
@@ -191,7 +191,7 @@
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.testpath" value="${basedir}/client.log" />
+			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
 			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
@@ -281,7 +281,7 @@
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.testpath" value="${basedir}/client.log" />
+			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
 			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />

@@ -8,6 +8,9 @@ public class DoveMQBrokerDriver
 
     static void shutdown()
     {
+        System.out.println("DoveMQ broker shutting down");
+        CAMQPLinkManager.shutdown();
+        System.out.println("DoveMQ broker shut down");
         doShutdown = true;
     }
 
@@ -28,8 +31,5 @@ public class DoveMQBrokerDriver
                 Thread.currentThread().interrupt();
             }
         }
-        System.out.println("DoveMQ broker shutting down");
-        CAMQPLinkManager.shutdown();
-        System.out.println("DoveMQ broker shut down");
     }
 }
