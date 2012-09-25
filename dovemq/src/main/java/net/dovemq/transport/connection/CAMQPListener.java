@@ -29,8 +29,6 @@ public final class CAMQPListener
     private CAMQPListener(CAMQPConnectionProperties defaultConnectionProps)
     {
         this.defaultConnectionProps = defaultConnectionProps;
-        final CAMQPListenerShutdownHook sh = new CAMQPListenerShutdownHook(this);
-        Runtime.getRuntime().addShutdownHook(sh);
     }
 
     public void start()
