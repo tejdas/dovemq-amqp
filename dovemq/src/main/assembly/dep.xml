@@ -17,6 +17,14 @@
                 <include>runbroker.bat</include>
             </includes>
         </fileSet>
+         <fileSet>
+            <directory>${basedir}/src/main/resources</directory>
+            <outputDirectory>bin</outputDirectory>
+            <includes>
+                <include>runbroker.sh</include>
+            </includes>
+            <fileMode>0777</fileMode>
+        </fileSet>       
     </fileSets>
 
     <dependencySets>
