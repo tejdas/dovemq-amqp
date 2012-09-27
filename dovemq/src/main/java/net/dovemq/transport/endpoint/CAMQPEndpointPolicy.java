@@ -11,11 +11,11 @@ public final class CAMQPEndpointPolicy
         AtmostOnce,
         ExactlyOnce
     }
-    
+
     /**
      * ReceiverLinkCreditPolicy determines how the Link credit
      * is increased when it drops to (below) zero.
-     * 
+     *
      * @author tejdas
      */
     public static enum ReceiverLinkCreditPolicy
@@ -36,7 +36,13 @@ public final class CAMQPEndpointPolicy
          * Link credit is incremented whenever Link sender has no
          * more credit, and sends a flow-frame to ask for more credit.
          */
-        CREDIT_AS_DEMANDED_BY_SENDER
+        CREDIT_AS_DEMANDED_BY_SENDER,
+        /*
+         * Link credit is incremented every-time target acknowledges completion
+         * of processing a message. A flow-frame is sent whenever it is asked by
+         * the sender.
+         */
+        CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING
     }
 
     private final long maxMessageSize;
@@ -47,7 +53,7 @@ public final class CAMQPEndpointPolicy
     private final ReceiverLinkCreditPolicy linkCreditPolicy;
     private final long minLinkCreditThreshold;
     private final long linkCreditBoost;
-    
+
     public CAMQPMessageDeliveryPolicy getDeliveryPolicy()
     {
         return deliveryPolicy;
@@ -97,7 +103,7 @@ public final class CAMQPEndpointPolicy
         this.linkCreditPolicy = linkCreditPolicy;
         this.minLinkCreditThreshold = minLinkCreditThreshold;
         this.linkCreditBoost = linkCreditBoost;
-        
+
 
         if (senderSettleMode.equalsIgnoreCase(CAMQPConstants.SENDER_SETTLE_MODE_SETTLED_STR))
             this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_SETTLED;
@@ -105,13 +111,13 @@ public final class CAMQPEndpointPolicy
             this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_UNSETTLED;
         else
             this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_MIXED;
-        
+
         if (receiverSettleMode.equalsIgnoreCase(CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST_STR))
             this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST;
         else
             this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
     }
-    
+
     public CAMQPEndpointPolicy(long maxMessageSize,
             int senderSettleMode,
             int receiverSettleMode,
@@ -125,7 +131,7 @@ public final class CAMQPEndpointPolicy
         linkCreditPolicy = that.linkCreditPolicy;
         minLinkCreditThreshold = that.minLinkCreditThreshold;
         linkCreditBoost = that.linkCreditBoost;
-        
+
         if ((senderSettleMode == CAMQPConstants.SENDER_SETTLE_MODE_SETTLED) &&
             (receiverSettleMode == CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST))
         {
@@ -157,12 +163,12 @@ public final class CAMQPEndpointPolicy
             this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_SETTLED;
             this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST;
             break;
-            
+
         case AtleastOnce:
             this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_UNSETTLED;
             this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST;
             break;
-            
+
         case ExactlyOnce:
         default:
             this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_UNSETTLED;
@@ -170,7 +176,7 @@ public final class CAMQPEndpointPolicy
             break;
         }
     }
-    
+
     public CAMQPEndpointPolicy()
     {
         super();
@@ -182,5 +188,5 @@ public final class CAMQPEndpointPolicy
         linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE;
         minLinkCreditThreshold = 10;
         linkCreditBoost = 100;
-    } 
+    }
 }

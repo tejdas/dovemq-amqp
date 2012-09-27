@@ -2,9 +2,9 @@ package net.dovemq.transport.link;
 
 import java.util.Collection;
 
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
-import static net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
@@ -19,7 +19,8 @@ import org.apache.log4j.Logger;
 public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverInterface
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkReceiver.class);
-    
+
+    private long timeSinceSenderLinkCreditExhausted = -1;
     private long targetIssuedLinkCredit = -1;
     private CAMQPTargetInterface target = null;
     public void setTarget(CAMQPTargetInterface target)
@@ -63,7 +64,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         {
             return;
         }
- 
+
         CAMQPControlFlow flow = null;
         boolean violatedLinkCredit = false;
         synchronized (this)
@@ -77,13 +78,13 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
             }
             deliveryCount++;
             linkCredit--;
-            
+
             if ((linkCredit < 0) && (targetIssuedLinkCredit > 0))
             {
                 linkCredit = targetIssuedLinkCredit;
                 targetIssuedLinkCredit = -1;
             }
-                    
+
             if ((linkCredit < 0) && (-linkCredit > CAMQPLinkConstants.LINK_CREDIT_VIOLATION_LIMIT))
             {
                 /*
@@ -101,25 +102,35 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                  * and send a flow-frame to the Link sender, if the link credit drops
                  * below minLinkCreditThreshold.
                  */
-                if ((linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE) && (linkCredit < minLinkCreditThreshold))
+                if (linkCredit < minLinkCreditThreshold)
                 {
-                    linkCredit = minLinkCreditThreshold + linkCreditBoost;
-                    flow = populateFlowFrame();
+                    if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE)
+                    {
+                        linkCredit = minLinkCreditThreshold + linkCreditBoost;
+                        flow = populateFlowFrame();
+                    }
+                    else if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
+                    {
+                        if (timeSinceSenderLinkCreditExhausted == -1)
+                        {
+                            timeSinceSenderLinkCreditExhausted = System.currentTimeMillis();
+                        }
+                    }
                 }
             }
         }
-        
+
         if (violatedLinkCredit)
         {
             destroyLink(CAMQPConstants.LINK_ERROR_TRANSFER_LIMIT_EXCEEDED);
             return;
         }
-        
+
         if (flow != null)
         {
             session.sendFlow(flow);
         }
- 
+
         /*
          * Deliver the message to the Link target.
          * TODO reassemble transfer frames of a
@@ -143,7 +154,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         String deliveryTag = new String(transferFrame.getDeliveryTag());
         target.messageReceived(transferFrame.getDeliveryId(), deliveryTag, payload, transferFrame.getSettled(), transferFrame.getRcvSettleMode());
     }
- 
+
     /**
      * Processes an incoming Link flow-frame:
      *   (a) updates flow-control attributes.
@@ -160,17 +171,17 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
             {
                 available = flow.getAvailable();
             }
-            
+
             if (flow.isSetEcho() && flow.getEcho())
             {
                 outFlow = populateFlowFrame();
             }
-            
+
             if (flow.isSetDeliveryCount())
             {
                 deliveryCount = flow.getDeliveryCount();
             }
-            
+
             /*
              * Link sender has messages available, but has
              * run out of link credit. Issue link credit
@@ -188,9 +199,16 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                     linkCredit = available;
                     outFlow = populateFlowFrame();
                 }
+                else if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
+                {
+                    if (timeSinceSenderLinkCreditExhausted == -1)
+                    {
+                        timeSinceSenderLinkCreditExhausted = System.currentTimeMillis();
+                    }
+                }
             }
         }
-        
+
         if (outFlow != null)
         {
             session.sendFlow(outFlow);
@@ -212,13 +230,13 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
      * sender might appear to overrun the link credit, if it
      * does not get the new flow frame until it has sent
      * enough messages to appear to have breached the link credit.
-     * 
+     *
      * So, we store the newLinkCredit in a member attribute
      * targetIssuedLinkCredit. The linkCredit is altered only
      * after it has been exhausted. In other words, the sender
      * is provided with a new link credit only after it has used
      * up its current linkCredit.
-     * 
+     *
      * @param newLinkCredit
      * @param drain
      */
@@ -239,7 +257,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
             flow = populateFlowFrame();
             flow.setDrain(drain);
         }
-        
+
         session.sendFlow(flow);
     }
 
@@ -247,7 +265,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
     public void issueLinkCredit(long linkCreditBoost)
     {
         modifyLinkCredit(linkCreditBoost, false);
-    }    
+    }
 
     /**
      * Called by Link target to asynchronously receive
@@ -279,14 +297,14 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
             this.minLinkCreditThreshold = minLinkCreditThreshold;
             this.linkCreditBoost = linkCreditBoost;
             linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE;
-            
+
             if (linkCredit < this.minLinkCreditThreshold)
             {
                 linkCredit = this.minLinkCreditThreshold + this.linkCreditBoost;
                 flow = populateFlowFrame();
             }
         }
-        
+
         if (flow != null)
         {
             session.sendFlow(flow);
@@ -312,7 +330,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                 flow = populateFlowFrame();
             }
         }
-        
+
         if (flow != null)
         {
             session.sendFlow(flow);
@@ -334,7 +352,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         }
         return deliveryIds;
     }
-    
+
     @Override
     public void attached(boolean isInitiator)
     {
@@ -344,6 +362,31 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
             linkCreditPolicy = endpointPolicy.getLinkCreditPolicy();
             minLinkCreditThreshold = endpointPolicy.getMinLinkCreditThreshold();
             linkCreditBoost = endpointPolicy.getLinkCreditBoost();
+        }
+    }
+
+    @Override
+    public void acnowledgeMessageProcessingComplete()
+    {
+        CAMQPControlFlow flow = null;
+        synchronized (this)
+        {
+            if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
+            {
+                linkCredit++;
+                if (timeSinceSenderLinkCreditExhausted != -1)
+                {
+                    if (((System.currentTimeMillis() - timeSinceSenderLinkCreditExhausted) >= 5000) || (linkCredit == linkCreditBoost))
+                    {
+                        timeSinceSenderLinkCreditExhausted = -1;
+                        flow = populateFlowFrame();
+                    }
+                }
+            }
+        }
+        if (flow != null)
+        {
+            session.sendFlow(flow);
         }
     }
 }
