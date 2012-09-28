@@ -1,7 +1,6 @@
 package net.dovemq.transport.link;
 
 import java.util.Collection;
-
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -21,6 +20,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
     private static final Logger log = Logger.getLogger(CAMQPLinkReceiver.class);
 
     private long timeSinceSenderLinkCreditExhausted = -1;
+    private long messagesProcessedSinceLastSendFlow = 0;
     private long targetIssuedLinkCredit = -1;
     private CAMQPTargetInterface target = null;
     public void setTarget(CAMQPTargetInterface target)
@@ -39,13 +39,6 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
 
     private long minLinkCreditThreshold = 0;
     private long linkCreditBoost = 0;
-
-    synchronized void setLinkCreditSteadyState(long linkCreditBoost, long minLinkCreditThreshold)
-    {
-        this.linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE;
-        this.linkCreditBoost = linkCreditBoost;
-        this.minLinkCreditThreshold = minLinkCreditThreshold;
-    }
 
     public CAMQPLinkReceiver(CAMQPSessionInterface session)
     {
@@ -371,16 +364,24 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         CAMQPControlFlow flow = null;
         synchronized (this)
         {
+            long timeout = linkCreditBoost * 50;
             if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
             {
                 linkCredit++;
+                messagesProcessedSinceLastSendFlow++;
                 if (timeSinceSenderLinkCreditExhausted != -1)
                 {
-                    if (((System.currentTimeMillis() - timeSinceSenderLinkCreditExhausted) >= 5000) || (linkCredit == linkCreditBoost))
+                    if (((System.currentTimeMillis() - timeSinceSenderLinkCreditExhausted) >= timeout) || (linkCredit >= linkCreditBoost))
                     {
                         timeSinceSenderLinkCreditExhausted = -1;
+                        messagesProcessedSinceLastSendFlow = 0;
                         flow = populateFlowFrame();
                     }
+                }
+                else if (messagesProcessedSinceLastSendFlow >= (linkCreditBoost - minLinkCreditThreshold))
+                {
+                    messagesProcessedSinceLastSendFlow = 0;
+                    flow = populateFlowFrame();
                 }
             }
         }
@@ -388,5 +389,22 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         {
             session.sendFlow(flow);
         }
+    }
+
+    @Override
+    public void configureSteadyStatePacedByMessageProcessing(long minLinkCreditThreshold,
+            long linkCreditBoost)
+    {
+        CAMQPControlFlow flow = null;
+        synchronized (this)
+        {
+            this.minLinkCreditThreshold = minLinkCreditThreshold;
+            this.linkCreditBoost = linkCreditBoost;
+            linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING;
+            linkCredit = linkCreditBoost;
+            flow = populateFlowFrame();
+        }
+
+        session.sendFlow(flow);
     }
 }
