@@ -1,6 +1,7 @@
 package net.dovemq.transport.link;
 
 import java.util.Collection;
+
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -19,7 +20,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkReceiver.class);
 
-    private long timeSinceSenderLinkCreditExhausted = -1;
+    private long timeLastFlowFrameSent = System.currentTimeMillis();
     private long messagesProcessedSinceLastSendFlow = 0;
     private long targetIssuedLinkCredit = -1;
     private CAMQPTargetInterface target = null;
@@ -104,9 +105,13 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                     }
                     else if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
                     {
-                        if (timeSinceSenderLinkCreditExhausted == -1)
+                        System.out.println("reason3: " + messagesProcessedSinceLastSendFlow);
+                        if (messagesProcessedSinceLastSendFlow >= (linkCreditBoost - minLinkCreditThreshold))
                         {
-                            timeSinceSenderLinkCreditExhausted = System.currentTimeMillis();
+                            linkCredit += messagesProcessedSinceLastSendFlow;
+                            messagesProcessedSinceLastSendFlow = 0;
+                            timeLastFlowFrameSent = System.currentTimeMillis();
+                            flow = populateFlowFrame();
                         }
                     }
                 }
@@ -155,24 +160,24 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
      *   (c) Sends back a flow frame if needed.
      */
     @Override
-    public void flowReceived(CAMQPControlFlow flow)
+    public void flowReceived(CAMQPControlFlow inFlow)
     {
         CAMQPControlFlow outFlow = null;
         synchronized (this)
         {
-            if (flow.isSetAvailable())
+            if (inFlow.isSetAvailable())
             {
-                available = flow.getAvailable();
+                available = inFlow.getAvailable();
             }
 
-            if (flow.isSetEcho() && flow.getEcho())
+            if (inFlow.isSetEcho() && inFlow.getEcho())
             {
                 outFlow = populateFlowFrame();
             }
 
-            if (flow.isSetDeliveryCount())
+            if (inFlow.isSetDeliveryCount())
             {
-                deliveryCount = flow.getDeliveryCount();
+                deliveryCount = inFlow.getDeliveryCount();
             }
 
             /*
@@ -194,9 +199,12 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                 }
                 else if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
                 {
-                    if (timeSinceSenderLinkCreditExhausted == -1)
+                    if (messagesProcessedSinceLastSendFlow > 0)
                     {
-                        timeSinceSenderLinkCreditExhausted = System.currentTimeMillis();
+                        linkCredit = messagesProcessedSinceLastSendFlow;
+                        messagesProcessedSinceLastSendFlow = 0;
+                        timeLastFlowFrameSent = System.currentTimeMillis();
+                        outFlow = populateFlowFrame();
                     }
                 }
             }
@@ -364,24 +372,26 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         CAMQPControlFlow flow = null;
         synchronized (this)
         {
-            long timeout = linkCreditBoost * 50;
+            long timeout = linkCreditBoost * 20;
             if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
             {
-                linkCredit++;
                 messagesProcessedSinceLastSendFlow++;
-                if (timeSinceSenderLinkCreditExhausted != -1)
+
+                if ((System.currentTimeMillis() - timeLastFlowFrameSent) >= timeout)
                 {
-                    if (((System.currentTimeMillis() - timeSinceSenderLinkCreditExhausted) >= timeout) || (linkCredit >= linkCreditBoost))
-                    {
-                        timeSinceSenderLinkCreditExhausted = -1;
-                        messagesProcessedSinceLastSendFlow = 0;
-                        flow = populateFlowFrame();
-                    }
+                    timeLastFlowFrameSent = System.currentTimeMillis();
+                    linkCredit += messagesProcessedSinceLastSendFlow;
+                    messagesProcessedSinceLastSendFlow = 0;
+                    flow = populateFlowFrame();
+                    System.out.println("reason1: " + linkCredit);
                 }
                 else if (messagesProcessedSinceLastSendFlow >= (linkCreditBoost - minLinkCreditThreshold))
                 {
+                    linkCredit += messagesProcessedSinceLastSendFlow;
                     messagesProcessedSinceLastSendFlow = 0;
                     flow = populateFlowFrame();
+                    timeLastFlowFrameSent = System.currentTimeMillis();
+                    System.out.println("reason2: " + linkCredit);
                 }
             }
         }
