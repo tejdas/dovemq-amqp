@@ -10,15 +10,17 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 public class LinkCommand implements LinkCommandMBean
 {
     private volatile LinkTestTarget linkTargetEndpoint = new LinkTestTarget();
+
+    private volatile LinkTestDelayedTarget linkDelayedTargetEndpoint = null;
     private volatile LinkTestTargetReceiver linkTargetReceiver = null;
     private volatile CAMQPSourceInterface linkSource = null;
     private final LinkTestTargetReceiver linkTargetSharedReceiver = new LinkTestTargetReceiver();
-    
+
     @Override
     public void registerFactory(String factoryName)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -37,7 +39,7 @@ public class LinkCommand implements LinkCommandMBean
         }
         else
         {
-            System.out.println("LinkEndpoint is not a LinkSender");           
+            System.out.println("LinkEndpoint is not a LinkSender");
         }
     }
 
@@ -53,12 +55,12 @@ public class LinkCommand implements LinkCommandMBean
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
         {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
-            
+
             linkReceiver.setTarget(linkTargetEndpoint);
         }
         else
         {
-            System.out.println("LinkEndpoint is not a LinkReceiver");           
+            System.out.println("LinkEndpoint is not a LinkReceiver");
         }
     }
 
@@ -75,7 +77,7 @@ public class LinkCommand implements LinkCommandMBean
             String remoteContainerId)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -94,8 +96,8 @@ public class LinkCommand implements LinkCommandMBean
         }
         else
         {
-            System.out.println("LinkEndpoint is not a LinkReceiver");           
-        }       
+            System.out.println("LinkEndpoint is not a LinkReceiver");
+        }
     }
 
     @Override
@@ -114,7 +116,7 @@ public class LinkCommand implements LinkCommandMBean
         }
         else
         {
-            System.out.println("LinkEndpoint is not a LinkReceiver");           
+            System.out.println("LinkEndpoint is not a LinkReceiver");
         }
     }
 
@@ -133,6 +135,12 @@ public class LinkCommand implements LinkCommandMBean
         linkSource = null;
         linkTargetReceiver = null;
         linkTargetSharedReceiver.stop();
+        if (linkDelayedTargetEndpoint != null)
+        {
+            linkDelayedTargetEndpoint.resetNumberOfMessagesReceived();
+            linkDelayedTargetEndpoint.stopProcessing();
+            linkDelayedTargetEndpoint = null;
+        }
     }
 
     @Override
@@ -167,5 +175,44 @@ public class LinkCommand implements LinkCommandMBean
     {
         CAMQPTargetInterface linkTarget = CAMQPEndpointManager.attachTarget(source, target);
         linkTarget.registerTargetReceiver(linkTargetSharedReceiver);
+    }
+
+    @Override
+    public void registerDelayedTarget(String linkSource, String linkTarget)
+    {
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
+        if (linkEndpoint == null)
+        {
+            System.out.println("could not find linkEndpoint");
+            return;
+        }
+        if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
+        {
+            CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
+            linkDelayedTargetEndpoint = new LinkTestDelayedTarget(linkReceiver);
+            linkReceiver.setTarget(linkDelayedTargetEndpoint);
+            linkReceiver.configureSteadyStatePacedByMessageProcessing(20, 100);
+            linkDelayedTargetEndpoint.startProcessing();
+        }
+        else
+        {
+            System.out.println("LinkEndpoint is not a LinkReceiver");
+        }
+    }
+
+    @Override
+    public long getNumMessagesProcessedByDelayedEndpoint()
+    {
+        if (linkDelayedTargetEndpoint != null)
+            return linkDelayedTargetEndpoint.getNumberOfMessagesReceived();
+        return 0;
+    }
+
+    @Override
+    public boolean processedAllMessages()
+    {
+        if (linkDelayedTargetEndpoint != null)
+            return linkDelayedTargetEndpoint.isDone();
+        return false;
     }
 }

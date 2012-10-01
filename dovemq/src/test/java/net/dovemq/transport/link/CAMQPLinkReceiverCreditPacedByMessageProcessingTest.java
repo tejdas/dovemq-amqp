@@ -245,7 +245,6 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
             if (gotLinkCredit < minLinkCreditThreshold)
             {
                 long linkCredit = getLinkCreditWaitIfNecessary();
-                System.out.println("received link credit: " + linkCredit);
                 gotLinkCredit = (int) linkCredit;
             }
         }
@@ -279,7 +278,6 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
                 flow.setLinkCredit(gotLinkCredit);
                 linkReceiver.flowReceived(flow);
                 long linkCredit = getLinkCreditWaitIfNecessary();
-                System.out.println("received link credit: " + linkCredit);
                 gotLinkCredit = linkCredit;
 
                 if (gotLinkCredit <= 0)
@@ -385,47 +383,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     {
         CAMQPSessionManager.shutdown();
     }
-/*
-    @Test
-    public void testFoo() throws InterruptedException
-    {
-        int numMessages = 2000;
-        int linkCreditBoost = 400;
-        int minLinkCreditThreshold = 15;
-        int msgProcessingAvgTime = 200;
-        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime, runWithSendFlow);
-    }
 
-    @Test
-    public void testFoo2() throws InterruptedException
-    {
-        int numMessages = 1000;
-        int linkCreditBoost = 45;
-        int minLinkCreditThreshold = 15;
-        int msgProcessingAvgTime = 20;
-        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime, runWithSendFlow);
-    }
-
-    @Test
-    public void testFoo3() throws InterruptedException
-    {
-        int numMessages = 1000;
-        int linkCreditBoost = 45;
-        int minLinkCreditThreshold = 15;
-        int msgProcessingAvgTime = 2000;
-        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime, runWithSendFlow);
-    }
-
-    @Test
-    public void testFoo4() throws InterruptedException
-    {
-        int numMessages = 2000;
-        int linkCreditBoost = 400;
-        int minLinkCreditThreshold = 50;
-        int msgProcessingAvgTime = 3000;
-        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime, runWithSendFlow);
-    }
-*/
     @Test
     public void testMessageProcessingLinkCredit() throws InterruptedException
     {
@@ -454,7 +412,6 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
 
             Thread.sleep(1000);
         }
-        System.out.println("done here");
         sender.waitForDone();
         target.stopProcessing();
         controlFramesQueue.clear();

@@ -57,7 +57,6 @@ public class LinkTestSimple
         {
             CAMQPMessagePayload message = LinkTestUtils.createMessagePayload(randomGenerator);
             sender.sendMessage(message);
-            //Thread.sleep(randomGenerator.nextInt(10) + 10);
         }
         System.out.println("Done sending messages");
         
