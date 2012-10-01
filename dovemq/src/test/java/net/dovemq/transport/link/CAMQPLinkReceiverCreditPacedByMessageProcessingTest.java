@@ -3,6 +3,7 @@ package net.dovemq.transport.link;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 import java.util.Set;
@@ -43,9 +44,50 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
 {
+    private boolean runWithSendFlow;
+    private int numMessages;
+    private int linkCreditBoost;
+    private int minLinkCreditThreshold;
+    private int msgProcessingAvgTime;
+
+    public CAMQPLinkReceiverCreditPacedByMessageProcessingTest(boolean runWithSendFlow,
+            int numMessages,
+            int linkCreditBoost,
+            int minLinkCreditThreshold,
+            int msgProcessingAvgTime)
+    {
+        super();
+        this.runWithSendFlow = runWithSendFlow;
+        this.numMessages = numMessages;
+        this.linkCreditBoost = linkCreditBoost;
+        this.minLinkCreditThreshold = minLinkCreditThreshold;
+        this.msgProcessingAvgTime = msgProcessingAvgTime;
+    }
+
+    @Parameters
+    public static Collection<Object[]> configs()
+    {
+        return Arrays.asList(new Object[][]
+            {
+                {true, 2000, 400, 15, 200},
+                {false, 2000, 400, 15, 200},
+                {true, 1000, 45, 15, 20},
+                {false, 1000, 45, 15, 20},
+                {true, 1000, 45, 15, 2000},
+                {false, 1000, 45, 15, 2000},
+                {true, 2000, 400, 50, 3000},
+                {false, 2000, 400, 50, 3000},
+            }
+        );
+    }
+
     private static class MockLinkReceiverFactory implements
             CAMQPLinkMessageHandlerFactory
     {
@@ -182,11 +224,9 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
             super(numMessagesToSend, pauseBetweenSends);
         }
 
-        public int linkCreditBoost;
-
-        public int minLinkCreditThreshold;
-
-        private int gotLinkCredit = 0;
+        int linkCreditBoost;
+        int minLinkCreditThreshold;
+        volatile long gotLinkCredit = 0;
 
         @Override
         public void run()
@@ -200,13 +240,60 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         {
             Random r = new Random();
             createAndSendMessage(r);
-
             gotLinkCredit--;
+
             if (gotLinkCredit < minLinkCreditThreshold)
             {
                 long linkCredit = getLinkCreditWaitIfNecessary();
-                // System.out.println("got link credit: " + linkCredit);
+                System.out.println("received link credit: " + linkCredit);
                 gotLinkCredit = (int) linkCredit;
+            }
+        }
+    }
+
+    private class MessageAndFlowSender extends MessageSender
+    {
+        public MessageAndFlowSender(int numMessagesToSend, boolean pauseBetweenSends)
+        {
+            super(numMessagesToSend, pauseBetweenSends);
+        }
+
+        @Override
+        void doSend()
+        {
+            CAMQPControlFlow control = peekForLinkCredit();
+            if (control != null)
+                gotLinkCredit = control.getLinkCredit();
+            if (gotLinkCredit > 0)
+            {
+                Random r = new Random();
+                createAndSendMessage(r);
+                gotLinkCredit--;
+            }
+
+            while (gotLinkCredit <= 0)
+            {
+                CAMQPControlFlow flow = new CAMQPControlFlow();
+                flow.setEcho(true);
+                flow.setAvailable(10L);
+                flow.setLinkCredit(gotLinkCredit);
+                linkReceiver.flowReceived(flow);
+                long linkCredit = getLinkCreditWaitIfNecessary();
+                System.out.println("received link credit: " + linkCredit);
+                gotLinkCredit = linkCredit;
+
+                if (gotLinkCredit <= 0)
+                {
+                    try
+                    {
+                        Thread.sleep(1000);
+                    }
+                    catch (InterruptedException e)
+                    {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
@@ -298,7 +385,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     {
         CAMQPSessionManager.shutdown();
     }
-
+/*
     @Test
     public void testFoo() throws InterruptedException
     {
@@ -306,30 +393,41 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         int linkCreditBoost = 400;
         int minLinkCreditThreshold = 15;
         int msgProcessingAvgTime = 200;
-        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime);
+        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime, runWithSendFlow);
     }
 
     @Test
     public void testFoo2() throws InterruptedException
     {
-        int numMessages = 200;
+        int numMessages = 1000;
         int linkCreditBoost = 45;
         int minLinkCreditThreshold = 15;
         int msgProcessingAvgTime = 20;
-        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime);
+        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime, runWithSendFlow);
     }
 
     @Test
     public void testFoo3() throws InterruptedException
     {
-        int numMessages = 200;
+        int numMessages = 1000;
         int linkCreditBoost = 45;
         int minLinkCreditThreshold = 15;
         int msgProcessingAvgTime = 2000;
-        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime);
+        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime, runWithSendFlow);
     }
 
-    private void messageProcessingLinkCreditTest(int numMessages, int linkCreditBoost, int minLinkCreditThreshold, int msgProcessingAvgTime) throws InterruptedException
+    @Test
+    public void testFoo4() throws InterruptedException
+    {
+        int numMessages = 2000;
+        int linkCreditBoost = 400;
+        int minLinkCreditThreshold = 50;
+        int msgProcessingAvgTime = 3000;
+        messageProcessingLinkCreditTest(numMessages, linkCreditBoost, minLinkCreditThreshold, msgProcessingAvgTime, runWithSendFlow);
+    }
+*/
+    @Test
+    public void testMessageProcessingLinkCredit() throws InterruptedException
     {
         target = new TestTarget(linkReceiver, msgProcessingAvgTime);
         linkReceiver.setTarget(target);
@@ -340,7 +438,11 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
 
         getAndAssertLinkCredit(linkCreditBoost);
 
-        MessageSender sender = new MessageSender(numMessages, true);
+        MessageSender sender;
+        if (runWithSendFlow)
+            sender = new MessageAndFlowSender(numMessages, true);
+        else
+            sender = new MessageSender(numMessages, true);
         sender.linkCreditBoost = linkCreditBoost;
         sender.minLinkCreditThreshold = minLinkCreditThreshold;
         executor.submit(sender);
@@ -451,6 +553,20 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         assertTrue(flowFrame.isSetHandle());
         assertTrue(flowFrame.isSetLinkCredit());
         return flowFrame.getLinkCredit();
+    }
+
+    private CAMQPControlFlow peekForLinkCredit()
+    {
+        Object control = controlFramesQueue.poll();
+        if (control != null)
+        {
+            assertTrue(control instanceof CAMQPControlFlow);
+            CAMQPControlFlow flowFrame = (CAMQPControlFlow) control;
+            assertTrue(flowFrame.isSetHandle());
+            assertTrue(flowFrame.isSetLinkCredit());
+            return flowFrame;
+        }
+        return null;
     }
 
     private long getLinkCreditWaitIfNecessary()

@@ -9,6 +9,7 @@ import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.session.CAMQPSessionInterface;
+import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
@@ -20,8 +21,26 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkReceiver.class);
 
+    /*
+     * Used for steady-state LinkCredit issuance policy
+     */
+    private long minLinkCreditThreshold = 0;
+    private long linkCreditBoost = 0;
+    /*
+     * Used to record the time the last flow-frame was sent with linkCredit boost
+     * for CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING.
+     */
     private long timeLastFlowFrameSent = System.currentTimeMillis();
+    /*
+     * In case of CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING, the following
+     * attribute keeps track of how many messages have been processed by LinkTarget since
+     * the last flow frame was issued. The sender is then given a link-credit boost for
+     * this amount, the next time a flow frame is sent.
+     */
     private long messagesProcessedSinceLastSendFlow = 0;
+    /*
+     * Issued by target when the policy is CREDIT_OFFERED_BY_TARGET
+     */
     private long targetIssuedLinkCredit = -1;
     private CAMQPTargetInterface target = null;
     public void setTarget(CAMQPTargetInterface target)
@@ -37,9 +56,6 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
     {
         this.linkCreditPolicy = linkCreditPolicy;
     }
-
-    private long minLinkCreditThreshold = 0;
-    private long linkCreditBoost = 0;
 
     public CAMQPLinkReceiver(CAMQPSessionInterface session)
     {
@@ -105,13 +121,9 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                     }
                     else if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
                     {
-                        System.out.println("reason3: " + messagesProcessedSinceLastSendFlow);
                         if (messagesProcessedSinceLastSendFlow >= (linkCreditBoost - minLinkCreditThreshold))
                         {
-                            linkCredit += messagesProcessedSinceLastSendFlow;
-                            messagesProcessedSinceLastSendFlow = 0;
-                            timeLastFlowFrameSent = System.currentTimeMillis();
-                            flow = populateFlowFrame();
+                            flow = boostLinkCreditAndCreateFlowFrame();
                         }
                     }
                 }
@@ -201,10 +213,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                 {
                     if (messagesProcessedSinceLastSendFlow > 0)
                     {
-                        linkCredit = messagesProcessedSinceLastSendFlow;
-                        messagesProcessedSinceLastSendFlow = 0;
-                        timeLastFlowFrameSent = System.currentTimeMillis();
-                        outFlow = populateFlowFrame();
+                        outFlow = boostLinkCreditAndCreateFlowFrame();
                     }
                 }
             }
@@ -377,21 +386,10 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
             {
                 messagesProcessedSinceLastSendFlow++;
 
-                if ((System.currentTimeMillis() - timeLastFlowFrameSent) >= timeout)
+                if (((System.currentTimeMillis() - timeLastFlowFrameSent) >= timeout) ||
+                    (messagesProcessedSinceLastSendFlow >= (linkCreditBoost - minLinkCreditThreshold)))
                 {
-                    timeLastFlowFrameSent = System.currentTimeMillis();
-                    linkCredit += messagesProcessedSinceLastSendFlow;
-                    messagesProcessedSinceLastSendFlow = 0;
-                    flow = populateFlowFrame();
-                    System.out.println("reason1: " + linkCredit);
-                }
-                else if (messagesProcessedSinceLastSendFlow >= (linkCreditBoost - minLinkCreditThreshold))
-                {
-                    linkCredit += messagesProcessedSinceLastSendFlow;
-                    messagesProcessedSinceLastSendFlow = 0;
-                    flow = populateFlowFrame();
-                    timeLastFlowFrameSent = System.currentTimeMillis();
-                    System.out.println("reason2: " + linkCredit);
+                    flow = boostLinkCreditAndCreateFlowFrame();
                 }
             }
         }
@@ -416,5 +414,18 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
         }
 
         session.sendFlow(flow);
+    }
+
+    @GuardedBy("this")
+    private CAMQPControlFlow boostLinkCreditAndCreateFlowFrame()
+    {
+        timeLastFlowFrameSent = System.currentTimeMillis();
+        if (linkCredit <= 0)
+            linkCredit = messagesProcessedSinceLastSendFlow;
+        else
+            linkCredit += messagesProcessedSinceLastSendFlow;
+        messagesProcessedSinceLastSendFlow = 0;
+
+        return populateFlowFrame();
     }
 }
