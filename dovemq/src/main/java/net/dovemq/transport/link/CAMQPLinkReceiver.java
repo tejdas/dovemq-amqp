@@ -299,7 +299,7 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
      * frame generated.
      */
     @Override
-    public void flowMessages(long minLinkCreditThreshold, long linkCreditBoost)
+    public void configureSteadyStatePacedByMessageReceipt(long minLinkCreditThreshold, long linkCreditBoost)
     {
         CAMQPControlFlow flow = null;
         synchronized (this)

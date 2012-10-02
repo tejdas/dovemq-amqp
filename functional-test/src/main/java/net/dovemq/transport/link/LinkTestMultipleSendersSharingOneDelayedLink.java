@@ -12,6 +12,7 @@ import javax.management.MalformedObjectNameException;
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 
 public class LinkTestMultipleSendersSharingOneDelayedLink
 {
@@ -69,12 +70,13 @@ public class LinkTestMultipleSendersSharingOneDelayedLink
         CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target, new CAMQPEndpointPolicy());
         System.out.println("Sender Link created between : " + source + "  and: " + target);
 
-        mbeanProxy.registerDelayedTarget(source, target);
+        mbeanProxy.registerDelayedTarget(source, target, 500);
         /*
-         * ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE
+         * ReceiverLinkCreditPolicy.
+         * CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING
          */
-        // String linkName = linkSender.getLinkName();
-        // mbeanProxy.setLinkCreditSteadyState(linkName, 100, 500);
+        String linkName = linkSender.getLinkName();
+        mbeanProxy.setLinkCreditSteadyState(linkName, 100, 500, ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
 
         Thread.sleep(2000);
 

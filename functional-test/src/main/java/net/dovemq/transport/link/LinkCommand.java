@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
@@ -81,7 +82,7 @@ public class LinkCommand implements LinkCommandMBean
     }
 
     @Override
-    public void setLinkCreditSteadyState(String linkName, long minLinkCreditThreshold, long linkCreditBoost)
+    public void setLinkCreditSteadyState(String linkName, long minLinkCreditThreshold, long linkCreditBoost, ReceiverLinkCreditPolicy policy)
     {
         CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkName);
         if (linkEndpoint == null)
@@ -92,7 +93,10 @@ public class LinkCommand implements LinkCommandMBean
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
         {
             CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
-            linkReceiver.flowMessages(minLinkCreditThreshold, linkCreditBoost);
+            if (policy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE)
+                linkReceiver.configureSteadyStatePacedByMessageReceipt(minLinkCreditThreshold, linkCreditBoost);
+            else
+                linkReceiver.configureSteadyStatePacedByMessageProcessing(minLinkCreditThreshold, linkCreditBoost);
         }
         else
         {
@@ -178,7 +182,7 @@ public class LinkCommand implements LinkCommandMBean
     }
 
     @Override
-    public void registerDelayedTarget(String linkSource, String linkTarget)
+    public void registerDelayedTarget(String linkSource, String linkTarget, int averageMsgProcessingTime)
     {
         CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
         if (linkEndpoint == null)
@@ -189,9 +193,8 @@ public class LinkCommand implements LinkCommandMBean
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
         {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
-            linkDelayedTargetEndpoint = new LinkTestDelayedTarget(linkReceiver);
+            linkDelayedTargetEndpoint = new LinkTestDelayedTarget(linkReceiver, averageMsgProcessingTime);
             linkReceiver.setTarget(linkDelayedTargetEndpoint);
-            linkReceiver.configureSteadyStatePacedByMessageProcessing(20, 100);
             linkDelayedTargetEndpoint.startProcessing();
         }
         else

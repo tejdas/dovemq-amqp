@@ -47,7 +47,7 @@ public final class CAMQPEndpointManager
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
             CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkEndpoint.getEndpointPolicy());
             linkReceiver.setTarget(dovemqTarget);
-            linkReceiver.flowMessages(10, 100);
+            linkReceiver.configureSteadyStatePacedByMessageReceipt(10, 100);
             return dovemqTarget;
         }
         else

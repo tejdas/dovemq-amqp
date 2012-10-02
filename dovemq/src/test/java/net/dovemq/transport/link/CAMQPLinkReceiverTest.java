@@ -295,7 +295,7 @@ public class CAMQPLinkReceiverTest
         int numMessages = 50;
         int linkCreditBoost = 70;
         int minLinkCreditThreshold = 15;
-        linkReceiver.flowMessages(minLinkCreditThreshold, linkCreditBoost);
+        linkReceiver.configureSteadyStatePacedByMessageReceipt(minLinkCreditThreshold, linkCreditBoost);
         getAndAssertLinkCredit(linkCreditBoost+minLinkCreditThreshold);
 
         MessageSender sender = new MessageSender(numMessages, true, false);
@@ -322,7 +322,7 @@ public class CAMQPLinkReceiverTest
         int numMessages = 2000;
         int linkCreditBoost = 40;
         int minLinkCreditThreshold = 15;
-        linkReceiver.flowMessages(minLinkCreditThreshold, linkCreditBoost);
+        linkReceiver.configureSteadyStatePacedByMessageReceipt(minLinkCreditThreshold, linkCreditBoost);
 
         getAndAssertLinkCredit(linkCreditBoost+minLinkCreditThreshold);
 
@@ -363,7 +363,7 @@ public class CAMQPLinkReceiverTest
     {
         long configuredCreditBoost = 10;
         long minCreditThreshold = 5;
-        linkReceiver.flowMessages(configuredCreditBoost, minCreditThreshold);
+        linkReceiver.configureSteadyStatePacedByMessageReceipt(configuredCreditBoost, minCreditThreshold);
 
         CAMQPControlFlow flow = new CAMQPControlFlow();
         flow.setEcho(true);

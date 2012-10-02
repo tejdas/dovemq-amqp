@@ -16,10 +16,12 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 public class LinkTestDelayedTarget implements CAMQPTargetInterface
 {
-    public LinkTestDelayedTarget(CAMQPLinkReceiverInterface linkReceiver)
+    public LinkTestDelayedTarget(CAMQPLinkReceiverInterface linkReceiver,
+            int averageMsgProcessingTime)
     {
         super();
         this.linkReceiver = linkReceiver;
+        this.msgProcessingTime = averageMsgProcessingTime;
     }
 
     private static class MsgDetails
@@ -43,7 +45,8 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
 
     private final AtomicLong messageCount = new AtomicLong(0);
     private final ConcurrentMap<Long, MsgDetails> messagesBeingProcessed = new ConcurrentHashMap<Long, MsgDetails>();
-    private final int msgProcessingTime = 200;
+
+    private final int msgProcessingTime;
     private final CAMQPLinkReceiverInterface linkReceiver;
     private final ScheduledExecutorService _scheduledExecutor = Executors.newScheduledThreadPool(1);
 
