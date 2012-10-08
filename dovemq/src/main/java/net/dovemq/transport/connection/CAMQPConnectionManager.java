@@ -48,7 +48,7 @@ public final class CAMQPConnectionManager
             connectionManager = new CAMQPConnectionManager(containerId);
         }
     }
-    
+
     private static synchronized CAMQPConnectionManager getConnectionManager()
     {
         return connectionManager ;
@@ -94,7 +94,7 @@ public final class CAMQPConnectionManager
             getConnectionManager().connectionObserver = connectionAcceptor;
         }
     }
-    
+
     private synchronized CAMQPConnectionObserver getConnectionObserver()
     {
         return connectionObserver;
@@ -117,7 +117,7 @@ public final class CAMQPConnectionManager
             // handle exception
         }
         this.containerId = String.format("%s@%s", containerId, hostName);
-        log.info("Initialized DoveMQ endpoint ID: " + this.containerId);        
+        log.info("Initialized DoveMQ endpoint ID: " + this.containerId);
         System.out.println("Initialized DoveMQ endpoint ID: " + this.containerId);
     }
 
@@ -137,7 +137,7 @@ public final class CAMQPConnectionManager
         Set<CAMQPConnectionKey> keys = openConnections.keySet();
         for (CAMQPConnectionKey k : keys)
         {
-            connectionList.add(k.getRemoteContainerId());
+            connectionList.add(k.toString());
         }
         return connectionList;
     }
@@ -170,7 +170,7 @@ public final class CAMQPConnectionManager
     {
         getConnectionManager().connectionCreatedInternal(key, connection);
     }
-    
+
     private synchronized void connectionCreatedInternal(CAMQPConnectionKey key, CAMQPConnection connection)
     {
         if (shutdownInProgress)
@@ -198,10 +198,10 @@ public final class CAMQPConnectionManager
     }
 
     public static void connectionCloseInitiatedByRemotePeer(CAMQPConnectionKey key)
-    {      
+    {
         getConnectionManager().connectionCloseInitiatedByRemotePeerInternal(key);
     }
-    
+
     private void connectionCloseInitiatedByRemotePeerInternal(CAMQPConnectionKey key)
     {
         CAMQPConnectionObserver observer = getConnectionObserver();
@@ -222,7 +222,7 @@ public final class CAMQPConnectionManager
             }
         }
     }
-    
+
     public static void shutdown()
     {
         getConnectionManager().shutdownInternal();
@@ -261,6 +261,6 @@ public final class CAMQPConnectionManager
             }
         }
         log.info("Shutdown DoveMQ endpoint ID: " + containerId);
-        System.out.println("Shutdown DoveMQ endpoint ID: " + containerId);        
+        System.out.println("Shutdown DoveMQ endpoint ID: " + containerId);
     }
 }

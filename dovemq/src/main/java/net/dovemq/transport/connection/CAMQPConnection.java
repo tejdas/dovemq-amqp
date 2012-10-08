@@ -6,6 +6,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.dovemq.transport.frame.CAMQPFrame;
+import net.dovemq.transport.frame.CAMQPFrameConstants;
+import net.dovemq.transport.frame.CAMQPFrameHeader;
+import net.dovemq.transport.protocol.data.CAMQPControlOpen;
+import net.dovemq.transport.session.CAMQPSessionFrameHandler;
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
@@ -13,15 +18,9 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 
-import net.dovemq.transport.frame.CAMQPFrame;
-import net.dovemq.transport.frame.CAMQPFrameConstants;
-import net.dovemq.transport.frame.CAMQPFrameHeader;
-import net.dovemq.transport.protocol.data.CAMQPControlOpen;
-import net.dovemq.transport.session.CAMQPSessionFrameHandler;
-
 /**
  * AMQP Connection implementation on the outgoing side
- * 
+ *
  *    ==>> CAMQPConnection ==>>
  * <<== CAMQPConnectionHandler <<==
  * @author tejdas
@@ -58,16 +57,21 @@ public class CAMQPConnection
     {
         stateActor = null;
     }
-    
+
     public String getRemoteContainerId()
     {
         return stateActor.key.getRemoteContainerId();
     }
-    
+
+    public String getId()
+    {
+        return stateActor.key.toString();
+    }
+
     public String getLocalContainerId()
     {
         return CAMQPConnectionManager.getContainerId();
-    }    
+    }
 
     public boolean isInitiator()
     {
@@ -170,7 +174,7 @@ public class CAMQPConnection
     /**
      * Register an incoming channel with the channelHandler, so that
      * the incoming frames on the rxChannel could be dispatched.
-     * 
+     *
      * @param receiveChannelNumber
      * @param channelHandler
      */
@@ -188,7 +192,7 @@ public class CAMQPConnection
     /**
      * Called by the session layer to detach itself from an
      * outgoing channel.
-     * 
+     *
      * @param outgoingChannelNumber
      * @param incomingChannelNumber
      */
@@ -205,7 +209,7 @@ public class CAMQPConnection
      * Dispatches the incoming AMQP frame to the channelHandler
      * associated with the channelNumber (if it's already attached),
      * or to CAMQPSessionFrameHandler if it hasn't been attached yet.
-     * 
+     *
      * @param channelNumber
      * @param frame
      */

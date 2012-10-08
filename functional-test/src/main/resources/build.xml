@@ -92,7 +92,7 @@
 	</target>
 
 	<target name="RunClient">
-		<java fork="true" classname="net.dovemq.transport.connection.ConnectionSysTestClient" maxmemory="2048M" failonerror="true">
+		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">			
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -121,21 +121,51 @@
 			<echo>...Run DoveMQ clients</echo>
 			<parallel>
 				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub1" />
 				</antcall>
 				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub2" />
 				</antcall>
 				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub3" />
 				</antcall>
 				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub4" />
 				</antcall>
 				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub5" />
 				</antcall>
 			</parallel>
+			
+			<sleep seconds="5" />
+				<echo>...Run DoveMQ clients</echo>
+				<parallel>
+					<antcall target="RunClient">
+						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+						<param name="publisherName" value="pub1" />
+					</antcall>
+					<antcall target="RunClient">
+						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+						<param name="publisherName" value="pub2" />
+					</antcall>
+					<antcall target="RunClient">
+						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+						<param name="publisherName" value="pub3" />
+					</antcall>
+					<antcall target="RunClient">
+						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+						<param name="publisherName" value="pub4" />
+					</antcall>
+					<antcall target="RunClient">
+						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+						<param name="publisherName" value="pub5" />
+					</antcall>
+				</parallel>			
 		</sequential>
 	</target>
 

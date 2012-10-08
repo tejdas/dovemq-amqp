@@ -9,7 +9,7 @@ public class ConnectionCommand implements ConnectionCommandMBean
     {
         return shutdown;
     }
-    
+
     @Override
     public void help()
     {
@@ -20,7 +20,7 @@ public class ConnectionCommand implements ConnectionCommandMBean
         System.out.println("closeAsync [targetContainerId]");
         System.out.println("isClosed [targetContainerId]");
     }
-    
+
     @Override
     public void create(String targetContainerId)
     {
@@ -29,15 +29,15 @@ public class ConnectionCommand implements ConnectionCommandMBean
         if (connection == null)
             System.out.println("AMQP connection could not be created");
     }
-    
+
     @Override
     public void shutdown()
     {
         shutdown = true;
     }
-    
+
     @Override
-    public void list()
+    public Collection<String> list()
     {
         Collection<String> connectionList = CAMQPConnectionManager.listConnections();
         if (connectionList.size() > 0)
@@ -48,15 +48,16 @@ public class ConnectionCommand implements ConnectionCommandMBean
                 System.out.println(conn);
             }
         }
+        return connectionList;
     }
-    
+
     @Override
     public void close(String targetContainerId)
     {
         CAMQPConnection conn = CAMQPConnectionManager.getCAMQPConnection(targetContainerId);
         conn.close();
     }
-    
+
     @Override
     public boolean checkClosed(String targetContainerId)
     {
@@ -66,7 +67,7 @@ public class ConnectionCommand implements ConnectionCommandMBean
         else
             return false;
     }
-    
+
     @Override
     public void closeAsync(String targetContainerId)
     {
