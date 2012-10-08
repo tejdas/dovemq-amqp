@@ -141,7 +141,7 @@
 
 	<target name="RunSessionClient">
 		<echo>...Run DoveMQ Session client</echo>
-		<java fork="true" classname="net.dovemq.transport.session.SessionSysTestJMXClient" maxmemory="2048M" failonerror="true">
+		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
 			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -156,44 +156,6 @@
 			<!-- Name of LinkReceiverFactory -->
 			<arg value="${param3}" />
 			<!-- Perform I/O -->
-			<classpath refid="dovemq-functest-classpath" />
-		</java>
-	</target>
-
-	<target name="RunSessionClientBiDir">
-		<echo>...Run DoveMQ Session client</echo>
-		<java fork="true" classname="net.dovemq.transport.session.SessionSysTestBiDir" maxmemory="2048M" failonerror="true">
-			<!--if we run into an out of memory error, dump it-->
-			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
-			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
-			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
-			<arg value="pub1" />
-			<arg value="${broker.ip}" />
-			<arg value="${jmxPortNumber}" />
-			<arg value="${param1}" />
-			<!-- Number of concurrent sessions -->
-			<arg value="${param2}" />
-			<!-- Name of LinkReceiverFactory -->
-			<arg value="${param3}" />
-			<!-- Perform I/O -->
-			<classpath refid="dovemq-functest-classpath" />
-		</java>
-	</target>
-
-	<target name="RunSessionClientBiDirIO">
-		<echo>...Run DoveMQ Session client</echo>
-		<java fork="true" classname="net.dovemq.transport.session.SessionSysTestBiDirIO" maxmemory="2048M" failonerror="true">
-			<!--if we run into an out of memory error, dump it-->
-			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
-			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
-			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
-			<arg value="pub1" />
-			<arg value="${broker.ip}" />
-			<arg value="${jmxPortNumber}" />
-			<arg value="${param1}" />
-			<!-- Name of LinkReceiverFactory -->
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -214,30 +176,35 @@
 			<sleep seconds="5" />
 
 			<antcall target="RunSessionClient">
+				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestJMXClient" />
 				<param name="param1" value="5" />
 				<param name="param2" value="SysTestCommandReceiver" />
 				<param name="param3" value="false" />
 			</antcall>
 
 			<antcall target="RunSessionClient">
+				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestJMXClient" />
 				<param name="param1" value="1" />
 				<param name="param2" value="SysTestCommandReceiver" />
 				<param name="param3" value="true" />
 			</antcall>
 
 			<antcall target="RunSessionClient">
+				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestJMXClient" />					
 				<param name="param1" value="1" />
 				<param name="param2" value="SysTestDelayedAckLinkReceiver" />
 				<param name="param3" value="true" />
 			</antcall>
 
-			<antcall target="RunSessionClientBiDir">
+			<antcall target="RunSessionClient">
+				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestBiDir" />					
 				<param name="param1" value="5" />
 				<param name="param2" value="SysTestCommandReceiver" />
 				<param name="param3" value="false" />
 			</antcall>
 
-			<antcall target="RunSessionClientBiDirIO">
+			<antcall target="RunSessionClient">
+				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestBiDirIO" />				
 				<param name="param1" value="SysTestDelayedAckLinkReceiver" />
 			</antcall>
 
@@ -276,7 +243,7 @@
 	<target name="LinkTestWithBrokerRunning" description="running all link tests">
 		<sequential>
 			<sleep seconds="5" />
-<!--			
+			
 			<antcall target="RunLinksClient">
 				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing" />
 				<param name="param1" value="5" />
@@ -323,11 +290,11 @@
 				<param name="param1" value="1000" />
 				<param name="param2" value="AtmostOnce" />
 			</antcall>
--->			
+			
 			<antcall target="RunLinksClient">
 				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneDelayedLink" />
-				<param name="param1" value="1" />
-				<param name="param2" value="1000" />
+				<param name="param1" value="5" />
+				<param name="param2" value="10000" />
 			</antcall>				
 
 		</sequential>
