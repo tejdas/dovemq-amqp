@@ -6,6 +6,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import net.dovemq.transport.frame.CAMQPFrameConstants;
+import net.dovemq.transport.frame.CAMQPFrameHeader;
+import net.dovemq.transport.frame.CAMQPFrameHeaderCodec;
+import net.dovemq.transport.protocol.CAMQPEncoder;
+import net.dovemq.transport.protocol.data.CAMQPControlClose;
+import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -14,13 +20,6 @@ import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
-
-import net.dovemq.transport.frame.CAMQPFrameHeader;
-import net.dovemq.transport.frame.CAMQPFrameConstants;
-import net.dovemq.transport.frame.CAMQPFrameHeaderCodec;
-import net.dovemq.transport.protocol.CAMQPEncoder;
-import net.dovemq.transport.protocol.data.CAMQPControlClose;
-import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 
 enum Event
 {
@@ -37,8 +36,7 @@ enum Event
     CLOSE_RECEIVED, // From Peer
     CLOSED, // Generated
     CONNECTION_ABORTED, // Generated,
-    HEARTBEAT_DELAYED
-    // Generated
+    HEARTBEAT_DELAYED // Generated
 }
 
 enum State
@@ -83,7 +81,7 @@ class CAMQPConnectionStateActor
 
     private ScheduledFuture<?> scheduledFuture = null;
 
-    private CAMQPHeartbeatProcessor heartbeatProcessor = null;
+    private volatile CAMQPHeartbeatProcessor heartbeatProcessor = null;
 
     private CAMQPConnectionProperties connectionProps = null;
 
@@ -94,14 +92,9 @@ class CAMQPConnectionStateActor
 
     boolean isInitiator;
 
-    private final byte[] receivedAMQPHeader = new byte[CAMQPConnectionConstants.HEADER_LENGTH];
+    volatile CAMQPSender sender = null;
 
-    @GuardedBy("this")
-    private int headerLengthReadSoFar = 0;
-
-    CAMQPSender sender = null;
-
-    synchronized void setChannel(Channel channel)
+    void setChannel(Channel channel)
     {
         int ephemeralPort;
         if (isInitiator)
@@ -112,20 +105,32 @@ class CAMQPConnectionStateActor
         {
             ephemeralPort = ((InetSocketAddress) channel.getRemoteAddress()).getPort();
         }
-        key.setEphemeralPort(ephemeralPort);
         sender = new CAMQPSender(channel);
+        key.setEphemeralPort(ephemeralPort);
         heartbeatProcessor = new CAMQPHeartbeatProcessor(this, sender);
     }
 
     private boolean processingQueuedEvents = false;
 
+    private volatile boolean receivedConnectionHeaderBytes = false;
+    boolean hasReceivedConnectionHeaderBytes()
+    {
+        return receivedConnectionHeaderBytes;
+    }
+
     private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<QueuedContext>();
+    private final Queue<QueuedContext> queuedGeneratedEvents = new ConcurrentLinkedQueue<QueuedContext>();
 
     @GuardedBy("this")
     private State currentState = State.START;
 
     @GuardedBy("this")
     private boolean openExchangeComplete = false;
+
+    private synchronized boolean isOpenExchangeComplete()
+    {
+        return openExchangeComplete;
+    }
 
     final CAMQPConnectionKey key = new CAMQPConnectionKey();
 
@@ -174,7 +179,7 @@ class CAMQPConnectionStateActor
 
     void notifyHeartbeatDelay()
     {
-        queuedEvents.add(new QueuedContext(Event.HEARTBEAT_DELAYED, null));
+        queuedGeneratedEvents.add(new QueuedContext(Event.HEARTBEAT_DELAYED, null));
         processEvents();
     }
 
@@ -197,13 +202,14 @@ class CAMQPConnectionStateActor
 
     void connectionHeaderBytesReceived(ChannelBuffer buffer)
     {
+        receivedConnectionHeaderBytes = true;
         queuedEvents.add(new QueuedContext(Event.CONN_HDR_BYTES_RECEIVED, buffer));
         processEvents();
     }
 
     void disconnectReceived()
     {
-        queuedEvents.add(new QueuedContext(Event.CONNECTION_ABORTED, null));
+        queuedGeneratedEvents.add(new QueuedContext(Event.CONNECTION_ABORTED, null));
         processEvents();
     }
 
@@ -327,11 +333,11 @@ class CAMQPConnectionStateActor
 
                 CAMQPControlOpen controlOpen = initializeControlOpen(CAMQPConnectionManager.getContainerId());
 
-                queuedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
+                queuedGeneratedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
             }
             else if (currentState == State.END)
             {
-                queuedEvents.add(new QueuedContext(Event.CLOSED, null));
+                queuedGeneratedEvents.add(new QueuedContext(Event.CLOSED, null));
             }
             else
             {
@@ -345,25 +351,19 @@ class CAMQPConnectionStateActor
     private QueuedContext processConnHdrBytesReceived(QueuedContext contextToProcess)
     {
         ChannelBuffer buffer = (ChannelBuffer) contextToProcess.getContext();
-        int readableBytes = buffer.readableBytes();
-        if (readableBytes < (CAMQPConnectionConstants.HEADER_LENGTH - headerLengthReadSoFar))
+        byte[] receivedAMQPHeader = new byte[buffer.readableBytes()];
+        buffer.getBytes(0, receivedAMQPHeader);
+
+        if (CAMQPHeaderUtil.validateAMQPHeader(receivedAMQPHeader))
         {
-            buffer.readBytes(receivedAMQPHeader, headerLengthReadSoFar, readableBytes);
-            headerLengthReadSoFar += readableBytes;
+            queuedGeneratedEvents.add(new QueuedContext(Event.CONN_HEADER_RECEIVED, null));
         }
         else
         {
-            buffer.readBytes(receivedAMQPHeader, headerLengthReadSoFar, (CAMQPConnectionConstants.HEADER_LENGTH - headerLengthReadSoFar));
-            headerLengthReadSoFar = CAMQPConnectionConstants.HEADER_LENGTH;
-            if (CAMQPHeaderUtil.validateAMQPHeader(receivedAMQPHeader))
-            {
-                queuedEvents.add(new QueuedContext(Event.CONN_HEADER_RECEIVED, null));
-            }
-            else
-            {
-                queuedEvents.add(new QueuedContext(Event.MALFORMED_CONN_HEADER_RECEIVED, null));
-            }
+            log.error("MalformedHeader received: " + receivedAMQPHeader);
+            queuedGeneratedEvents.add(new QueuedContext(Event.MALFORMED_CONN_HEADER_RECEIVED, null));
         }
+
         synchronized (this)
         {
             return getNextEvent();
@@ -376,14 +376,14 @@ class CAMQPConnectionStateActor
         if (currentState == State.START)
         {
             currentState = State.HDR_RCVD;
-            queuedEvents.add(new QueuedContext(Event.SEND_CONN_HEADER, null));
+            queuedGeneratedEvents.add(new QueuedContext(Event.SEND_CONN_HEADER, null));
         }
         else if (currentState == State.HDR_SENT)
         {
             CAMQPControlOpen controlOpen = initializeControlOpen(CAMQPConnectionManager.getContainerId());
 
             currentState = State.HDR_EXCH;
-            queuedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
+            queuedGeneratedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
         }
         else if (currentState == State.OPEN_PIPE)
         {
@@ -412,7 +412,7 @@ class CAMQPConnectionStateActor
         synchronized (this)
         {
             currentState = State.END;
-            queuedEvents.add(new QueuedContext(Event.CLOSED, null));
+            queuedGeneratedEvents.add(new QueuedContext(Event.CLOSED, null));
             return getNextEvent();
         }
     }
@@ -465,7 +465,7 @@ class CAMQPConnectionStateActor
             else if (currentState == State.OPEN_RCVD)
             {
                 currentState = State.OPENED;
-                queuedEvents.add(new QueuedContext(Event.OPENED, null));
+                queuedGeneratedEvents.add(new QueuedContext(Event.OPENED, null));
             }
             else
             {
@@ -488,9 +488,9 @@ class CAMQPConnectionStateActor
 
         synchronized (this)
         {
+            openExchangeComplete = true;
             if (isInitiator)
             {
-                openExchangeComplete = true;
                 notify();
             }
             return getNextEvent();
@@ -509,16 +509,28 @@ class CAMQPConnectionStateActor
                 CAMQPControlOpen controlOpen = initializeControlOpen(CAMQPConnectionManager.getContainerId());
 
                 currentState = State.OPEN_RCVD;
-                queuedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
+                queuedGeneratedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
             }
             else if (currentState == State.OPEN_SENT)
             {
                 currentState = State.OPENED;
-                queuedEvents.add(new QueuedContext(Event.OPENED, null));
+                queuedGeneratedEvents.add(new QueuedContext(Event.OPENED, null));
             }
             else if (currentState == State.CLOSE_PIPE)
             {
                 currentState = State.CLOSE_SENT;
+            }
+            else if (currentState == State.HDR_SENT)
+            {
+                connectionProps.update(peerOpenControlData);
+                CAMQPControlOpen controlOpen = initializeControlOpen(CAMQPConnectionManager.getContainerId());
+
+                currentState = State.OPEN_RCVD;
+                queuedGeneratedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
+            }
+            else
+            {
+                log.fatal("Incorrect state detected: currentState: " + currentState + " Event to be processed: " + contextToProcess.getEvent());
             }
             return getNextEvent();
         }
@@ -554,12 +566,11 @@ class CAMQPConnectionStateActor
             else if (currentState == State.CLOSE_RCVD)
             {
                 currentState = State.END;
-                queuedEvents.add(new QueuedContext(Event.CLOSED, null));
+                queuedGeneratedEvents.add(new QueuedContext(Event.CLOSED, null));
             }
             else
             {
-                log.error("Connection is in bad state: " + currentState);
-                // TODO BAD state
+                log.fatal("Incorrect state detected: currentState: " + currentState + " Event to be processed: " + contextToProcess.getEvent());
             }
             return getNextEvent();
         }
@@ -575,12 +586,11 @@ class CAMQPConnectionStateActor
         else if (currentState == State.CLOSE_SENT)
         {
             currentState = State.END;
-            queuedEvents.add(new QueuedContext(Event.CLOSED, null));
+            queuedGeneratedEvents.add(new QueuedContext(Event.CLOSED, null));
         }
         else
         {
-            log.error("Connection is in bad state: " + currentState);
-            // TODO BAD state
+            log.fatal("Incorrect state detected: currentState: " + currentState + " Event to be processed: " + contextToProcess.getEvent());
         }
     }
 
@@ -588,13 +598,16 @@ class CAMQPConnectionStateActor
     {
         cancelHeartbeat();
         sender.close();
-        CAMQPConnectionManager.connectionClosed(key);
+        if (isOpenExchangeComplete())
+        {
+            CAMQPConnectionManager.connectionClosed(key);
+        }
         synchronized (this)
         {
             return getNextEvent();
         }
     }
-    
+
     private QueuedContext processCloseReceived(QueuedContext contextToProcess)
     {
         CAMQPConnectionManager.connectionCloseInitiatedByRemotePeer(key);
@@ -607,7 +620,10 @@ class CAMQPConnectionStateActor
     private QueuedContext processConnectionAborted(QueuedContext contextToProcess)
     {
         cancelHeartbeat();
-        CAMQPConnectionManager.connectionAborted(key);
+        if (isOpenExchangeComplete())
+        {
+            CAMQPConnectionManager.connectionAborted(key);
+        }
         synchronized (this)
         {
             return getNextEvent();
@@ -617,7 +633,10 @@ class CAMQPConnectionStateActor
     private QueuedContext processHeartbeatDelayed(QueuedContext contextToProcess)
     {
         cancelHeartbeat();
-        CAMQPConnectionManager.connectionAborted(key);
+        if (isOpenExchangeComplete())
+        {
+            CAMQPConnectionManager.connectionAborted(key);
+        }
         synchronized (this)
         {
             return getNextEvent();
@@ -636,13 +655,22 @@ class CAMQPConnectionStateActor
     {
         while (true)
         {
-            if (queuedEvents.isEmpty())
+            QueuedContext contextToProcess = null;
+            if (!queuedGeneratedEvents.isEmpty())
+            {
+                contextToProcess = queuedGeneratedEvents.remove();
+            }
+            else if (!queuedEvents.isEmpty())
+            {
+                contextToProcess = queuedEvents.remove();
+            }
+
+            if (contextToProcess == null)
             {
                 processingQueuedEvents = false;
                 return null;
             }
 
-            QueuedContext contextToProcess = queuedEvents.remove();
             if (isOKToProcessEvent(contextToProcess.getEvent()))
             {
                 boolean processingComplete = processPreCondition(contextToProcess);
@@ -683,7 +711,7 @@ class CAMQPConnectionStateActor
         }
         else if (eventToBeProcessed == Event.OPEN_RECEIVED)
         {
-            return ((currentState == State.HDR_EXCH) || (currentState == State.OPEN_SENT) || (currentState == State.CLOSE_PIPE));
+            return ((currentState == State.HDR_EXCH) || (currentState == State.OPEN_SENT) || (currentState == State.CLOSE_PIPE) || (currentState == State.HDR_SENT));
         }
         else if (eventToBeProcessed == Event.SEND_CLOSE_REQUESTED)
         {
@@ -768,11 +796,6 @@ class CAMQPConnectionStateActor
         controlOpen.setChannelMax(connectionProps.getMaxChannels());
         controlOpen.setMaxFrameSize(connectionProps.getMaxFrameSizeSupported());
         return controlOpen;
-    }
-
-    synchronized boolean isConnectionHandshakeInProgress()
-    {
-        return ((currentState == State.START) || (currentState == State.HDR_SENT) || (currentState == State.OPEN_PIPE) || (currentState == State.OC_PIPE));
     }
 
     @GuardedBy("this")

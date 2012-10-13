@@ -79,6 +79,7 @@ public class ConnectionSysTestMTClient
         System.out.println("AMQP client container ID: " + CAMQPConnectionManager.getContainerId());
 
         brokerContainerId = String.format("broker@%s", args[1]);
+        NUM_THREADS = Integer.parseInt(args[2]);
 
         ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
         CountDownLatch startSignal = new CountDownLatch(1);
@@ -112,5 +113,6 @@ public class ConnectionSysTestMTClient
 
         CAMQPConnectionManager.shutdown();
         CAMQPConnectionFactory.shutdown();
+
     }
 }

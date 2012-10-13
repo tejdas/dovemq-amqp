@@ -6,7 +6,6 @@ import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 
-import net.dovemq.transport.frame.CAMQPFrameDecoder;
 
 class CAMQPConnectionPipelineFactory implements ChannelPipelineFactory
 {

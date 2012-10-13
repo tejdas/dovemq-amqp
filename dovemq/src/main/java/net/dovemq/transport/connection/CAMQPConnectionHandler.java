@@ -1,37 +1,39 @@
 package net.dovemq.transport.connection;
 
+import net.dovemq.transport.frame.CAMQPFrame;
+import net.dovemq.transport.frame.CAMQPFrameHeader;
+import net.dovemq.transport.frame.CAMQPHandshakeFrame;
+import net.dovemq.transport.protocol.CAMQPSyncDecoder;
+import net.dovemq.transport.protocol.data.CAMQPControlClose;
+import net.dovemq.transport.protocol.data.CAMQPControlOpen;
+
 import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
-import net.dovemq.transport.frame.CAMQPFrame;
-import net.dovemq.transport.frame.CAMQPFrameHeader;
-import net.dovemq.transport.protocol.CAMQPSyncDecoder;
-import net.dovemq.transport.protocol.data.CAMQPControlClose;
-import net.dovemq.transport.protocol.data.CAMQPControlOpen;
-
 /**
  * Handler class that compliments AMQPConnection on the incoming side.
- * 
+ *
  *    ==>> CAMQPConnection ==>>
  * <<== CAMQPConnectionHandler <<==
- * 
+ *
  * It is added twice in the Netty incoming pipeline.
  * See {@link CAMQPConnectionPipelineFactory}.
- * 
+ *
  * The bottom-most interceptor does AMQP handshake processing
  * and is a passthru once the handshake is complete.
- * 
+ *
  * The second interceptor decodes and dispatches the connection
  * frames, or dispatches session/link frames to the attached
  * ChannelHandler.
- * 
+ *
  * @author tejdas
  *
  */
@@ -40,7 +42,6 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
     private static final Logger log = Logger.getLogger(CAMQPConnectionHandler.class);
 
     private final CAMQPConnectionStateActor stateActor;
-
     private CAMQPConnection connection = null;
 
     void registerConnection(CAMQPConnection connection)
@@ -65,6 +66,9 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
         assert (channel != null);
         stateActor.setChannel(channel);
         ctx.sendUpstream(e);
+
+        CAMQPFrameDecoder frameDecoder = channel.getPipeline().get(CAMQPFrameDecoder.class);
+        frameDecoder.setConnectionStateActor(stateActor);
     }
 
     @Override
@@ -77,22 +81,6 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
     @Override
     public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception
     {
-        if (stateActor.isConnectionHandshakeInProgress())
-        {
-            if (e instanceof MessageEvent)
-            {
-                Object message = ((MessageEvent) e).getMessage();
-                if (!(message instanceof ChannelBuffer))
-                {
-                    ctx.sendUpstream(e);
-                    return;
-                }
-                /*
-                 * process AMQP handshake
-                 */
-                stateActor.connectionHeaderBytesReceived((ChannelBuffer) message);
-            }
-        }
         super.handleUpstream(ctx, e);
     }
 
@@ -110,15 +98,23 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
     public void messageReceived(ChannelHandlerContext ctx, final MessageEvent e)
     {
         Object message = e.getMessage();
-        if (!(message instanceof CAMQPFrame))
+        if (message instanceof CAMQPHandshakeFrame)
         {
-            ctx.sendUpstream(e);
+            handshakeFrameReceived((CAMQPHandshakeFrame) message);
+        }
+        else if (message instanceof CAMQPFrame)
+        {
+            frameReceived((CAMQPFrame) message);
         }
         else
         {
-            CAMQPFrame frame = (CAMQPFrame) e.getMessage();
-            frameReceived(frame);
+            ctx.sendUpstream(e);
         }
+    }
+
+    private void handshakeFrameReceived(CAMQPHandshakeFrame frame)
+    {
+        stateActor.connectionHeaderBytesReceived(frame.getBody());
     }
 
     /**
@@ -150,6 +146,7 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
             if (controlName.equalsIgnoreCase(CAMQPControlOpen.descriptor))
             {
                 CAMQPControlOpen peerConnectionProps = CAMQPControlOpen.decode(decoder);
+
                 stateActor.openControlReceived(peerConnectionProps);
             }
             else if (controlName.equalsIgnoreCase(CAMQPControlClose.descriptor))

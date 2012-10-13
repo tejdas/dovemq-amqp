@@ -49,7 +49,7 @@ public class CAMQPFrameHeader
         this.channelNumber = channelNumber;
     }
 
-    short getDataOffset()
+    public short getDataOffset()
     {
         return dataOffset;
     }

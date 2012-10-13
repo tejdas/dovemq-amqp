@@ -100,6 +100,7 @@
 			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="${publisherName}" />
 			<arg value="${broker.ip}" />
+			<arg value="${numThreads}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -123,23 +124,38 @@
 				<antcall target="RunClient">
 					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub1" />
+					<param name="numThreads" value="50" />
 				</antcall>
 				<antcall target="RunClient">
 					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub2" />
+					<param name="numThreads" value="50" />
 				</antcall>
 				<antcall target="RunClient">
 					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub3" />
+					<param name="numThreads" value="50" />
 				</antcall>
 				<antcall target="RunClient">
 					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub4" />
+					<param name="numThreads" value="50" />
 				</antcall>
 				<antcall target="RunClient">
 					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub5" />
+					<param name="numThreads" value="50" />
 				</antcall>
+				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
+					<param name="publisherName" value="pub6" />
+					<param name="numThreads" value="50" />
+				</antcall>
+				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
+					<param name="publisherName" value="pub7" />
+					<param name="numThreads" value="50" />
+				</antcall>				
 			</parallel>
 			
 			<sleep seconds="5" />
