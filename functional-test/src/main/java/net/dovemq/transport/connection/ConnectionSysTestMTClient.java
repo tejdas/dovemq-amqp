@@ -93,8 +93,6 @@ public class ConnectionSysTestMTClient
             executor.submit(connector);
         }
 
-        startSignal.countDown();
-
         ConnectionCommandMBean command = new ConnectionCommand();
         while (true)
         {
@@ -106,6 +104,7 @@ public class ConnectionSysTestMTClient
             Thread.sleep(2000);
         }
 
+        startSignal.countDown();
         doneSignal.await();
         Thread.sleep(5000);
 
