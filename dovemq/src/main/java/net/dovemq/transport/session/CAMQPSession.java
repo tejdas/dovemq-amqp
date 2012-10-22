@@ -302,6 +302,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     /**
      * Close the AMQP session
      */
+    @Override
     public void close()
     {
         closeInternal(null);

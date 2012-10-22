@@ -46,6 +46,6 @@ public final class ConnectionFactory
     {
         String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
         CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId);
-        return new Session(camqpSession);
+        return new Session(brokerContainerId, camqpSession);
     }
 }
