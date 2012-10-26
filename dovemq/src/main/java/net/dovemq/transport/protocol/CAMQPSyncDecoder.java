@@ -20,20 +20,22 @@ package net.dovemq.transport.protocol;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPFormatCodes;
 import net.dovemq.transport.protocol.data.CAMQPTypes;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+
 /**
  * Decoder for AMQP data types.
  * Used by CAMQPControlXYZ and CAMQPDefinitionXYZ classes
  * to decode AMQP composite date types
- * 
+ *
  * @author tejdas
  *
  */
@@ -58,7 +60,7 @@ public final class CAMQPSyncDecoder
         buffer.readBytes(payloadBody);
         return new CAMQPMessagePayload(payloadBody);
     }
-    
+
     public boolean isEnoughDataAvailable()
     {
         return enoughDataAvailable;
@@ -299,5 +301,48 @@ public final class CAMQPSyncDecoder
                 return new CAMQPCompundHeader(elementFormatCode, 1);
             }
         }
+    }
+
+    public Map<String, String> decodePropertiesMap()
+    {
+        int formatCode = readFormatCode();
+        assert((formatCode == CAMQPFormatCodes.MAP8) || (formatCode == CAMQPFormatCodes.MAP32));
+        long mapSize = readMapCount(formatCode);
+        if (mapSize == 0)
+        {
+            return null;
+        }
+
+        Map<String, String> propertiesMap = new HashMap<String, String>();
+        for (long index = 0; index < mapSize; index++)
+        {
+            String key = null;
+            formatCode = readFormatCode();
+            if (formatCode == CAMQPFormatCodes.SYM8)
+            {
+                key = readString(formatCode);
+            }
+            String val = null;
+            formatCode = readFormatCode();
+            if (formatCode != CAMQPFormatCodes.NULL)
+            {
+                val = readString(formatCode);
+            }
+            if ((key != null) && (val != null))
+            {
+                propertiesMap.put(key,  val);
+            }
+        }
+        return propertiesMap;
+    }
+
+    public byte[] readBinaryPayload()
+    {
+        int formatCode = readFormatCode();
+        int size = (int) readBinaryDataSize(formatCode);
+        ChannelBuffer buf = readBinary(formatCode, size, false);
+        byte[] payload = new byte[size];
+        buf.readBytes(payload);
+        return payload;
     }
 }
