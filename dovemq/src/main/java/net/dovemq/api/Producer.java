@@ -17,6 +17,16 @@
 
 package net.dovemq.api;
 
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+
 public class Producer
 {
+    public Producer(String sourceName, CAMQPSourceInterface sourceEndpoint)
+    {
+        super();
+        this.sourceName = sourceName;
+        this.sourceEndpoint = sourceEndpoint;
+    }
+    private final String sourceName;
+    private final CAMQPSourceInterface sourceEndpoint;
 }

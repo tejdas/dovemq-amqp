@@ -20,17 +20,20 @@ package net.dovemq.api;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public class Session
 {
     private final String brokerContainerId;
+    private final String endpointId;
     private final CAMQPSessionInterface session;
 
-    Session(String brokerContainerId, CAMQPSessionInterface session)
+    Session(String brokerContainerId, String endpointId, CAMQPSessionInterface session)
     {
         super();
         this.brokerContainerId = brokerContainerId;
+        this.endpointId = endpointId;
         this.session = session;
     }
 
@@ -41,14 +44,16 @@ public class Session
 
     public Producer createProducer(String queueName)
     {
-        String source = "src";
+        String source = String.format("%s.%s", endpointId, queueName);
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, queueName, new CAMQPEndpointPolicy());
-        return null;
+        return new Producer(source, sender);
     }
 
     public Consumer createConsumer(String queueName)
     {
-        return null;
+        String target = String.format("%s.%s", endpointId, queueName);
+        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(brokerContainerId, target, queueName, new CAMQPEndpointPolicy());
+        return new Consumer(target, receiver);
     }
 
     public Publisher createPublisher(String topicName)

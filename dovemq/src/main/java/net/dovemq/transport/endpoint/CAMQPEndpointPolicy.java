@@ -62,6 +62,12 @@ public final class CAMQPEndpointPolicy
         CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING
     }
 
+    public static enum EndpointType
+    {
+        QUEUE,
+        TOPIC
+    }
+
     private final long maxMessageSize;
     private final long maxAvailableLimit;
     private final int senderSettleMode;
@@ -70,7 +76,16 @@ public final class CAMQPEndpointPolicy
     private final ReceiverLinkCreditPolicy linkCreditPolicy;
     private final long minLinkCreditThreshold;
     private final long linkCreditBoost;
+    private EndpointType endpointType = EndpointType.QUEUE;
 
+    public EndpointType getEndpointType()
+    {
+        return endpointType;
+    }
+    public void setEndpointType(EndpointType endpointType)
+    {
+        this.endpointType = endpointType;
+    }
     public CAMQPMessageDeliveryPolicy getDeliveryPolicy()
     {
         return deliveryPolicy;
