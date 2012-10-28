@@ -15,32 +15,19 @@
  *
  */
 
-package net.dovemq.transport.frame;
+package net.dovemq.transport.common;
 
-import net.jcip.annotations.Immutable;
+import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 
-@Immutable
-public class CAMQPMessagePayload
+public class CAMQPFunctionalTestUtils
 {
-    public ChannelBuffer getPayload()
+    public static byte[] getBytes(CAMQPMessagePayload payload)
     {
-        return payload;
+        ChannelBuffer inputBuffer = payload.getPayload();
+        byte[] input = new byte[inputBuffer.readableBytes()];
+        inputBuffer.readBytes(input);
+        return input;
     }
-
-    public CAMQPMessagePayload(ChannelBuffer payload)
-    {
-        super();
-        this.payload = payload;
-    }
-
-    public CAMQPMessagePayload(byte[] payload)
-    {
-        super();
-        this.payload = ChannelBuffers.wrappedBuffer(payload);
-    }
-
-    private final ChannelBuffer payload;
 }

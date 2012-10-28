@@ -56,9 +56,9 @@ public final class CAMQPSyncDecoder
 
     public CAMQPMessagePayload getPayload()
     {
-        byte[] payloadBody = new byte[buffer.readableBytes()];
-        buffer.readBytes(payloadBody);
-        return new CAMQPMessagePayload(payloadBody);
+        ChannelBuffer remainingData = buffer;
+        buffer = null;
+        return new CAMQPMessagePayload(remainingData);
     }
 
     public boolean isEnoughDataAvailable()

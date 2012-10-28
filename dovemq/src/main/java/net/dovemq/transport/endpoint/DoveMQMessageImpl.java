@@ -27,6 +27,7 @@ import java.util.Map;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.api.HeaderProperties;
 import net.dovemq.api.MessageProperties;
+import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.CAMQPProtocolConstants;
 import net.dovemq.transport.protocol.CAMQPSyncDecoder;
@@ -346,6 +347,20 @@ class DoveMQMessageImpl implements DoveMQMessage
         }
         message.footers = decoder.decodePropertiesMap();
         return message;
+    }
+
+    public CAMQPMessagePayload marshal()
+    {
+        CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
+        encode(encoder);
+        return new CAMQPMessagePayload(encoder.getEncodedBuffer());
+    }
+
+    public static DoveMQMessageImpl unmarshal(CAMQPMessagePayload payload)
+    {
+        CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
+        decoder.take(payload.getPayload());
+        return DoveMQMessageImpl.decode(decoder);
     }
 
     private final HeaderPropertiesImpl headerProperties;

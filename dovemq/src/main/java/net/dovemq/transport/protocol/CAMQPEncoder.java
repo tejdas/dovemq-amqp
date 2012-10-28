@@ -127,7 +127,7 @@ public final class CAMQPEncoder
 
     public void writePayload(CAMQPMessagePayload payload)
     {
-        byte[] payloadBody = payload.getPayload();
+        ChannelBuffer payloadBody = payload.getPayload();
         writePayloadInternal(payloadBody);
     }
 
@@ -407,22 +407,18 @@ public final class CAMQPEncoder
     }
 
     private void
-    writePayloadInternal(byte[] binaryData)
+    writePayloadInternal(ChannelBuffer binaryData)
     {
-        int size = binaryData.length;
-        if (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE)
+        if (dynamicBuffer != null)
         {
-            /*
-             * Ignore copyFree and ALWAYS deep-copy
-             */
-            ChannelBuffer bufferToCopy = ensureCapacity(size);
-            bufferToCopy.writeBytes(binaryData, 0, size);
-            return;
+            buffer = ChannelBuffers.wrappedBuffer(buffer, dynamicBuffer, binaryData);
+            dynamicBuffer = null;
         }
         else
         {
-            writeBinaryBody(binaryData, true);
+            buffer = ChannelBuffers.wrappedBuffer(buffer, binaryData);
         }
+        isComposite = true;
     }
 
     private void writeBinaryBody(byte[] binaryData, boolean copyFree)

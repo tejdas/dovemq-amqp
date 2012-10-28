@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import net.dovemq.transport.common.CAMQPFunctionalTestUtils;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkMessageHandler;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
@@ -29,14 +30,14 @@ import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 
 public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
-{   
+{
     private SysTestCommandReceiverFactory factory = null;
     protected final CAMQPSessionInterface session;
     private FileOutputStream outputStream = null;
     private boolean firstCommand = true;
     private long expectedBytes = 0;
     private long receivedBytes = 0;
-    
+
     private volatile boolean isDone = false;
 
     public boolean isDone()
@@ -48,7 +49,7 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
     {
         this.factory = factory;
     }
-    
+
     public SysBaseLinkReceiver(CAMQPSessionInterface session)
     {
         super();
@@ -78,7 +79,8 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
     {
         try
         {
-            parsePayload(payload.getPayload());
+            byte[] payloadBytes = CAMQPFunctionalTestUtils.getBytes(payload);
+            parsePayload(payloadBytes);
         }
         catch (IOException e)
         {
@@ -134,25 +136,25 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
             }
         }
     }
-    
+
     @Override
     public void flowReceived(CAMQPControlFlow flow)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void attachReceived(CAMQPControlAttach controlFrame)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void detachReceived(CAMQPControlDetach controlFrame)
     {
         // TODO Auto-generated method stub
-        
+
     }
 }
