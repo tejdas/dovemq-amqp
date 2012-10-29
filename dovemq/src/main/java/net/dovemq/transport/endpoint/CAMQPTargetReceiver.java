@@ -17,9 +17,9 @@
 
 package net.dovemq.transport.endpoint;
 
-import net.dovemq.transport.frame.CAMQPMessagePayload;
+import net.dovemq.api.DoveMQMessage;
 
 public interface CAMQPTargetReceiver
 {
-    public void messageReceived(CAMQPMessagePayload message);
+    public void messageReceived(DoveMQMessage message);
 }

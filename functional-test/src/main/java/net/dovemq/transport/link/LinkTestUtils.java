@@ -45,20 +45,20 @@ public class LinkTestUtils
             }
         }
     }
-    
+
     public static CAMQPMessage createMessage(Random randomGenerator)
     {
         String deliveryTag = UUID.randomUUID().toString();
         int sectionSize = 256 * (randomGenerator.nextInt(10) + 1);
         String str = RandomStringUtils.randomAlphanumeric(sectionSize);
-        CAMQPMessagePayload payload = new CAMQPMessagePayload(str.getBytes()); 
+        CAMQPMessagePayload payload = new CAMQPMessagePayload(str.getBytes());
         return new CAMQPMessage(deliveryTag, payload);
     }
-    
+
     public static CAMQPMessagePayload createMessagePayload(Random randomGenerator)
     {
         int sectionSize = 256 * (randomGenerator.nextInt(10) + 1);
         String str = RandomStringUtils.randomAlphanumeric(sectionSize);
-        return new CAMQPMessagePayload(str.getBytes()); 
-    }    
+        return new CAMQPMessagePayload(str.getBytes());
+    }
 }

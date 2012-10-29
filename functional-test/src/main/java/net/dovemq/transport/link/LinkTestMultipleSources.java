@@ -25,11 +25,12 @@ import java.util.concurrent.Executors;
 
 import javax.management.MalformedObjectNameException;
 
+import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.frame.CAMQPMessagePayload;
+import net.dovemq.transport.endpoint.EndpointTestUtils;
 import net.dovemq.transport.session.SessionCommand;
 
 public class LinkTestMultipleSources
@@ -39,10 +40,10 @@ public class LinkTestMultipleSources
     private static String brokerContainerId ;
     private static int NUM_THREADS = 5;
     private static LinkCommandMBean mbeanProxy;
-    
+
     private static final CountDownLatch startSignal = new CountDownLatch(1);
     private static volatile CountDownLatch doneSignal = null;
-    
+
     private static class LinkSourceDriver implements Runnable
     {
         public LinkSourceDriver(int numMessagesToSend)
@@ -52,7 +53,7 @@ public class LinkTestMultipleSources
         }
 
         private final int numMessagesToSend;
-        
+
         @Override
         public void run()
         {
@@ -69,17 +70,17 @@ public class LinkTestMultipleSources
             String localTarget = String.format("%s%d", target, Thread.currentThread().getId());
             CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, localSource, localTarget, new CAMQPEndpointPolicy());
             mbeanProxy.attachSharedTarget(localSource,  localTarget);
-            
+
             Random randomGenerator = new Random();
             for (int i = 0; i < numMessagesToSend; i++)
             {
-                CAMQPMessagePayload message = LinkTestUtils.createMessagePayload(randomGenerator);
+                DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator);
                 sender.sendMessage(message);
             }
             doneSignal.countDown();
         }
     }
-    
+
     public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
     {
         /*
@@ -88,26 +89,26 @@ public class LinkTestMultipleSources
         String publisherName = args[0];
         String brokerIp = args[1];
         String jmxPort = args[2];
-        
+
         JMXProxyWrapper jmxWrapper = new JMXProxyWrapper(brokerIp, jmxPort);
-        
+
         NUM_THREADS = Integer.parseInt(args[3]);
         int numMessagesToSend = Integer.parseInt(args[4]);
-        
+
         doneSignal = new CountDownLatch(NUM_THREADS);
-          
+
         brokerContainerId = String.format("broker@%s", brokerIp);
         CAMQPLinkManager.initialize(false, publisherName);
-        
+
         SessionCommand localSessionCommand = new SessionCommand();
         localSessionCommand.sessionCreate(brokerContainerId);
-        
+
         mbeanProxy = jmxWrapper.getLinkBean();
-        
+
         ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
 
         int numMessagesExpected = numMessagesToSend * NUM_THREADS;
-        
+
         LinkSourceDriver[] senders = new LinkSourceDriver[NUM_THREADS];
         for (int i = 0; i < NUM_THREADS; i++)
         {
@@ -115,12 +116,12 @@ public class LinkTestMultipleSources
             senders[i] = sender;
             executor.submit(sender);
         }
-        
+
         startSignal.countDown();
-        
+
         doneSignal.await();
         Thread.sleep(2000);
-        
+
         while (true)
         {
             Thread.sleep(1000);
@@ -129,7 +130,7 @@ public class LinkTestMultipleSources
             if (numMessagesReceivedAtRemote == numMessagesExpected)
                 break;
         }
-        
+
         System.out.println("Got all messages: sleeping for 10 secs");
         Thread.sleep(10000);
         executor.shutdown();

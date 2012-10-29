@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkEndpoint;
@@ -151,9 +152,11 @@ class CAMQPSource implements CAMQPSourceInterface
     }
 
     @Override
-    public void sendMessage(CAMQPMessagePayload message)
+    public void sendMessage(DoveMQMessage message)
     {
+        DoveMQMessageImpl messageImpl = (DoveMQMessageImpl) message;
+        CAMQPMessagePayload encodedMessagePayload = messageImpl.marshal();
         String deliveryTag = UUID.randomUUID().toString();
-        linkSender.sendMessage(deliveryTag, message);
+        linkSender.sendMessage(deliveryTag, encodedMessagePayload);
     }
 }

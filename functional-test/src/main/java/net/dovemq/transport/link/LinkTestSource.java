@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 public class LinkTestSource implements CAMQPSourceInterface
 {
@@ -56,7 +56,7 @@ public class LinkTestSource implements CAMQPSourceInterface
     public void messageSent(long deliveryId, CAMQPMessage message)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -69,9 +69,9 @@ public class LinkTestSource implements CAMQPSourceInterface
     }
 
     @Override
-    public void sendMessage(CAMQPMessagePayload message)
+    public void sendMessage(DoveMQMessage message)
     {
         // TODO Auto-generated method stub
-        
+
     }
 }

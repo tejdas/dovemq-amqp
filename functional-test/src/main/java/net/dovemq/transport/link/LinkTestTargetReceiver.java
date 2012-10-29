@@ -24,20 +24,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetReceiver;
-import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 public class LinkTestTargetReceiver implements CAMQPTargetReceiver, Runnable
 {
     private volatile boolean shutdown = false;
     private final AtomicLong messageCount = new AtomicLong(0);
-    private final BlockingQueue<CAMQPMessagePayload> msgQueue = new LinkedBlockingQueue<CAMQPMessagePayload>();
+    private final BlockingQueue<DoveMQMessage> msgQueue = new LinkedBlockingQueue<DoveMQMessage>();
     private volatile CAMQPSourceInterface source = null;
     private volatile Thread sender = null;
-    
+
     @Override
-    public void messageReceived(CAMQPMessagePayload message)
+    public void messageReceived(DoveMQMessage message)
     {
         long count = messageCount.incrementAndGet();
         if (count%10000 == 0)
@@ -54,12 +54,12 @@ public class LinkTestTargetReceiver implements CAMQPTargetReceiver, Runnable
             e.printStackTrace();
         }
     }
-    
+
     public long getNumberOfMessagesReceived()
     {
         return messageCount.longValue();
     }
-    
+
     @Override
     public void run()
     {
@@ -67,7 +67,7 @@ public class LinkTestTargetReceiver implements CAMQPTargetReceiver, Runnable
         {
             try
             {
-                CAMQPMessagePayload msg = msgQueue.poll(1000, TimeUnit.MILLISECONDS);
+                DoveMQMessage msg = msgQueue.poll(1000, TimeUnit.MILLISECONDS);
                 if (msg != null)
                     source.sendMessage(msg);
             }
@@ -77,14 +77,14 @@ public class LinkTestTargetReceiver implements CAMQPTargetReceiver, Runnable
             }
         }
     }
-    
+
     void setSource(CAMQPSourceInterface source)
     {
         this.source = source;
         sender = new Thread(this);
         sender.start();
     }
-    
+
     void stop()
     {
         messageCount.set(0);

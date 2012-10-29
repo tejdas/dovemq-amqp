@@ -81,11 +81,10 @@ class CAMQPTarget implements CAMQPTargetInterface
          */
         if (targetReceiver != null)
         {
-            targetReceiver.messageReceived(message);
+            DoveMQMessageImpl decodedMessage = DoveMQMessageImpl.unmarshal(message);
+            targetReceiver.messageReceived(decodedMessage);
         }
 
-        // if (endpointPolicy.getDeliveryPolicy() !=
-        // CAMQPMessageDeliveryPolicy.AtmostOnce)
         /*
          * Do not send the disposition if it is already settled by the sender.
          */
