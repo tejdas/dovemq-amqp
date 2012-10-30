@@ -17,6 +17,9 @@
 
 package net.dovemq.transport.session;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.Random;
@@ -28,6 +31,19 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.frame.CAMQPFrame;
+import net.dovemq.transport.frame.CAMQPFrameHeader;
+import net.dovemq.transport.frame.CAMQPMessagePayload;
+import net.dovemq.transport.link.CAMQPLinkSenderInterface;
+import net.dovemq.transport.link.CAMQPMessage;
+import net.dovemq.transport.protocol.CAMQPEncoder;
+import net.dovemq.transport.protocol.CAMQPSyncDecoder;
+import net.dovemq.transport.protocol.data.CAMQPControlAttach;
+import net.dovemq.transport.protocol.data.CAMQPControlDetach;
+import net.dovemq.transport.protocol.data.CAMQPControlFlow;
+import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -38,35 +54,20 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import net.dovemq.transport.connection.CAMQPConnection;
-import net.dovemq.transport.frame.CAMQPFrame;
-import net.dovemq.transport.frame.CAMQPFrameHeader;
-import net.dovemq.transport.frame.CAMQPMessagePayload;
-import net.dovemq.transport.link.CAMQPLinkSenderInterface;
-import net.dovemq.transport.protocol.CAMQPEncoder;
-import net.dovemq.transport.protocol.CAMQPSyncDecoder;
-import net.dovemq.transport.protocol.data.CAMQPControlAttach;
-import net.dovemq.transport.protocol.data.CAMQPControlDetach;
-import net.dovemq.transport.protocol.data.CAMQPControlFlow;
-import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
-
 class MockLinkSender implements CAMQPLinkSenderInterface
 {
     @Override
-    public void sendMessage(String deliveryTag, CAMQPMessagePayload message)
+    public void sendMessage(CAMQPMessage message)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void messageSent(CAMQPControlTransfer transferFrame)
     {
         // TODO Auto-generated method stub
-        
+
     }
 }
 
@@ -78,12 +79,12 @@ public class CAMQPSessionSenderTest
     private CAMQPSession session = null;
     private final BlockingQueue<ChannelBuffer> outgoingFrames = new LinkedBlockingQueue<ChannelBuffer>();
     private CAMQPConnection mockConnection = null;
-    
+
     @BeforeClass
     public static void setupBeforeClass()
     {
     }
-    
+
     @Before
     public void setup()
     {
@@ -94,12 +95,12 @@ public class CAMQPSessionSenderTest
         };
         executor = Executors.newFixedThreadPool(32);
         numLinkFlowFrameCount.set(0);
-        
+
         final CAMQPSessionStateActor mockStateActor = mockContext.mock(CAMQPSessionStateActor.class);
         mockConnection =  createMockConnection();
         session = new CAMQPSession(mockConnection, mockStateActor);
         session.retrieveAndSetRemoteFlowControlAttributes(CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE, 0, CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE);
-        
+
         mockContext.checking(new Expectations()
             {{
                 ignoring(mockStateActor).getCurrentState();will(returnValue(State.MAPPED));
@@ -114,7 +115,7 @@ public class CAMQPSessionSenderTest
         mockContext.assertIsSatisfied();
         outgoingFrames.clear();
     }
-    
+
     private class DummyLinkSource implements Runnable
     {
         private final CAMQPSession session;
@@ -127,7 +128,7 @@ public class CAMQPSessionSenderTest
             this.session = session;
             this.latch = latch;
         }
-    
+
         @Override
         public void run()
         {
@@ -143,9 +144,9 @@ public class CAMQPSessionSenderTest
             {
                 Thread.currentThread().interrupt();
             }
-            
+
             CAMQPLinkSenderInterface mockLinkSender = new MockLinkSender();
-            
+
             try
             {
             for (int i = 0; i < numberOfTransfers; i++)
@@ -162,7 +163,7 @@ public class CAMQPSessionSenderTest
                 {
                     Thread.currentThread().interrupt();
                 }
-                
+
                 if (i%50 == 5)
                 {
                     CAMQPControlFlow flowFrame = createLinkFlowFrame(linkHandle);
@@ -191,23 +192,23 @@ public class CAMQPSessionSenderTest
         long linkHandle = 5L;
         ChannelBuffer encodedFrame = createAttachFrame(linkHandle);
         session.sendLinkControlFrame(encodedFrame);
-        
+
         ChannelBuffer buffer = outgoingFrames.poll(500, TimeUnit.MILLISECONDS);
         CAMQPSyncDecoder inputPipe = CAMQPSyncDecoder.createCAMQPSyncDecoder();
         inputPipe.take(buffer);
-    
+
         String controlName = inputPipe.readSymbol();
         assertTrue(controlName.equalsIgnoreCase(CAMQPControlAttach.descriptor));
         CAMQPControlAttach controlFrame = CAMQPControlAttach.decode(inputPipe);
         assertTrue(linkHandle == controlFrame.getHandle());
     }
-    
+
     @Test
     public void testSession() throws InterruptedException
     {
         sendTransfers(1, 100);
     };
-    
+
     @Test(timeout=120000L)
     public void testSessionSimulateFlowReceipt() throws InterruptedException
     {
@@ -219,7 +220,7 @@ public class CAMQPSessionSenderTest
         latch.countDown();
         getAndAssertFlowFrames(0, numTransfersPerLink);
     };
-    
+
     @Test(timeout=120000L)
     public void testSessionMultipleLinks() throws InterruptedException
     {
@@ -227,7 +228,7 @@ public class CAMQPSessionSenderTest
         int numTransfersPerLink = 256;
         sendTransfers(numLinks, numTransfersPerLink);
     };
-    
+
     private void sendTransfers(int numLinks, int numTransfersPerLink) throws InterruptedException
     {
         CountDownLatch latch = new CountDownLatch(1);
@@ -240,7 +241,7 @@ public class CAMQPSessionSenderTest
         latch.countDown();
         getAndAssertTransferCount(0, numTransfersPerLink * numLinks);
     };
-    
+
     private void getAndAssertTransferCount(long initialTransferId, int expectedTransferFrames) throws InterruptedException
     {
         int numLinkFlowFrames = 0;
@@ -262,12 +263,12 @@ public class CAMQPSessionSenderTest
             lastFrameReceivedTime = new Date();
             CAMQPSyncDecoder inputPipe = CAMQPSyncDecoder.createCAMQPSyncDecoder();
             inputPipe.take(buffer);
-        
+
             String controlName = inputPipe.readSymbol();
             if (controlName.equalsIgnoreCase(CAMQPControlTransfer.descriptor))
             {
                 CAMQPControlTransfer.decode(inputPipe);
-                nextExpectedIncomingTransferId++;  
+                nextExpectedIncomingTransferId++;
             }
             else if (controlName.equalsIgnoreCase(CAMQPControlFlow.descriptor))
             {
@@ -279,7 +280,7 @@ public class CAMQPSessionSenderTest
                 else
                     numLinkFlowFrames++;
             }
-            
+
             if (nextExpectedIncomingTransferId == expectedTransferFrames)
             {
                 break;
@@ -288,7 +289,7 @@ public class CAMQPSessionSenderTest
         assertEquals(expectedTransferFrames, nextExpectedIncomingTransferId);
         assertEquals(numLinkFlowFrameCount.get(), numLinkFlowFrames);
     }
-    
+
     private void getAndAssertFlowFrames(long initialTransferId, int expectedTransferFrames) throws InterruptedException
     {
         int numEchoFlowFramesSent = 0;
@@ -312,12 +313,12 @@ public class CAMQPSessionSenderTest
             lastFrameReceivedTime = new Date();
             CAMQPSyncDecoder inputPipe = CAMQPSyncDecoder.createCAMQPSyncDecoder();
             inputPipe.take(buffer);
-        
+
             String controlName = inputPipe.readSymbol();
             if (controlName.equalsIgnoreCase(CAMQPControlTransfer.descriptor))
             {
                 CAMQPControlTransfer.decode(inputPipe);
-                nextExpectedIncomingTransferId++;  
+                nextExpectedIncomingTransferId++;
             }
             else if (controlName.equalsIgnoreCase(CAMQPControlFlow.descriptor))
             {
@@ -335,7 +336,7 @@ public class CAMQPSessionSenderTest
                 else
                     numLinkFlowFrames++;
             }
-            
+
             if (nextExpectedIncomingTransferId == expectedTransferFrames)
             {
                 if (numEchoFlowFramesSent == numEchoFlowFramesRecvd)
@@ -346,7 +347,7 @@ public class CAMQPSessionSenderTest
         assertEquals(numLinkFlowFrames, numLinkFlowFrameCount.get());
         assertEquals(numEchoFlowFramesSent, numEchoFlowFramesRecvd);
     }
-    
+
     private void simulateFlowFrameFromSessionReceiver(CAMQPSession session, long sessionReceiverNextIncomingId, boolean echoFlag)
     {
         Random r = new Random();
@@ -370,14 +371,14 @@ public class CAMQPSessionSenderTest
         long nextIncomingId = sessionReceiverNextIncomingId - numFramesInTransit;
         flow.setNextIncomingId(nextIncomingId);
         flow.setEcho(echoFlag);
-        
+
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlFlow.encode(encoder, flow);
         ChannelBuffer frameBody = encoder.getEncodedBuffer();
         CAMQPFrameHeader frameHeader = CAMQPFrameHeader.createFrameHeader(0, frameBody.readableBytes());
         session.frameReceived(new CAMQPFrame(frameHeader, frameBody));
     }
-    
+
     private static CAMQPControlFlow createLinkFlowFrame(long linkHandle)
     {
         CAMQPControlFlow flow = new CAMQPControlFlow();
@@ -389,7 +390,7 @@ public class CAMQPSessionSenderTest
         flow.setLinkCredit(50L);
         return flow;
     }
-    
+
     private CAMQPConnection createMockConnection()
     {
         return new CAMQPConnection() {
@@ -400,13 +401,13 @@ public class CAMQPSessionSenderTest
             }
         };
     }
-    
+
     public static CAMQPSessionInterface createMockSessionAndSetExpectations(Mockery mockContext, CAMQPConnection mockConnection)
     {
         final CAMQPSessionStateActor mockStateActor = mockContext.mock(CAMQPSessionStateActor.class);
         CAMQPSession session = new CAMQPSession(mockConnection, mockStateActor);
         session.retrieveAndSetRemoteFlowControlAttributes(CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE, 0, CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE);
-        
+
         mockContext.checking(new Expectations()
             {{
                 ignoring(mockStateActor).getCurrentState();will(returnValue(State.MAPPED));
@@ -414,7 +415,7 @@ public class CAMQPSessionSenderTest
         );
         return session;
     }
-    
+
     public static ChannelBuffer createAttachFrame(long linkHandle)
     {
         CAMQPControlAttach attachControl = new CAMQPControlAttach();
@@ -426,7 +427,7 @@ public class CAMQPSessionSenderTest
         CAMQPControlAttach.encode(encoder, attachControl);
         return encoder.getEncodedBuffer();
     }
-    
+
     public static ChannelBuffer createDetachFrame(long linkHandle)
     {
         CAMQPControlDetach detachControl = new CAMQPControlDetach();

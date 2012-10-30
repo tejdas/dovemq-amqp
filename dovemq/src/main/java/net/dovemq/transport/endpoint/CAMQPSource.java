@@ -43,6 +43,12 @@ class CAMQPSource implements CAMQPSourceInterface
     private final CAMQPLinkSenderInterface linkSender;
     private final CAMQPEndpointPolicy endpointPolicy;
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
+    private volatile CAMQPMessageDispositionObserver observer = null;
+
+    public void setObserver(CAMQPMessageDispositionObserver observer)
+    {
+        this.observer = observer;
+    }
 
     CAMQPSource(CAMQPLinkSenderInterface linkSender, CAMQPEndpointPolicy endpointPolicy)
     {
@@ -123,8 +129,8 @@ class CAMQPSource implements CAMQPSourceInterface
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null)
             {
-                //System.out.println("SOURCE processed disposition, settled deliveryId and acking: " + deliveryId + "  current time: " + System.currentTimeMillis());
                 settledDeliveryIds.add(deliveryId);
+                observer.messageAckedByConsumer(message.getMessage());
             }
         }
 
@@ -157,6 +163,6 @@ class CAMQPSource implements CAMQPSourceInterface
         DoveMQMessageImpl messageImpl = (DoveMQMessageImpl) message;
         CAMQPMessagePayload encodedMessagePayload = messageImpl.marshal();
         String deliveryTag = UUID.randomUUID().toString();
-        linkSender.sendMessage(deliveryTag, encodedMessagePayload);
+        linkSender.sendMessage(new CAMQPMessage(deliveryTag, encodedMessagePayload, message));
     }
 }

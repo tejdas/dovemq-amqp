@@ -20,16 +20,15 @@ package net.dovemq.transport.link;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.log4j.Logger;
-
-import net.jcip.annotations.GuardedBy;
-
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
+import net.jcip.annotations.GuardedBy;
+
+import org.apache.log4j.Logger;
 
 /**
  * Implements AMQP Link Sender.
@@ -39,27 +38,27 @@ import net.dovemq.transport.session.CAMQPSessionManager;
 public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkSender.class);
-    
+
     private CAMQPSourceInterface source = null;
-    
+
     public void setSource(CAMQPSourceInterface source)
     {
         this.source = source;
     }
-    
+
     /**
      * Messages that are waiting to be sent because no link credit is available,
      * or there is a send in progress.
      */
     private final ConcurrentLinkedQueue<CAMQPMessage> unsentMessages = new ConcurrentLinkedQueue<CAMQPMessage>();
-    
+
     /**
      * Used to keep track of how many unsent messages are outstanding at session for this link.
      * A non-zero value is an indication that session is under flow-control.
-     * 
+     *
      * Incremented before call to CAMQPSessionInterface.sendTransfer()
      * Decremented in the callback from session layer: messageSent()
-     * 
+     *
      * Flow-control calculation in the link layer takes this value into account.
      * If linkCredit <= unsentMessagesAtSession, the link layer is under flow-control.
      *
@@ -67,14 +66,14 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
     private long unsentMessagesAtSession = 0;
 
     private boolean sendInProgress = false;
-    
+
     /**
      * Set to true if drain is requested by the peer and until it is processed.
      */
     private boolean drainRequested = false;
-    
+
     private long maxAvailableLimit;
-    
+
     public void setMaxAvailableLimit(long maxAvailableLimit)
     {
         this.maxAvailableLimit = maxAvailableLimit;
@@ -85,7 +84,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
         super(session);
         maxAvailableLimit = CAMQPLinkConstants.DEFAULT_MAX_AVAILABLE_MESSAGES_AT_SENDER;
     }
-    
+
     @Override
     public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
     {
@@ -95,14 +94,14 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
     /**
      * Called by Session layer when a flow frame is received from the peer.
      * Processes the flow frame:
-     * 
+     *
      *  (a) updates the link credit, taking into account the delta between
      *  Link Sender's deliveryCount and Link Receiver's delivery count.
-     *  
+     *
      *  (b) If there are unsent messages waiting for link credit to become
      *  available and there is available link credit (after it was updated),
      *  then executes a Runnable to start sending messages.
-     *  
+     *
      *  (c) If there is drain requested or echo flow requested, then process
      *  and sends a flow frame.
      */
@@ -124,12 +123,12 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
                     linkCredit = flow.getLinkCredit() - deliveryCount;
                 }
             }
-            
+
             if (flow.isSetDrain())
             {
-                drainRequested = flow.getDrain();              
+                drainRequested = flow.getDrain();
             }
-            
+
             if (!sendInProgress)
             {
                 if (canSendMessage())
@@ -142,18 +141,18 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
                     outgoingFlow = processDrainRequested();
                 }
             }
-            
+
             if (flow.isSetEcho() && flow.getEcho() && (outgoingFlow == null))
             {
                 outgoingFlow = populateFlowFrame();
             }
         }
-        
+
         if (outgoingFlow != null)
         {
             session.sendFlow(outgoingFlow);
         }
-        
+
         if (messagesParked)
         {
             CAMQPSessionManager.getExecutor().execute(this);
@@ -170,35 +169,32 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
      * Called by Link source to send a message.
      */
     @Override
-    public void sendMessage(String deliveryTag, CAMQPMessagePayload message)
+    public void sendMessage(CAMQPMessage message)
     {
         CAMQPControlFlow flow = null;
         synchronized (this)
         {
             if (available >= maxAvailableLimit)
             {
-                /*
-                 * TODO throw exception to throttle the Source
-                 */
                 log.warn("Reached available limit threshold: " + maxAvailableLimit);
-                return;
+                throw new CAMQPLinkSenderFlowControlException("Reached available limit threshold: " + maxAvailableLimit);
             }
             available++;
-            
+
             if (sendInProgress || (linkCredit <= unsentMessagesAtSession))
             {
                 /*
                  * TODO: send flow??
                  */
-                unsentMessages.add(new CAMQPMessage(deliveryTag, message));
+                unsentMessages.add(message);
                 return;
             }
-            
+
             sendInProgress = true;
             unsentMessagesAtSession++;
         }
-    
-        send(deliveryTag, message, source);
+
+        send(message, source);
 
         boolean parkedMessages = false;
         synchronized (this)
@@ -216,12 +212,12 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
                 }
             }
         }
- 
+
         if (flow != null)
         {
             session.sendFlow(flow);
         }
-        
+
         if (parkedMessages)
         {
             CAMQPSessionManager.getExecutor().execute(this);
@@ -243,7 +239,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
         {
             return;
         }
-        
+
         boolean parkedMessages = false;
         CAMQPControlFlow flow = null;
         synchronized (this)
@@ -255,7 +251,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
             available--;
             deliveryCount++;
             linkCredit--;
-            
+
             if (!sendInProgress)
             {
                 if (canSendMessage())
@@ -274,7 +270,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
                     flow = processDrainRequested();
                 }
             }
-            
+
             /*
              * Send a flow-frame asking the AMQP peer for more link credit.
              */
@@ -284,12 +280,12 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
                 flow.setEcho(true);
             }
         }
-        
+
         if (flow != null)
         {
             session.sendFlow(flow);
         }
-        
+
         if (parkedMessages)
         {
             CAMQPSessionManager.getExecutor().execute(this);
@@ -299,7 +295,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
     /**
      * This Runnable runs as a Link sender, and sends all the unsent
      * messages, until it runs out of Link credit.
-     * 
+     *
      * If it is done sending messages, and if there's an outstanding
      * drain requested, it sends a flow frame.
      */
@@ -319,7 +315,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
                 }
                 else
                 {
-                    sendInProgress = false;                 
+                    sendInProgress = false;
                     if (drainRequested)
                     {
                         flow = processDrainRequested();
@@ -327,16 +323,16 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
                     break;
                 }
             }
-            
-            send(message.getDeliveryTag(), message.getPayload(), source);
+
+            send(message, source);
         }
-        
+
         if (flow != null)
         {
             session.sendFlow(flow);
         }
     }
- 
+
     @GuardedBy("this")
     private CAMQPControlFlow processDrainRequested()
     {
@@ -363,7 +359,7 @@ public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSende
     {
         return ((linkCredit > unsentMessagesAtSession) && (!unsentMessages.isEmpty()));
     }
-    
+
     @GuardedBy("this")
     private boolean hasLinkCreditButNoMessage()
     {

@@ -17,6 +17,7 @@
 
 package net.dovemq.transport.link;
 
+import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.jcip.annotations.Immutable;
 
@@ -31,12 +32,25 @@ public class CAMQPMessage
     {
         return payload;
     }
+    public DoveMQMessage getMessage()
+    {
+        return message;
+    }
     public CAMQPMessage(String deliveryTag, CAMQPMessagePayload payload)
     {
         super();
         this.deliveryTag = deliveryTag;
         this.payload = payload;
+        this.message = null;
+    }
+    public CAMQPMessage(String deliveryTag, CAMQPMessagePayload payload, DoveMQMessage message)
+    {
+        super();
+        this.deliveryTag = deliveryTag;
+        this.payload = payload;
+        this.message = message;
     }
     private final String deliveryTag;
     private final CAMQPMessagePayload payload;
+    private final DoveMQMessage message;
 }

@@ -24,7 +24,6 @@ import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
@@ -361,11 +360,10 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
      * Send the message on the underlying AMQP session
      * as a transfer frame.
      *
-     * @param deliveryTag
      * @param message
      * @param messageSource
      */
-    void send(String deliveryTag, CAMQPMessagePayload message, CAMQPSourceInterface messageSource)
+    void send(CAMQPMessage message, CAMQPSourceInterface messageSource)
     {
         /*
          * TODO: fragment the message into multiple transfer frames
@@ -377,7 +375,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         transferFrame.setDeliveryId(deliveryId);
         transferFrame.setMore(false);
         transferFrame.setHandle(linkHandle);
-        transferFrame.setDeliveryTag(deliveryTag.getBytes());
+        transferFrame.setDeliveryTag(message.getDeliveryTag().getBytes());
 
         populateTransferFrameWithDispositionPolicy(transferFrame, endpointPolicy.getDeliveryPolicy());
 
@@ -386,11 +384,11 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
          */
         if (messageSource != null)
         {
-            messageSource.messageSent(deliveryId, new CAMQPMessage(deliveryTag, message));
+            messageSource.messageSent(deliveryId, message);
         }
 
         assert(this instanceof CAMQPLinkSenderInterface);
-        session.sendTransfer(transferFrame, message, (CAMQPLinkSenderInterface) this);
+        session.sendTransfer(transferFrame, message.getPayload(), (CAMQPLinkSenderInterface) this);
     }
 
     private static void populateTransferFrameWithDispositionPolicy(CAMQPControlTransfer transferFrame, CAMQPMessageDeliveryPolicy deliveryPolicy)

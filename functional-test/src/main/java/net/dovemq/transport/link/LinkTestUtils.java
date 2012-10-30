@@ -33,7 +33,7 @@ public class LinkTestUtils
         {
             int randomInt = randomGenerator.nextInt(5);
             CAMQPMessage message = createMessage(randomGenerator);
-            linkSender.sendMessage(message.getDeliveryTag(), message.getPayload());
+            linkSender.sendMessage(new CAMQPMessage(message.getDeliveryTag(), message.getPayload()));
             try
             {
                 Thread.sleep(randomInt);

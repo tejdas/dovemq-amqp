@@ -17,6 +17,7 @@
 
 package net.dovemq.transport.endpoint;
 
+import net.dovemq.broker.endpoint.DoveMQEndpointManager;
 import net.dovemq.transport.link.CAMQPLinkEndpoint;
 import net.dovemq.transport.link.CAMQPLinkFactory;
 import net.dovemq.transport.link.CAMQPLinkManager;
@@ -27,6 +28,12 @@ import net.dovemq.transport.link.LinkRole;
 public final class CAMQPEndpointManager
 {
     private static CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
+    private static DoveMQEndpointManager doveMQEndpointManager = null;
+
+    public static void registerDoveMQEndpointManager(DoveMQEndpointManager doveMQEndpointManager)
+    {
+        CAMQPEndpointManager.doveMQEndpointManager = doveMQEndpointManager;
+    }
 
     public static CAMQPEndpointPolicy getDefaultEndpointPolicy()
     {
@@ -107,5 +114,14 @@ public final class CAMQPEndpointManager
             System.out.println("LinkEndpoint is not a LinkSender");
         }
         return null;
+    }
+
+    public static void linkEndpointAttached(String source, String target, CAMQPLinkEndpoint linkEndpoint)
+    {
+    }
+
+    public static void linkEndpointDetached(String source, String target, CAMQPLinkEndpoint linkEndpoint)
+    {
+
     }
 }

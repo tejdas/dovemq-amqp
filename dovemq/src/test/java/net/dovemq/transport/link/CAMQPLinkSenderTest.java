@@ -99,7 +99,7 @@ public class CAMQPLinkSenderTest
         {
             Random r = new Random();
             String deliveryTag = UUID.randomUUID().toString();
-            this.linkSender.sendMessage(deliveryTag, createMessage(r));
+            this.linkSender.sendMessage(new CAMQPMessage(deliveryTag, createMessage(r)));
         }
     }
 
@@ -307,7 +307,7 @@ public class CAMQPLinkSenderTest
         simulateLinkFlowFrameReceipt(false, false, 50, 256);
 
         String deliveryTag = UUID.randomUUID().toString();
-        linkSender.sendMessage(deliveryTag, createMessage(r));
+        linkSender.sendMessage(new CAMQPMessage(deliveryTag, createMessage(r)));
         getAndAssertMessage(1);
         checkAndAssertDeliveryCount();
     }
@@ -330,7 +330,7 @@ public class CAMQPLinkSenderTest
         for (int i = 0; i < numMessagesToSend; i++)
         {
             String deliveryTag = UUID.randomUUID().toString();
-            linkSender.sendMessage(deliveryTag, createMessage(r));
+            linkSender.sendMessage(new CAMQPMessage(deliveryTag, createMessage(r)));
         }
 
         getAndAssertMessage((int) sessionCredit);
@@ -355,7 +355,7 @@ public class CAMQPLinkSenderTest
         for (int i = 0; i < numMessagesToSend; i++)
         {
             String deliveryTag = UUID.randomUUID().toString();
-            linkSender.sendMessage(deliveryTag, createMessage(r));
+            linkSender.sendMessage(new CAMQPMessage(deliveryTag, createMessage(r)));
         }
 
         getAndAssertMessage((int) linkCredit);
@@ -383,7 +383,7 @@ public class CAMQPLinkSenderTest
         for (int i = 0; i < numMessagesToSend; i++)
         {
             String deliveryTag = UUID.randomUUID().toString();
-            linkSender.sendMessage(deliveryTag, createMessage(r));
+            linkSender.sendMessage(new CAMQPMessage(deliveryTag, createMessage(r)));
         }
 
         int messagesExpected = (int) linkCredit;
@@ -579,7 +579,7 @@ public class CAMQPLinkSenderTest
             public void run()
             {
                 String deliveryTag = UUID.randomUUID().toString();
-                linkSender.sendMessage(deliveryTag, createMessage(r));
+                linkSender.sendMessage(new CAMQPMessage(deliveryTag, createMessage(r)));
             }
         };
         Thread t = new Thread(runnable);
@@ -587,7 +587,7 @@ public class CAMQPLinkSenderTest
 
         localSession.waitSendTransfer();
         String deliveryTag = UUID.randomUUID().toString();
-        linkSender.sendMessage(deliveryTag, createMessage(r));
+        linkSender.sendMessage(new CAMQPMessage(deliveryTag, createMessage(r)));
 
         localSession.signalDoneTransfer();
         localSession.waitUntilAllMessagesSent();

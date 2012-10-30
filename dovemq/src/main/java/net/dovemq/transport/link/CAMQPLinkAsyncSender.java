@@ -20,26 +20,25 @@ package net.dovemq.transport.link;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import net.jcip.annotations.GuardedBy;
-
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
+import net.jcip.annotations.GuardedBy;
 
 /**
  * Asynchronous Link sender implementation.
  * CAMQPLinkAsyncSender picks up message from the Link Source
  * and sends it.
- * 
+ *
  * @author tejdas
  */
 class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
     private CAMQPSourceInterface source = null;
-    
+
     void setSource(CAMQPSourceInterface source)
     {
         this.source = source;
@@ -47,21 +46,21 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
 
     /*
      * messageOutstanding is set to true before calling CAMQPSessionInterface.sendTransfer()
-     * 
+     *
      * It is set to false after the message has been sent by the session layer, in the callback:
      * messageSent()
-     * 
+     *
      */
     private AtomicBoolean messageOutstanding = new AtomicBoolean(false);
 
     private boolean sendInProgress = false;
     private boolean drainRequested = false;
-    
+
     public CAMQPLinkAsyncSender(CAMQPSessionInterface session)
     {
         super(session);
     }
-    
+
     @Override
     public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
     {
@@ -73,7 +72,7 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     {
         boolean messagesParked = false;
         CAMQPControlFlow outgoingFlow = null;
-        
+
         long availableMessageCount = source.getMessageCount();
         synchronized (this)
         {
@@ -89,12 +88,12 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
                     linkCredit = flow.getLinkCredit() - deliveryCount;
                 }
             }
-            
+
             if (flow.isSetDrain())
             {
-                drainRequested = flow.getDrain();              
+                drainRequested = flow.getDrain();
             }
- 
+
             if (!sendInProgress)
             {
                 if ((available > 0) && (linkCredit > 0))
@@ -107,18 +106,18 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
                     outgoingFlow = processDrainRequested(true);
                 }
             }
-            
+
             if (flow.isSetEcho() && flow.getEcho() && (outgoingFlow == null))
             {
                 outgoingFlow = populateFlowFrame();
             }
         }
-        
+
         if (outgoingFlow != null)
         {
             session.sendFlow(outgoingFlow);
         }
-        
+
         if (messagesParked)
         {
             CAMQPSessionManager.getExecutor().execute(this);
@@ -129,11 +128,11 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     public void sessionClosed()
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
-    public void sendMessage(String deliveryTag, CAMQPMessagePayload payload)
+    public void sendMessage(CAMQPMessage message)
     {
         /*
          * Not implemented
@@ -151,38 +150,38 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         {
             return;
         }
-        
+
         boolean checkMessageAvailability = false;
         boolean parkedMessages = false;
         CAMQPControlFlow flow = null;
         synchronized (this)
         {
             messageOutstanding.set(false);
- 
+
             if (available > 0)
             {
                 available--;
             }
             deliveryCount++;
             linkCredit--;
-            
+
             if (!sendInProgress)
             {
                 checkMessageAvailability = ((linkCredit > 0) && (available == 0));
-                
+
                 if (drainRequested && (linkCredit <= 0) && !checkMessageAvailability)
                 {
                     flow = processDrainRequested(available > 0);
-                }                
+                }
             }
         }
-        
+
         long messageCount = 0;
         if (checkMessageAvailability)
         {
             messageCount = source.getMessageCount();
         }
-        
+
         synchronized (this)
         {
             if (checkMessageAvailability)
@@ -203,12 +202,12 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
                 }
             }
         }
-        
+
         if (flow != null)
         {
             session.sendFlow(flow);
         }
-        
+
         if (parkedMessages)
         {
             CAMQPSessionManager.getExecutor().execute(this);
@@ -221,7 +220,7 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
         CAMQPMessage message = null;
         CAMQPControlFlow flow = null;
         String deliveryTag = null;
-        
+
         while (true)
         {
             message = source.getMessage();
@@ -229,9 +228,9 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
             {
                 deliveryTag = message.getDeliveryTag();
                 messageOutstanding.set(true);
-                send(deliveryTag, message.getPayload(), source);
+                send(message, source);
             }
-            
+
             synchronized (this)
             {
                 if ((deliveryTag != null) && messageOutstanding.get())
@@ -239,11 +238,11 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
                     sendInProgress = false;
                     break;
                 }
-                
+
                 if ((message == null) || (linkCredit <= 0))
                 {
                     sendInProgress = false;
-                    
+
                     if (drainRequested)
                     {
                         flow = processDrainRequested(available > 0);
@@ -252,13 +251,13 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
                 }
             }
         }
-        
+
         if (flow != null)
         {
             session.sendFlow(flow);
         }
     }
-    
+
     @GuardedBy("this")
     private CAMQPControlFlow processDrainRequested(boolean availableKnown)
     {
