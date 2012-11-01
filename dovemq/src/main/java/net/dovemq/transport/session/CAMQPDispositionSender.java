@@ -38,7 +38,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
  * interval. It manages the outstanding disposition ranges, merging them into
  * batches having the same characteristics (outcome and settled flag) if
  * necessary, for efficient disposition.
- * 
+ *
  * @author tejdas
  */
 class CAMQPDispositionSender implements Runnable
@@ -226,8 +226,6 @@ class CAMQPDispositionSender implements Runnable
         {
             for (DispositionRange range : dispositionRanges)
             {
-                //String roleStr = (role)? "receiver" : "sender";
-                //System.out.println("disposition: role: " + roleStr + " details: " + range.toString() + "  current time: " + System.currentTimeMillis());
                 CAMQPControlDisposition disposition = new CAMQPControlDisposition();
                 disposition.setBatchable(false);
                 disposition.setFirst(range.getMin());

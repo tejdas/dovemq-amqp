@@ -35,7 +35,7 @@ import net.jcip.annotations.Immutable;
 
 import org.apache.commons.lang.StringUtils;
 
-class DoveMQMessageImpl implements DoveMQMessage
+public class DoveMQMessageImpl implements DoveMQMessage
 {
     private static final String SYMBOL_DELIVERY_ANNOTATIONS = "amqp:delivery-annotations:map";
     private static final String SYMBOL_MESSAGE_ANNOTATIONS = "amqp:message-annotations:map";
@@ -257,7 +257,7 @@ class DoveMQMessageImpl implements DoveMQMessage
         return payloadCollection;
     }
 
-    DoveMQMessageImpl()
+    public DoveMQMessageImpl()
     {
         super();
         headerProperties = new HeaderPropertiesImpl();

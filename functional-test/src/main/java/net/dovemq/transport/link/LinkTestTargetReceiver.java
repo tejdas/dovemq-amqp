@@ -25,10 +25,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import net.dovemq.api.DoveMQMessage;
+import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.endpoint.CAMQPTargetReceiver;
 
-public class LinkTestTargetReceiver implements CAMQPTargetReceiver, Runnable
+public class LinkTestTargetReceiver implements DoveMQMessageReceiver, Runnable
 {
     private volatile boolean shutdown = false;
     private final AtomicLong messageCount = new AtomicLong(0);

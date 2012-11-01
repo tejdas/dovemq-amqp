@@ -15,11 +15,9 @@
  *
  */
 
-package net.dovemq.transport.endpoint;
+package net.dovemq.api;
 
-import net.dovemq.api.DoveMQMessage;
-
-public interface CAMQPTargetReceiver
+public interface DoveMQMessageReceiver
 {
     public void messageReceived(DoveMQMessage message);
 }

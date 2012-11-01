@@ -21,7 +21,22 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 public class Consumer
 {
-    public Consumer(String targetName, CAMQPTargetInterface targetEndpoint)
+    public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver)
+    {
+        targetEndpoint.registerMessageReceiver(messageReceiver);
+    }
+
+    public void start()
+    {
+        targetEndpoint.startReceivingMessages();
+    }
+
+    public void stop()
+    {
+
+    }
+
+    Consumer(String targetName, CAMQPTargetInterface targetEndpoint)
     {
         super();
         this.targetName = targetName;

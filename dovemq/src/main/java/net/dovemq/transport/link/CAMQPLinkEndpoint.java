@@ -198,6 +198,10 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         if (linkKey != null)
         {
             CAMQPLinkManager.getLinkmanager().registerLinkEndpoint(linkName, linkKey, this);
+            if (!isInitiator)
+            {
+                CAMQPEndpointManager.linkEndpointAttached(linkKey.getSource(), linkKey.getTarget(), this);
+            }
         }
         String initiatedBy =  isInitiator? "self" : "peer";
         log.debug(roleAsString + " created between source: " + sourceAddress + " and target: " + targetAddress + " . Initiated by: " + initiatedBy);
@@ -208,6 +212,10 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         if (linkKey != null)
         {
             CAMQPLinkManager.getLinkmanager().unregisterLinkEndpoint(linkName, linkKey);
+            if (!isInitiator)
+            {
+                CAMQPEndpointManager.linkEndpointDetached(linkKey.getSource(), linkKey.getTarget(), this);
+            }
         }
         String initiatedBy =  isInitiator? "self" : "peer";
         log.debug(roleAsString + " destroyed between source: " + sourceAddress + " and target: " + targetAddress + " . Initiated by: " + initiatedBy);

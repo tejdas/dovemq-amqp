@@ -24,8 +24,8 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public final class ConnectionFactory
 {
-    private volatile String endpointId = null;
-    public String getEndpointId()
+    private volatile static String endpointId = null;
+    public static String getEndpointId()
     {
         return endpointId;
     }
@@ -38,9 +38,9 @@ public final class ConnectionFactory
      *
      * @param endpointID
      */
-    public void initialize(String endpointID)
+    public static void initialize(String endpointID)
     {
-        if (endpointId != null)
+        if (endpointId == null)
         {
             boolean isBroker = false;
             CAMQPLinkManager.initialize(isBroker, endpointID);
@@ -51,7 +51,7 @@ public final class ConnectionFactory
     /**
      * Shuts down DoveMQ runtime.
      */
-    public void shutdown()
+    public static void shutdown()
     {
         if (endpointId != null)
         {
@@ -59,7 +59,7 @@ public final class ConnectionFactory
         }
     }
 
-    public Session createSession(String targetDoveMQBrokerAddress)
+    public static Session createSession(String targetDoveMQBrokerAddress)
     {
         String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
         CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId);

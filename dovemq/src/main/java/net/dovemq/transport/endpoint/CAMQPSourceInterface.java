@@ -24,6 +24,7 @@ import net.dovemq.transport.link.CAMQPMessage;
 
 public interface CAMQPSourceInterface
 {
+    public void registerDispositionObserver(CAMQPMessageDispositionObserver observer);
     public void sendMessage(DoveMQMessage message);
     public CAMQPMessage getMessage();
     public long getMessageCount();

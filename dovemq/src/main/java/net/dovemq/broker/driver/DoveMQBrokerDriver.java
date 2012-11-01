@@ -17,6 +17,9 @@
 
 package net.dovemq.broker.driver;
 
+import net.dovemq.broker.endpoint.DoveMQEndpointManager;
+import net.dovemq.broker.endpoint.DoveMQEndpointManagerImpl;
+import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.link.CAMQPLinkManager;
 
 public class DoveMQBrokerDriver
@@ -37,6 +40,8 @@ public class DoveMQBrokerDriver
         Runtime.getRuntime().addShutdownHook(sh);
 
         CAMQPLinkManager.initialize(true, "broker");
+        DoveMQEndpointManager doveMQEndpointManager = new DoveMQEndpointManagerImpl();
+        CAMQPEndpointManager.registerDoveMQEndpointManager(doveMQEndpointManager);
         while (!doShutdown)
         {
             try

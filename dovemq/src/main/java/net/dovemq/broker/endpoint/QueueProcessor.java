@@ -21,18 +21,18 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.dovemq.api.DoveMQMessage;
+import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.endpoint.CAMQPTargetReceiver;
-import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.link.CAMQPLinkSenderFlowControlException;
 
-public class QueueProcessor implements CAMQPTargetReceiver, CAMQPMessageDispositionObserver
+public class QueueProcessor implements DoveMQMessageReceiver, CAMQPMessageDispositionObserver
 {
     private final Queue<DoveMQMessage> messageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
     private final Queue<DoveMQMessage> inFlightMessageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
     private CAMQPSourceInterface targetProxy = null;
-    private CAMQPLinkReceiverInterface sourceSink = null;
+    private CAMQPTargetInterface sourceSink = null;
     private boolean sendInProgress = false;
 
     @Override
@@ -106,7 +106,8 @@ public class QueueProcessor implements CAMQPTargetReceiver, CAMQPMessageDisposit
         CAMQPSourceInterface currentDestination = null;
         synchronized(this)
         {
-            this.targetProxy = destination;
+            targetProxy = destination;
+            targetProxy.registerDispositionObserver(this);
             if (sendInProgress)
             {
                 return;
@@ -125,12 +126,13 @@ public class QueueProcessor implements CAMQPTargetReceiver, CAMQPMessageDisposit
         }
     }
 
-    public void sourceAttached(CAMQPLinkReceiverInterface linkReceiver)
+    public void sourceAttached(CAMQPTargetInterface sourceSink)
     {
         synchronized (this)
         {
-            sourceSink = linkReceiver;
+            this.sourceSink = sourceSink;
         }
+        sourceSink.registerMessageReceiver(this);
     }
 
     public void sourceDetached()

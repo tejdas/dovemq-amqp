@@ -45,7 +45,8 @@ class CAMQPSource implements CAMQPSourceInterface
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     private volatile CAMQPMessageDispositionObserver observer = null;
 
-    public void setObserver(CAMQPMessageDispositionObserver observer)
+    @Override
+    public void registerDispositionObserver(CAMQPMessageDispositionObserver observer)
     {
         this.observer = observer;
     }
@@ -130,7 +131,10 @@ class CAMQPSource implements CAMQPSourceInterface
             if (message != null)
             {
                 settledDeliveryIds.add(deliveryId);
-                observer.messageAckedByConsumer(message.getMessage());
+                if (observer != null)
+                {
+                    observer.messageAckedByConsumer(message.getMessage());
+                }
             }
         }
 

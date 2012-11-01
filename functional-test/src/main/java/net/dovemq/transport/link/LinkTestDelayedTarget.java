@@ -27,8 +27,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
-import net.dovemq.transport.endpoint.CAMQPTargetReceiver;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 public class LinkTestDelayedTarget implements CAMQPTargetInterface
@@ -119,7 +119,7 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void registerTargetReceiver(CAMQPTargetReceiver targetReceiver)
+    public void registerMessageReceiver(DoveMQMessageReceiver targetReceiver)
     {
         // TODO Auto-generated method stub
 
@@ -138,5 +138,17 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
     public boolean isDone()
     {
         return messagesBeingProcessed.isEmpty();
+    }
+
+    @Override
+    public void acnowledgeMessageProcessingComplete()
+    {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void startReceivingMessages()
+    {
+        // TODO Auto-generated method stub
     }
 }

@@ -35,12 +35,6 @@ import net.dovemq.transport.session.CAMQPSessionManager;
 
 import org.apache.log4j.Logger;
 
-enum LinkSenderType
-{
-    PUSH,
-    PULL
-}
-
 /**
  * This class is used
  * @author tejdas
@@ -51,12 +45,12 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
     static final class LinkHandshakeTracker
     {
         private final Map<String, CAMQPLinkMessageHandler> outstandingLinks = new ConcurrentHashMap<String, CAMQPLinkMessageHandler>();
-        
+
         /**
          * If we are the initiators of the Link establishment handshake, we first register
          * the link end-point here. It will be removed in linkAccepted, upon completion of
          * the link establishment.
-         * 
+         *
          * @param linkName
          * @param linkEndpoint
          */
@@ -64,11 +58,17 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         {
             outstandingLinks.put(linkName, linkEndpoint);
         }
-        
+
         CAMQPLinkMessageHandler unregisterOutstandingLink(String linkName)
         {
             return outstandingLinks.remove(linkName);
         }
+    }
+
+    public static enum LinkSenderType
+    {
+        PUSH,
+        PULL
     }
 
     private static final Logger log = Logger.getLogger(CAMQPLinkManager.class);
@@ -76,35 +76,40 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
     private static final AtomicLong nextLinkHandle = new AtomicLong(0);
     private static final CAMQPLinkManager linkManager = new CAMQPLinkManager();
     private static CAMQPListener listener = null;
-    
+
     public static CAMQPLinkManager getLinkmanager()
     {
         return linkManager;
     }
 
-    private LinkSenderType linkSenderType = LinkSenderType.PULL;
-    
+    private static LinkSenderType linkSenderType = LinkSenderType.PUSH;
+
+    public static void setLinkSenderType(LinkSenderType linkSenderType)
+    {
+        CAMQPLinkManager.linkSenderType = linkSenderType;
+    }
+
     private final LinkHandshakeTracker linkHandshakeTracker = new LinkHandshakeTracker();
-    
+
     private final ConcurrentMap<String, CAMQPLinkEndpoint> openLinks = new ConcurrentHashMap<String, CAMQPLinkEndpoint>();
-    
+
     private final ConcurrentMap<CAMQPLinkKey, Set<String>> keyToLinkSets = new ConcurrentHashMap<CAMQPLinkKey, Set<String>>();
 
     static LinkHandshakeTracker getLinkHandshakeTracker()
     {
         return linkManager.linkHandshakeTracker;
     }
-    
+
     static long getNextLinkHandle()
     {
         return nextLinkHandle.getAndIncrement();
     }
-    
+
     public static void initialize(boolean isBroker, String containerId)
     {
         CAMQPConnectionManager.initialize(containerId);
         log.info("container ID: " + CAMQPConnectionManager.getContainerId());
-        
+
         if (isBroker)
         {
             CAMQPConnectionManager.registerConnectionObserver(new CAMQPConnectionReaper());
@@ -114,7 +119,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         }
         CAMQPSessionManager.registerLinkReceiverFactory(linkManager);
     }
-    
+
     public static void shutdown()
     {
         linkManager.shutdownLinks();
@@ -126,11 +131,11 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
             listener.shutdown();
         }
     }
-    
+
     public CAMQPLinkEndpoint getLinkEndpoint(String source, String target)
     {
         CAMQPLinkKey linkKey = new CAMQPLinkKey(source, target);
-      
+
         String linkName = null;
         synchronized(this)
         {
@@ -144,19 +149,19 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
                 }
             }
         }
-        
+
         if (linkName != null)
         {
             return openLinks.get(linkName);
         }
         return null;
     }
-    
+
     public CAMQPLinkEndpoint getLinkEndpoint(String linkName)
     {
         return openLinks.get(linkName);
-    }    
-    
+    }
+
     /**
      * Called by Session layer upon the receipt of a Link attach frame.
      */
@@ -178,7 +183,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
              */
             return linkEndpoint;
         }
- 
+
         /*
          * We are the link receptors. Create an appropriate link end-point,
          * based on the role of the peer.
@@ -205,12 +210,12 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
             return new CAMQPLinkReceiver(session);
         }
     }
-    
+
     void registerLinkEndpoint(String linkName, CAMQPLinkKey linkKey, CAMQPLinkEndpoint linkEndpoint)
     {
         log.debug("registerLinkEndpoint: linkName: " + linkName + "  LinkKey: " + linkKey.toString());
         openLinks.put(linkName,  linkEndpoint);
-        
+
         synchronized(this)
         {
             Set<String> linkSetByKey = keyToLinkSets.get(linkKey);
@@ -222,7 +227,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
             linkSetByKey.add(linkName);
         }
     }
-    
+
     void unregisterLinkEndpoint(String linkName, CAMQPLinkKey linkKey)
     {
         log.debug("unregisterLinkEndpoint: linkName: " + linkName + "  LinkKey: " + linkKey.toString());
@@ -240,7 +245,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         }
         openLinks.remove(linkName);
     }
-    
+
     private void shutdownLinks()
     {
         Set<String> linksByName = openLinks.keySet();

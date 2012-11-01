@@ -22,6 +22,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import net.dovemq.api.DoveMQMessage;
+import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 
 public class LinkTestSource implements CAMQPSourceInterface
@@ -73,5 +74,11 @@ public class LinkTestSource implements CAMQPSourceInterface
     {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public void registerDispositionObserver(CAMQPMessageDispositionObserver observer)
+    {
+        // TODO Auto-generated method stub
     }
 }

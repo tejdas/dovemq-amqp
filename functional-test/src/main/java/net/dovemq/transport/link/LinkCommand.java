@@ -169,7 +169,7 @@ public class LinkCommand implements LinkCommandMBean
     {
         linkTargetReceiver = new LinkTestTargetReceiver();
         CAMQPTargetInterface linkTarget = CAMQPEndpointManager.attachTarget(source, target);
-        linkTarget.registerTargetReceiver(linkTargetReceiver);
+        linkTarget.registerMessageReceiver(linkTargetReceiver);
     }
 
     @Override
@@ -195,7 +195,7 @@ public class LinkCommand implements LinkCommandMBean
     public void attachSharedTarget(String source, String target)
     {
         CAMQPTargetInterface linkTarget = CAMQPEndpointManager.attachTarget(source, target);
-        linkTarget.registerTargetReceiver(linkTargetSharedReceiver);
+        linkTarget.registerMessageReceiver(linkTargetSharedReceiver);
     }
 
     @Override

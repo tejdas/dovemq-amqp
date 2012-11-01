@@ -21,7 +21,12 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 
 public class Producer
 {
-    public Producer(String sourceName, CAMQPSourceInterface sourceEndpoint)
+    public void sendMessage(DoveMQMessage message)
+    {
+        sourceEndpoint.sendMessage(message);
+    }
+
+    Producer(String sourceName, CAMQPSourceInterface sourceEndpoint)
     {
         super();
         this.sourceName = sourceName;

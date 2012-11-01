@@ -52,7 +52,7 @@ public class Session
     public Consumer createConsumer(String queueName)
     {
         String target = String.format("%s.%s", endpointId, queueName);
-        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(brokerContainerId, target, queueName, new CAMQPEndpointPolicy());
+        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(brokerContainerId, queueName, target, new CAMQPEndpointPolicy());
         return new Consumer(target, receiver);
     }
 

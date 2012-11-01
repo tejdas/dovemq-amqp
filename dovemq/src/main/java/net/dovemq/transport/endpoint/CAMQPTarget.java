@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkEndpoint;
 import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
@@ -42,7 +43,7 @@ class CAMQPTarget implements CAMQPTargetInterface
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     private final CAMQPLinkReceiverInterface linkReceiver;
     private final CAMQPEndpointPolicy endpointPolicy;
-    private CAMQPTargetReceiver targetReceiver = null;
+    private volatile DoveMQMessageReceiver targetReceiver = null;
 
     CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver,  CAMQPEndpointPolicy endpointPolicy)
     {
@@ -121,7 +122,6 @@ class CAMQPTarget implements CAMQPTargetInterface
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null)
             {
-                //System.out.println("TARGET processed disposition, settled deliveryId: " + deliveryId + "  current time: " + System.currentTimeMillis());
                 settledDeliveryIds.add(deliveryId);
             }
         }
@@ -147,8 +147,21 @@ class CAMQPTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void registerTargetReceiver(CAMQPTargetReceiver targetReceiver)
+    public void registerMessageReceiver(DoveMQMessageReceiver targetReceiver)
     {
         this.targetReceiver = targetReceiver;
+    }
+
+    @Override
+    public void acnowledgeMessageProcessingComplete()
+    {
+        linkReceiver.acnowledgeMessageProcessingComplete();
+    }
+
+    @Override
+    public void startReceivingMessages()
+    {
+        // TODO Auto-generated method stub
+        linkReceiver.configureSteadyStatePacedByMessageProcessing(endpointPolicy.getMinLinkCreditThreshold(), endpointPolicy.getLinkCreditBoost());
     }
 }

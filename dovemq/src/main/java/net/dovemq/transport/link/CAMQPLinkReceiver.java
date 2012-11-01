@@ -119,7 +119,6 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
                  * with error code: LINK_ERROR_TRANSFER_LIMIT_EXCEEDED
                  */
                 violatedLinkCredit = true;
-                System.out.println("violated link credit: closing link. Link credit should not have gone below -" + CAMQPLinkConstants.LINK_CREDIT_VIOLATION_LIMIT + " but is now " + linkCredit);
                 log.fatal("violated link credit: closing link. Link credit should not have gone below -" + CAMQPLinkConstants.LINK_CREDIT_VIOLATION_LIMIT + " but is now " + linkCredit);
             }
             else

@@ -21,14 +21,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
-class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
+public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
 {
     private final ConcurrentMap<String, QueueProcessor> queueProcessors = new ConcurrentHashMap<String, QueueProcessor>();
 
     @Override
-    public void publisherAttached(String queueName, CAMQPLinkReceiverInterface source)
+    public void publisherAttached(String queueName, CAMQPTargetInterface source)
     {
         QueueProcessor queueProcessor = queueProcessors.get(queueName);
         if (queueProcessor == null)

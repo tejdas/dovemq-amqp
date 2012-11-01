@@ -18,11 +18,11 @@
 package net.dovemq.broker.endpoint;
 
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 public interface DoveMQEndpointManager
 {
-    public void publisherAttached(String queueName, CAMQPLinkReceiverInterface source);
+    public void publisherAttached(String queueName, CAMQPTargetInterface source);
     public void publisherDetached(String queueName);
     public void consumerAttached(String queueName, CAMQPSourceInterface target);
     public void consumerDetached(String queueName);

@@ -77,7 +77,21 @@
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-
+	
+	<target name="RunDoveMQFullBroker" depends="init">
+		<echo>...Starting DoveMQ Broker</echo>
+		<java fork="true" classname="net.dovemq.broker.driver.DoveMQBrokerDriver" maxmemory="2048M" failonerror="true">
+			<!--if we run into an out of memory error, dump it-->
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="com.sun.management.jmxremote.port" value="${jmxPortNumber}" />
+			<sysproperty key="com.sun.management.jmxremote.authenticate" value="false" />
+			<sysproperty key="com.sun.management.jmxremote.ssl" value="false" />
+			<sysproperty key="dovemq.dir" value="${basedir}/server.log" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>
+		
 	<target name="ShutdownBroker">
 		<echo>...Shutting down DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.transport.connection.ConnectionSysTestJMXProxy" maxmemory="2048M" failonerror="true">
@@ -383,5 +397,25 @@
 		<property name="sonar.binaries" value="${dovemq.jars.dir}/dovemq/${dovemq.version}/dovemq-${dovemq.version}.jar,${mvn.repo.dir}/commons-lang/commons-lang/2.5/commons-lang-2.5.jar,${mvn.repo.dir}/org/jboss/netty/netty/3.2.4.Final/netty-3.2.4.Final.jar,${mvn.repo.dir}/log4j/log4j/1.2.15/log4j-1.2.15.jar" />
 		<sonar:sonar key="net.dovemq" version="1.0-SNAPSHOT" xmlns:sonar="antlib:org.sonar.ant" />
 	</target>
+	
+	<target name="RunProducer">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.ProducerTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="dovemq.dir" value="${basedir}/producer.log" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>
+	
+	<target name="RunConsumer">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.ConsumerTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>		
 
 </project>

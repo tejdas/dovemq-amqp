@@ -25,8 +25,12 @@ import net.dovemq.transport.link.CAMQPLinkReceiver;
 import net.dovemq.transport.link.CAMQPLinkSender;
 import net.dovemq.transport.link.LinkRole;
 
+import org.apache.log4j.Logger;
+
 public final class CAMQPEndpointManager
 {
+    private static final Logger log = Logger.getLogger(CAMQPEndpointManager.class);
+
     private static CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
     private static DoveMQEndpointManager doveMQEndpointManager = null;
 
@@ -63,7 +67,7 @@ public final class CAMQPEndpointManager
         CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
         if (linkEndpoint == null)
         {
-            System.out.println("could not find linkEndpoint");
+            log.warn("could not find linkEndpoint");
             return null;
         }
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
@@ -76,7 +80,7 @@ public final class CAMQPEndpointManager
         }
         else
         {
-            System.out.println("LinkEndpoint is not a LinkReceiver");
+            log.warn("LinkEndpoint is not a LinkReceiver");
         }
         return null;
     }
@@ -99,7 +103,7 @@ public final class CAMQPEndpointManager
         CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
         if (linkEndpoint == null)
         {
-            System.out.println("could not find linkEndpoint");
+            log.warn("could not find linkEndpoint");
             return null;
         }
         if (linkEndpoint.getRole() == LinkRole.LinkSender)
@@ -111,17 +115,45 @@ public final class CAMQPEndpointManager
         }
         else
         {
-            System.out.println("LinkEndpoint is not a LinkSender");
+            log.warn("LinkEndpoint is not a LinkSender");
         }
         return null;
     }
 
     public static void linkEndpointAttached(String source, String target, CAMQPLinkEndpoint linkEndpoint)
     {
+        if (doveMQEndpointManager != null)
+        {
+            if (linkEndpoint.getRole() == LinkRole.LinkSender)
+            {
+                CAMQPLinkSender linkSender = (CAMQPLinkSender) linkEndpoint;
+                CAMQPSource dovemqSource = new CAMQPSource(linkSender, linkEndpoint.getEndpointPolicy());
+                linkSender.setSource(dovemqSource);
+                doveMQEndpointManager.consumerAttached(source, dovemqSource);
+            }
+            else
+            {
+                CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
+                CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkEndpoint.getEndpointPolicy());
+                linkReceiver.setTarget(dovemqTarget);
+                linkReceiver.configureSteadyStatePacedByMessageReceipt(10, 100); // TODO reconfigure
+                doveMQEndpointManager.publisherAttached(target, dovemqTarget);
+            }
+        }
     }
 
     public static void linkEndpointDetached(String source, String target, CAMQPLinkEndpoint linkEndpoint)
     {
-
+        if (doveMQEndpointManager != null)
+        {
+            if (linkEndpoint.getRole() == LinkRole.LinkSender)
+            {
+                doveMQEndpointManager.consumerDetached(target);
+            }
+            else
+            {
+                doveMQEndpointManager.publisherDetached(target);
+            }
+        }
     }
 }

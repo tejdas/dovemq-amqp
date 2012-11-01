@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
+import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
@@ -119,6 +120,12 @@ public class CAMQPLinkAsyncSenderTest
 
         @Override
         public void sendMessage(DoveMQMessage message)
+        {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public void registerDispositionObserver(CAMQPMessageDispositionObserver observer)
         {
             // TODO Auto-generated method stub
         }
