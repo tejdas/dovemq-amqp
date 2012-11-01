@@ -37,9 +37,10 @@ import net.jcip.annotations.GuardedBy;
  */
 class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
-    private CAMQPSourceInterface source = null;
+    private volatile CAMQPSourceInterface source = null;
 
-    void setSource(CAMQPSourceInterface source)
+    @Override
+    public void registerSource(CAMQPSourceInterface source)
     {
         this.source = source;
     }

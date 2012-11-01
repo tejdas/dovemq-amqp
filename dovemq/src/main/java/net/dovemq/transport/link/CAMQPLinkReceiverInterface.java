@@ -17,8 +17,11 @@
 
 package net.dovemq.transport.link;
 
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
+
 public interface CAMQPLinkReceiverInterface
 {
+    public void registerTarget(CAMQPTargetInterface target);
     public void issueLinkCredit(long linkCreditBoost);
     public void getMessages(int messageCount);
     public void configureSteadyStatePacedByMessageReceipt(long minLinkCreditThreshold, long linkCreditBoost);

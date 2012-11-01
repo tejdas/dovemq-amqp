@@ -53,7 +53,7 @@ public class LinkCommand implements LinkCommandMBean
         if (linkEndpoint.getRole() == LinkRole.LinkSender)
         {
             CAMQPLinkAsyncSender linkSender = (CAMQPLinkAsyncSender) linkEndpoint;
-            linkSender.setSource(new LinkTestSource(initialMessageCount));
+            linkSender.registerSource(new LinkTestSource(initialMessageCount));
         }
         else
         {
@@ -74,7 +74,7 @@ public class LinkCommand implements LinkCommandMBean
         {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
 
-            linkReceiver.setTarget(linkTargetEndpoint);
+            linkReceiver.registerTarget(linkTargetEndpoint);
         }
         else
         {
@@ -211,7 +211,7 @@ public class LinkCommand implements LinkCommandMBean
         {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
             linkDelayedTargetEndpoint = new LinkTestDelayedTarget(linkReceiver, averageMsgProcessingTime);
-            linkReceiver.setTarget(linkDelayedTargetEndpoint);
+            linkReceiver.registerTarget(linkDelayedTargetEndpoint);
             linkDelayedTargetEndpoint.startProcessing();
         }
         else

@@ -38,6 +38,7 @@ import java.util.concurrent.Executors;
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.link.CAMQPMessage;
@@ -77,14 +78,18 @@ class MockLinkSender implements CAMQPLinkSenderInterface
     public void sendMessage(CAMQPMessage message)
     {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void messageSent(CAMQPControlTransfer transferFrame)
     {
         // TODO Auto-generated method stub
+    }
 
+    @Override
+    public void registerSource(CAMQPSourceInterface source)
+    {
+        // TODO Auto-generated method stub
     }
 }
 

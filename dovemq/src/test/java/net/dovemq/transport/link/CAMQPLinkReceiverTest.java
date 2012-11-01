@@ -219,7 +219,7 @@ public class CAMQPLinkReceiverTest
         linkHandle = 1;
         linkReceiver = new CAMQPLinkReceiver(session);
         target = new TestTarget();
-        linkReceiver.setTarget(target);
+        linkReceiver.registerTarget(target);
         factory.setLinkReceiver(linkReceiver);
         attachHandshakeAndVerify(linkHandle);
     }

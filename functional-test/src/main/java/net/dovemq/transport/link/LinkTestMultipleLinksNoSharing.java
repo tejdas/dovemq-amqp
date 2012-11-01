@@ -61,26 +61,26 @@ public class LinkTestMultipleLinksNoSharing
         {
             String linkSource = String.format("%s%d", source, Thread.currentThread().getId());
             String linkTarget = String.format("%s%d", target, Thread.currentThread().getId());
-            
-            CAMQPLinkSender sender = CAMQPLinkFactory.createLinkSender(brokerContainerId, linkSource, linkTarget, new CAMQPEndpointPolicy());
+
+            CAMQPLinkSender sender = (CAMQPLinkSender) CAMQPLinkFactory.createLinkSender(brokerContainerId, linkSource, linkTarget, new CAMQPEndpointPolicy());
             linkSender = sender;
             System.out.println("Sender Link created between : " + linkSource + "  and: " + linkTarget);
-            
+
             String linkName = linkSender.getLinkName();
-            
+
             mbeanProxy.registerTarget(linkSource, linkTarget);
             mbeanProxy.issueLinkCredit(linkName, 10);
-            
+
             LinkTestUtils.sendMessagesOnLink(linkSender, numMessagesToSend);
             waitForReady();
             linkSender.destroyLink();
             done();
         }
     }
-    
+
     private static String brokerContainerId ;
     private static LinkCommandMBean mbeanProxy;
-    
+
     public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
     {
         /*
@@ -89,24 +89,24 @@ public class LinkTestMultipleLinksNoSharing
         String publisherName = args[0];
         String brokerIp = args[1];
         String jmxPort = args[2];
-        
+
         JMXProxyWrapper jmxWrapper = new JMXProxyWrapper(brokerIp, jmxPort);
-        
+
         NUM_THREADS = Integer.parseInt(args[3]);
         int numMessagesToSend = Integer.parseInt(args[4]);
-          
+
         brokerContainerId = String.format("broker@%s", brokerIp);
         CAMQPLinkManager.initialize(false, publisherName);
-        
+
         SessionCommand localSessionCommand = new SessionCommand();
         localSessionCommand.sessionCreate(brokerContainerId);
-        
+
         mbeanProxy = jmxWrapper.getLinkBean();
-        
+
         ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
-        
+
         LinkTestMessageSender[] senders = new LinkTestMessageSender[NUM_THREADS];
         for (int i = 0; i < NUM_THREADS; i++)
         {
@@ -135,17 +135,17 @@ public class LinkTestMultipleLinksNoSharing
              */
             CAMQPLinkSender linksender = sender.getLinkSender();
             if (linksender != null)
-                mbeanProxy.issueLinkCredit(sender.getLinkSender().getLinkName(), randomInt);            
+                mbeanProxy.issueLinkCredit(sender.getLinkSender().getLinkName(), randomInt);
         }
-        
+
         startSignal.countDown();
-        
+
         doneSignal.await();
         Thread.sleep(2000);
-        
+
         assertTrue(mbeanProxy.getNumMessagesReceived() == numMessagesToSend * NUM_THREADS);
         executor.shutdown();
-        
+
         CAMQPLinkManager.shutdown();
         mbeanProxy.reset();
         jmxWrapper.cleanup();

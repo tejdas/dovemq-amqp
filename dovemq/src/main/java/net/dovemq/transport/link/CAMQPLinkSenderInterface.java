@@ -17,10 +17,12 @@
 
 package net.dovemq.transport.link;
 
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 
 public interface CAMQPLinkSenderInterface
 {
+    public void registerSource(CAMQPSourceInterface source);
     public void sendMessage(CAMQPMessage message);
     public void messageSent(CAMQPControlTransfer transferFrame);
 }

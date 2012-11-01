@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -60,14 +61,18 @@ class MockLinkSender implements CAMQPLinkSenderInterface
     public void sendMessage(CAMQPMessage message)
     {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void messageSent(CAMQPControlTransfer transferFrame)
     {
         // TODO Auto-generated method stub
+    }
 
+    @Override
+    public void registerSource(CAMQPSourceInterface source)
+    {
+        // TODO Auto-generated method stub
     }
 }
 

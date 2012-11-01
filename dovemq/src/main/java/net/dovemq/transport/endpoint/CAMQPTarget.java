@@ -43,7 +43,7 @@ class CAMQPTarget implements CAMQPTargetInterface
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     private final CAMQPLinkReceiverInterface linkReceiver;
     private final CAMQPEndpointPolicy endpointPolicy;
-    private volatile DoveMQMessageReceiver targetReceiver = null;
+    private volatile DoveMQMessageReceiver messageReceiver = null;
 
     CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver,  CAMQPEndpointPolicy endpointPolicy)
     {
@@ -80,10 +80,10 @@ class CAMQPTarget implements CAMQPTargetInterface
         /*
          * Dispatch the message to target receiver.
          */
-        if (targetReceiver != null)
+        if (messageReceiver != null)
         {
             DoveMQMessageImpl decodedMessage = DoveMQMessageImpl.unmarshal(message);
-            targetReceiver.messageReceived(decodedMessage);
+            messageReceiver.messageReceived(decodedMessage);
         }
 
         /*
@@ -149,7 +149,7 @@ class CAMQPTarget implements CAMQPTargetInterface
     @Override
     public void registerMessageReceiver(DoveMQMessageReceiver targetReceiver)
     {
-        this.targetReceiver = targetReceiver;
+        this.messageReceiver = targetReceiver;
     }
 
     @Override

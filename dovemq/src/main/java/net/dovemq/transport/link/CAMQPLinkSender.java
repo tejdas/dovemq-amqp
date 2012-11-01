@@ -35,13 +35,14 @@ import org.apache.log4j.Logger;
  * @author tejdas
  *
  */
-public class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
+class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkSender.class);
 
-    private CAMQPSourceInterface source = null;
+    private volatile CAMQPSourceInterface source = null;
 
-    public void setSource(CAMQPSourceInterface source)
+    @Override
+    public void registerSource(CAMQPSourceInterface source)
     {
         this.source = source;
     }

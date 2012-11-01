@@ -200,7 +200,7 @@ public class CAMQPLinkAsyncSenderTest
         linkHandle = 1;
         linkSender = new CAMQPLinkAsyncSender(session);
         testSource = new TestSource();
-        linkSender.setSource(testSource);
+        linkSender.registerSource(testSource);
         factory.setLinkSender(linkSender);
         attachHandshakeAndVerify(linkHandle);
     }

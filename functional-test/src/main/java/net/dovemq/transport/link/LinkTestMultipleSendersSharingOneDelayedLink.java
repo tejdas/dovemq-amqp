@@ -84,7 +84,7 @@ public class LinkTestMultipleSendersSharingOneDelayedLink
 
         LinkCommandMBean mbeanProxy = jmxWrapper.getLinkBean();
 
-        CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target, new CAMQPEndpointPolicy());
+        CAMQPLinkSender linkSender = (CAMQPLinkSender) CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target, new CAMQPEndpointPolicy());
         System.out.println("Sender Link created between : " + source + "  and: " + target);
 
         mbeanProxy.registerDelayedTarget(source, target, 500);

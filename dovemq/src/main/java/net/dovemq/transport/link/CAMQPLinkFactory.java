@@ -18,8 +18,8 @@
 package net.dovemq.transport.link;
 
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
-import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionFactory;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 /**
  * Factory class to initiate creation of Link Sender and Link Receiver
@@ -27,12 +27,12 @@ import net.dovemq.transport.session.CAMQPSessionFactory;
  */
 public final class CAMQPLinkFactory
 {
-    public static CAMQPLinkSender createLinkSender(String targetContainerId, String source, String target)
+    public static CAMQPLinkSenderInterface createLinkSender(String targetContainerId, String source, String target)
     {
         return createLinkSender(targetContainerId, source, target, new CAMQPEndpointPolicy());
     }
-    
-    public static CAMQPLinkSender createLinkSender(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
+
+    public static CAMQPLinkSenderInterface createLinkSender(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
         CAMQPSessionInterface session = CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
         if (session != null)
@@ -44,12 +44,12 @@ public final class CAMQPLinkFactory
         return null;
     }
 
-    public static CAMQPLinkReceiver createLinkReceiver(String targetContainerId, String source, String target)
+    public static CAMQPLinkReceiverInterface createLinkReceiver(String targetContainerId, String source, String target)
     {
         return createLinkReceiver(targetContainerId, source, target, new CAMQPEndpointPolicy());
     }
-    
-    public static CAMQPLinkReceiver createLinkReceiver(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
+
+    public static CAMQPLinkReceiverInterface createLinkReceiver(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
         CAMQPSessionInterface session = CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
         if (session != null)

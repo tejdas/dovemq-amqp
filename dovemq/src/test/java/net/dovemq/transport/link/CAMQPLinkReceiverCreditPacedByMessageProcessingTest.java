@@ -416,7 +416,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     public void testMessageProcessingLinkCredit() throws InterruptedException
     {
         target = new TestTarget(linkReceiver, msgProcessingAvgTime);
-        linkReceiver.setTarget(target);
+        linkReceiver.registerTarget(target);
 
         target.startProcessing();
 

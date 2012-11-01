@@ -21,8 +21,8 @@ import net.dovemq.broker.endpoint.DoveMQEndpointManager;
 import net.dovemq.transport.link.CAMQPLinkEndpoint;
 import net.dovemq.transport.link.CAMQPLinkFactory;
 import net.dovemq.transport.link.CAMQPLinkManager;
-import net.dovemq.transport.link.CAMQPLinkReceiver;
-import net.dovemq.transport.link.CAMQPLinkSender;
+import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
+import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.link.LinkRole;
 
 import org.apache.log4j.Logger;
@@ -56,9 +56,9 @@ public final class CAMQPEndpointManager
 
     public static CAMQPSourceInterface createSource(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
-        CAMQPLinkSender linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target, endpointPolicy);
-        CAMQPSource dovemqSource = new CAMQPSource(linkSender, linkSender.getEndpointPolicy());
-        linkSender.setSource(dovemqSource);
+        CAMQPLinkSenderInterface linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target, endpointPolicy);
+        CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
+        linkSender.registerSource(dovemqSource);
         return dovemqSource;
     }
 
@@ -72,9 +72,9 @@ public final class CAMQPEndpointManager
         }
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
         {
-            CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
+            CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
             CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkEndpoint.getEndpointPolicy());
-            linkReceiver.setTarget(dovemqTarget);
+            linkReceiver.registerTarget(dovemqTarget);
             linkReceiver.configureSteadyStatePacedByMessageReceipt(10, 100);
             return dovemqTarget;
         }
@@ -92,9 +92,9 @@ public final class CAMQPEndpointManager
 
     public static CAMQPTargetInterface createTarget(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
-        CAMQPLinkReceiver linkReceiver = CAMQPLinkFactory.createLinkReceiver(containerId, source, target, endpointPolicy);
-        CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkReceiver.getEndpointPolicy());
-        linkReceiver.setTarget(dovemqTarget);
+        CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(containerId, source, target, endpointPolicy);
+        CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
+        linkReceiver.registerTarget(dovemqTarget);
         return dovemqTarget;
     }
 
@@ -108,9 +108,9 @@ public final class CAMQPEndpointManager
         }
         if (linkEndpoint.getRole() == LinkRole.LinkSender)
         {
-            CAMQPLinkSender linkSender = (CAMQPLinkSender) linkEndpoint;
+            CAMQPLinkSenderInterface linkSender = (CAMQPLinkSenderInterface) linkEndpoint;
             CAMQPSource dovemqSource = new CAMQPSource(linkSender, linkEndpoint.getEndpointPolicy());
-            linkSender.setSource(dovemqSource);
+            linkSender.registerSource(dovemqSource);
             return dovemqSource;
         }
         else
@@ -126,16 +126,16 @@ public final class CAMQPEndpointManager
         {
             if (linkEndpoint.getRole() == LinkRole.LinkSender)
             {
-                CAMQPLinkSender linkSender = (CAMQPLinkSender) linkEndpoint;
+                CAMQPLinkSenderInterface linkSender = (CAMQPLinkSenderInterface) linkEndpoint;
                 CAMQPSource dovemqSource = new CAMQPSource(linkSender, linkEndpoint.getEndpointPolicy());
-                linkSender.setSource(dovemqSource);
+                linkSender.registerSource(dovemqSource);
                 doveMQEndpointManager.consumerAttached(source, dovemqSource);
             }
             else
             {
-                CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
+                CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
                 CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkEndpoint.getEndpointPolicy());
-                linkReceiver.setTarget(dovemqTarget);
+                linkReceiver.registerTarget(dovemqTarget);
                 linkReceiver.configureSteadyStatePacedByMessageReceipt(10, 100); // TODO reconfigure
                 doveMQEndpointManager.publisherAttached(target, dovemqTarget);
             }

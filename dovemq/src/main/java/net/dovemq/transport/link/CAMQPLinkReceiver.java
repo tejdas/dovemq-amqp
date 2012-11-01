@@ -34,7 +34,7 @@ import org.apache.log4j.Logger;
  * Implementation of AMQP Link Receiver.
  * @author tejdas
  */
-public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverInterface
+class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverInterface
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkReceiver.class);
 
@@ -59,8 +59,10 @@ public class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRec
      * Issued by target when the policy is CREDIT_OFFERED_BY_TARGET
      */
     private long targetIssuedLinkCredit = -1;
-    private CAMQPTargetInterface target = null;
-    public void setTarget(CAMQPTargetInterface target)
+    private volatile CAMQPTargetInterface target = null;
+
+    @Override
+    public void registerTarget(CAMQPTargetInterface target)
     {
         this.target = target;
     }
