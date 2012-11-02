@@ -18,6 +18,7 @@
 package net.dovemq.transport.endpoint;
 
 import net.dovemq.transport.link.CAMQPLinkConstants;
+import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 
 public final class CAMQPEndpointPolicy
@@ -27,40 +28,6 @@ public final class CAMQPEndpointPolicy
         AtleastOnce,
         AtmostOnce,
         ExactlyOnce
-    }
-
-    /**
-     * ReceiverLinkCreditPolicy determines how the Link credit
-     * is increased when it drops to (below) zero, or approaches
-     * the minimum threshold.
-     *
-     * @author tejdas
-     */
-    public static enum ReceiverLinkCreditPolicy
-    {
-        /*
-         * Link credit is offered by the target receiver, whenever
-         * it wants to get message(s).
-         */
-        CREDIT_OFFERED_BY_TARGET,
-        /*
-         * When the Link receiver's computed link credit goes below
-         * a certain threshold, it automatically increases the link
-         * credit. This enables messages to flow at a steady state,
-         * and the Link sender never runs out of link-credit.
-         */
-        CREDIT_STEADY_STATE,
-        /*
-         * Link credit is incremented whenever Link sender has no
-         * more credit, and sends a flow-frame to ask for more credit.
-         */
-        CREDIT_AS_DEMANDED_BY_SENDER,
-        /*
-         * Link credit is incremented every-time target acknowledges completion
-         * of processing a message. A flow-frame is sent whenever it is asked by
-         * the sender.
-         */
-        CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING
     }
 
     public static enum EndpointType

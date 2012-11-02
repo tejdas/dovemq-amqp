@@ -29,7 +29,6 @@ import javax.management.MalformedObjectNameException;
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
-import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 
 public class LinkTestMultipleSendersSharingOneDelayedLink
 {

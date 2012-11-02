@@ -19,8 +19,6 @@ package net.dovemq.transport.link;
 
 import java.util.Collection;
 
-import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
-import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
@@ -396,7 +394,7 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
 
     /**
      * Called by target end-point upon processing of a message.
-     * Applicable only for {@link CAMQPEndpointPolicy.ReceiverLinkCreditPolicy#CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING}
+     * Applicable only for {@link ReceiverLinkCreditPolicy#CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING}
      *
      * Increments messagesProcessedSinceLastSendFlow.
      *

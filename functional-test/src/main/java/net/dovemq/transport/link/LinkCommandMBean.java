@@ -19,7 +19,6 @@ package net.dovemq.transport.link;
 
 import java.util.Collection;
 
-import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 
 public interface LinkCommandMBean
 {

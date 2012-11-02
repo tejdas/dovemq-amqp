@@ -21,8 +21,8 @@ import net.dovemq.broker.endpoint.DoveMQEndpointManager;
 import net.dovemq.broker.endpoint.DoveMQEndpointManagerImpl;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
-import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.link.CAMQPLinkManager;
+import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
 
 public class DoveMQBrokerDriver
 {

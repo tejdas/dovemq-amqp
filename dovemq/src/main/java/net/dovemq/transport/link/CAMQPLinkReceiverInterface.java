@@ -17,7 +17,6 @@
 
 package net.dovemq.transport.link;
 
-import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 /**
@@ -55,7 +54,7 @@ public interface CAMQPLinkReceiverInterface
 
     /**
      * Called by target end-point to configure the link credit policy
-     * to {@link CAMQPEndpointPolicy.ReceiverLinkCreditPolicy#CREDIT_STEADY_STATE}
+     * to {@link ReceiverLinkCreditPolicy#CREDIT_STEADY_STATE}
      * for a steady-state flow of incoming messages.
      *
      * It also immediately boosts the link credit if necessary.
@@ -70,7 +69,7 @@ public interface CAMQPLinkReceiverInterface
 
     /**
      * Called by target end-point to configure the link credit policy
-     * to {@link CAMQPEndpointPolicy.ReceiverLinkCreditPolicy#CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING}
+     * to {@link ReceiverLinkCreditPolicy#CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING}
      * for a steady-state flow of incoming messages.
      *
      * The link credit is incremented after it has been processed by the target and notified
@@ -91,7 +90,7 @@ public interface CAMQPLinkReceiverInterface
     /**
      * Called by target end-point to notify after a message has been processed.
      * Used with the link credit policy
-     * {@link CAMQPEndpointPolicy.ReceiverLinkCreditPolicy#CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING}.
+     * {@link ReceiverLinkCreditPolicy#CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING}.
      *
      * This enables the LinkReceiver to keep track of how many incoming messages
      * have been processed since the last flow-frame was sent, so that it can boost
