@@ -49,11 +49,6 @@ public final class CAMQPEndpointManager
         CAMQPEndpointManager.defaultEndpointPolicy = defaultEndpointPolicy;
     }
 
-    public static CAMQPSourceInterface createSource(String containerId, String source, String target)
-    {
-        return createSource(containerId, source, target, defaultEndpointPolicy);
-    }
-
     public static CAMQPSourceInterface createSource(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
         CAMQPLinkSenderInterface linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target, endpointPolicy);
@@ -92,28 +87,6 @@ public final class CAMQPEndpointManager
         linkReceiver.registerTarget(dovemqTarget);
         linkReceiver.provideLinkCredit();
         return dovemqTarget;
-    }
-
-    public static CAMQPSourceInterface attachSource(String linkSource, String linkTarget)
-    {
-        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
-        if (linkEndpoint == null)
-        {
-            log.warn("could not find linkEndpoint");
-            return null;
-        }
-        if (linkEndpoint.getRole() == LinkRole.LinkSender)
-        {
-            CAMQPLinkSenderInterface linkSender = (CAMQPLinkSenderInterface) linkEndpoint;
-            CAMQPSource dovemqSource = new CAMQPSource(linkSender, linkEndpoint.getEndpointPolicy());
-            linkSender.registerSource(dovemqSource);
-            return dovemqSource;
-        }
-        else
-        {
-            log.warn("LinkEndpoint is not a LinkSender");
-        }
-        return null;
     }
 
     public static void linkEndpointAttached(String source, String target, CAMQPLinkEndpoint linkEndpoint)

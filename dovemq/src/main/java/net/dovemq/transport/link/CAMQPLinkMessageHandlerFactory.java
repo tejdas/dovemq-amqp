@@ -20,6 +20,14 @@ package net.dovemq.transport.link;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
+/**
+ * Factory interface for CAMQPLinkMessageHandler.
+ * Called by Session layer upon receipt of Link Attach
+ * control frame.
+ *
+ * @author tdas
+ *
+ */
 public interface CAMQPLinkMessageHandlerFactory
 {
     public CAMQPLinkMessageHandler linkAccepted(CAMQPSessionInterface session, CAMQPControlAttach attach);

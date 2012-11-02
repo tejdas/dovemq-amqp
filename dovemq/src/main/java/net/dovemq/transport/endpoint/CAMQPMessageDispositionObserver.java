@@ -19,6 +19,13 @@ package net.dovemq.transport.endpoint;
 
 import net.dovemq.api.DoveMQMessage;
 
+/**
+ * Registered with CAMQPSourceInterface, to be notified when
+ * a message has been disposed to a terminal state.
+ *
+ * @author tdas
+ *
+ */
 public interface CAMQPMessageDispositionObserver
 {
     public void messageAckedByConsumer(DoveMQMessage message);

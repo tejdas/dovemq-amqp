@@ -20,14 +20,13 @@ package net.dovemq.transport.link;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.log4j.Logger;
-
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
-
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
+
+import org.apache.log4j.Logger;
 
 enum State
 {
@@ -67,6 +66,14 @@ class QueuedContext
     private final Object context;
 }
 
+/**
+*
+* Acts on various state changes in AMQP link end-point
+* during link establishment and teardown.
+*
+* @author tdas
+*
+*/
 @ThreadSafe
 class CAMQPLinkStateActor
 {
@@ -80,7 +87,7 @@ class CAMQPLinkStateActor
         final Object data;
         boolean isInitiator = false;
     }
-    
+
     private static final Logger log = Logger.getLogger(CAMQPLinkStateActor.class);
 
     private final CAMQPLinkEndpoint linkEndpoint;
@@ -100,7 +107,7 @@ class CAMQPLinkStateActor
     {
         this.linkEndpoint = linkEndpoint;
     }
-    
+
     void sendAttach(CAMQPControlAttach attachContext)
     {
         queuedEvents.add(new QueuedContext(Event.SEND_ATTACH, new CAMQPLinkControlInfo(attachContext)));
@@ -187,7 +194,7 @@ class CAMQPLinkStateActor
         {
             linkEndpoint.attached(attachContext.isInitiator);
         }
- 
+
         synchronized (this)
         {
             if (attachContext.isInitiator && (currentState == State.ATTACH_SENT))
@@ -415,7 +422,7 @@ class CAMQPLinkStateActor
             }
             else
             {
-                log.fatal("Incorrect state detected: currentState: " + currentState + " Event to be processed: " + contextToProcess.getEvent());               
+                log.fatal("Incorrect state detected: currentState: " + currentState + " Event to be processed: " + contextToProcess.getEvent());
             }
         }
     }

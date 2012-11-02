@@ -72,15 +72,6 @@ class CAMQPSource implements CAMQPSourceInterface
         return 0;
     }
 
-    @Override
-    public void messageStateChanged(String deliveryId,
-            int oldState,
-            int newState)
-    {
-        // TODO Auto-generated method stub
-
-    }
-
     /**
      * Called just before the message is sent. Puts the message in the
      * unsettledDeliveries map if the message delivery policy is ExactlyOnce or

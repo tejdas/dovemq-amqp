@@ -96,13 +96,6 @@ public class CAMQPLinkAsyncSenderTest
         }
 
         @Override
-        public void messageStateChanged(String deliveryId, int oldState, int newState)
-        {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
         public void messageSent(long deliveryId, CAMQPMessage message)
         {
             // TODO Auto-generated method stub

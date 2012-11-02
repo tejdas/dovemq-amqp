@@ -75,8 +75,10 @@ class PointToPointRouter implements DoveMQMessageReceiver, CAMQPMessageDispositi
                 }
                 catch (RuntimeException ex)
                 {
+                    // TODO
                     if (ex instanceof CAMQPLinkSenderFlowControlException)
                     {
+                        inFlightMessageQueue.remove(messageToSend);
                         break;
                     }
                 }
@@ -94,11 +96,19 @@ class PointToPointRouter implements DoveMQMessageReceiver, CAMQPMessageDispositi
     @Override
     public void messageAckedByConsumer(DoveMQMessage message)
     {
-        inFlightMessageQueue.remove(message);
-        if (sourceSink != null)
+        if (inFlightMessageQueue.remove(message))
         {
-            sourceSink.acnowledgeMessageProcessingComplete();
+            CAMQPTargetInterface sink = getSourceSink();
+            if (sink != null)
+            {
+                sink.acnowledgeMessageProcessingComplete();
+            }
         }
+    }
+
+    private synchronized CAMQPTargetInterface getSourceSink()
+    {
+        return sourceSink;
     }
 
     public void destinationAttached(CAMQPSourceInterface destination)

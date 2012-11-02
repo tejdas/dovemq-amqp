@@ -100,7 +100,8 @@ public interface CAMQPLinkReceiverInterface
     public void acnowledgeMessageProcessingComplete();
 
     /**
-     * Called by target end-point to provide link credit based on the configuration.
+     * Called by target end-point to (re)configure link-credit state based on CAMQPEndpointPolicy
+     * and send a flow-frame to the peer with the updated link-credit, if needed.
      */
     public void provideLinkCredit();
 }

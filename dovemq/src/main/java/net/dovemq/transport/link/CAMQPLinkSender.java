@@ -27,6 +27,7 @@ import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
 import net.jcip.annotations.GuardedBy;
+import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
@@ -35,6 +36,8 @@ import org.apache.log4j.Logger;
  * @author tejdas
  *
  */
+
+@ThreadSafe
 class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
     private static final Logger log = Logger.getLogger(CAMQPLinkSender.class);

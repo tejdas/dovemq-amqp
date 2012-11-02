@@ -216,13 +216,6 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         }
 
         @Override
-        public void messageStateChanged(String deliveryId, int oldState, int newState)
-        {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
         public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
         {
             // TODO Auto-generated method stub

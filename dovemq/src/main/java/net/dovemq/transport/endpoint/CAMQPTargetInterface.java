@@ -22,12 +22,52 @@ import java.util.Collection;
 import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 
+/**
+ * This interface represents a Target end-point, that is used by
+ * Broker and Consumer/Subscriber to receive messages.
+ *
+ * @author tdas
+ *
+ */
 public interface CAMQPTargetInterface
 {
-    public void registerMessageReceiver(DoveMQMessageReceiver targetReceiver);
-    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode);
-    public void messageStateChanged(String deliveryId, int oldState, int newState);
+    /**
+     * Used by Broker and Consumer/Subscriber to register a DoveMQMessageReceiver
+     * to receive messages.
+     *
+     * @param messageReceiver
+     */
+    public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver);
 
+    /**
+     * Called by LinkReceiver upon receipt of a message.
+     *
+     * @param deliveryId
+     * @param deliveryTag
+     * @param message
+     * @param settledBySender
+     * @param receiverSettleMode
+     */
+    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode);
+
+    /**
+     * Called by Link Sender upon receipt of disposition control frame.
+     * Receives a collection of deliveryIds corresponding to messages being disposed.
+     * Processes the messages that are received by this end-point, and returns back a collection
+     * of unprocessed messages. The reason this happens is that, for a session attached to
+     * multiple links, a batched disposition frame may contain messages received by different
+     * link end-points.
+     *
+     * @param deliveryIds: collection of deliveryIds for batched disposition of messages.
+     * @param isMessageSettledByPeer: true/false.
+     * @param newState
+     * @return
+     *      A Collection of deliveryIds for messages that are not received by this end-point.
+     */
     public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
+
+    /**
+     * Called by DoveMQMessageReceiver to acknowledge processing of a message.
+     */
     public void acnowledgeMessageProcessingComplete();
 }

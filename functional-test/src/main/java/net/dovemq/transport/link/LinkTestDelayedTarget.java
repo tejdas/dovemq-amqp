@@ -96,11 +96,6 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
         messagesBeingProcessed.put(deliveryId, new MsgDetails(System.currentTimeMillis(), msgProcessingTimeDelay));
     }
 
-    @Override
-    public void messageStateChanged(String deliveryId, int oldState, int newState)
-    {
-    }
-
     public long getNumberOfMessagesReceived()
     {
         return messageCount.longValue();

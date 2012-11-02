@@ -26,17 +26,17 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 class CAMQPLinkKey
 {
-    public String getSource()
+    String getSource()
     {
         return source;
     }
 
-    public String getTarget()
+    String getTarget()
     {
         return target;
     }
 
-    public CAMQPLinkKey(String source, String target)
+    CAMQPLinkKey(String source, String target)
     {
         super();
         this.source = source;
@@ -67,7 +67,7 @@ class CAMQPLinkKey
         return source + ":" + target;
     }
 
-    public static CAMQPLinkKey createLinkKey(CAMQPControlAttach attach)
+    static CAMQPLinkKey createLinkKey(CAMQPControlAttach attach)
     {
         String sourceString = null;
         String targetString = null;

@@ -34,13 +34,6 @@ public class LinkTestTarget implements CAMQPTargetInterface
         messageCount.incrementAndGet();
     }
 
-    @Override
-    public void messageStateChanged(String deliveryId,
-            int oldState,
-            int newState)
-    {
-    }
-
     public long getNumberOfMessagesReceived()
     {
         return messageCount.longValue();

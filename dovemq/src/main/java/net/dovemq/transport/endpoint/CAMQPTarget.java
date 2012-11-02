@@ -96,15 +96,6 @@ class CAMQPTarget implements CAMQPTargetInterface
         }
     }
 
-    @Override
-    public void messageStateChanged(String deliveryId,
-            int oldState,
-            int newState)
-    {
-        // TODO Auto-generated method stub
-
-    }
-
     /**
      * Processes the Collection of disposed transferIds. Removes the settled
      * transferIds from unsettled map.

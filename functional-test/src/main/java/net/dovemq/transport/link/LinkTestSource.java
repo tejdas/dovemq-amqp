@@ -49,15 +49,9 @@ public class LinkTestSource implements CAMQPSourceInterface
     }
 
     @Override
-    public void messageStateChanged(String deliveryId, int oldState, int newState)
-    {
-    }
-
-    @Override
     public void messageSent(long deliveryId, CAMQPMessage message)
     {
         // TODO Auto-generated method stub
-
     }
 
     @Override

@@ -27,6 +27,7 @@ import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
 import net.jcip.annotations.GuardedBy;
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * Asynchronous Link sender implementation.
@@ -35,6 +36,7 @@ import net.jcip.annotations.GuardedBy;
  *
  * @author tejdas
  */
+@ThreadSafe
 class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
     private volatile CAMQPSourceInterface source = null;

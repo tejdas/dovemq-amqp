@@ -20,16 +20,15 @@ package net.dovemq.transport.session;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.protocol.CAMQPEncoder;
+import net.dovemq.transport.protocol.data.CAMQPControlBegin;
+import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
-
-import net.dovemq.transport.connection.CAMQPConnection;
-import net.dovemq.transport.protocol.CAMQPEncoder;
-import net.dovemq.transport.protocol.data.CAMQPControlBegin;
-import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 
 enum State
 {
@@ -70,6 +69,13 @@ class QueuedContext
     private final Object context;
 }
 
+/**
+ *
+ * Acts on various state changes in AMQP session.
+ *
+ * @author tdas
+ *
+ */
 @ThreadSafe
 class CAMQPSessionStateActor
 {
