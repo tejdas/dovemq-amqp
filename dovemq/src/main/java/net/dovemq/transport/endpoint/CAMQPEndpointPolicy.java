@@ -31,7 +31,8 @@ public final class CAMQPEndpointPolicy
 
     /**
      * ReceiverLinkCreditPolicy determines how the Link credit
-     * is increased when it drops to (below) zero.
+     * is increased when it drops to (below) zero, or approaches
+     * the minimum threshold.
      *
      * @author tejdas
      */
@@ -73,7 +74,12 @@ public final class CAMQPEndpointPolicy
     private final int senderSettleMode;
     private final int receiverSettleMode;
     private final CAMQPMessageDeliveryPolicy deliveryPolicy;
-    private final ReceiverLinkCreditPolicy linkCreditPolicy;
+    private ReceiverLinkCreditPolicy linkCreditPolicy;
+    public void setLinkCreditPolicy(ReceiverLinkCreditPolicy linkCreditPolicy)
+    {
+        this.linkCreditPolicy = linkCreditPolicy;
+    }
+
     private final long minLinkCreditThreshold;
     private final long linkCreditBoost;
     private EndpointType endpointType = EndpointType.QUEUE;

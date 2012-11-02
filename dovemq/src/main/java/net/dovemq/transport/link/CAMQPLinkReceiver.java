@@ -393,6 +393,10 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
         }
     }
 
+    /**
+     * Called by target end-point upon processing of a message.
+     *
+     */
     @Override
     public void acnowledgeMessageProcessingComplete()
     {
@@ -445,5 +449,30 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
         messagesProcessedSinceLastSendFlow = 0;
 
         return populateFlowFrame();
+    }
+
+    @Override
+    public void provideLinkCredit()
+    {
+        CAMQPControlFlow outFlow = null;
+        synchronized (this)
+        {
+            linkCreditPolicy = endpointPolicy.getLinkCreditPolicy();
+            minLinkCreditThreshold = endpointPolicy.getMinLinkCreditThreshold();
+            linkCreditBoost = endpointPolicy.getLinkCreditBoost();
+
+            if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE)
+            {
+                linkCredit = minLinkCreditThreshold + linkCreditBoost;
+
+            }
+            else if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
+            {
+                linkCredit = minLinkCreditThreshold + linkCreditBoost;
+            }
+            outFlow = populateFlowFrame();
+        }
+
+        session.sendFlow(outFlow);
     }
 }

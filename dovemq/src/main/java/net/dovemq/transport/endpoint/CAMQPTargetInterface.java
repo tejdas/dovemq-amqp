@@ -30,6 +30,4 @@ public interface CAMQPTargetInterface
 
     public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
     public void acnowledgeMessageProcessingComplete();
-
-    public void startReceivingMessages();
 }

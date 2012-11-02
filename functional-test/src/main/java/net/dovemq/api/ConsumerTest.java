@@ -36,7 +36,6 @@ public class ConsumerTest
 
         Consumer consumer = session.createConsumer("firstQueue");
         consumer.registerMessageReceiver(new TestMessageReceiver());
-        consumer.start();
         System.out.println("waiting for message");
         Thread.sleep(60000);
 

@@ -75,7 +75,7 @@ public final class CAMQPEndpointManager
             CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
             CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkEndpoint.getEndpointPolicy());
             linkReceiver.registerTarget(dovemqTarget);
-            linkReceiver.configureSteadyStatePacedByMessageReceipt(10, 100);
+            linkReceiver.provideLinkCredit();
             return dovemqTarget;
         }
         else
@@ -85,16 +85,12 @@ public final class CAMQPEndpointManager
         return null;
     }
 
-    public static CAMQPTargetInterface createTarget(String containerId, String source, String target)
-    {
-        return createTarget(containerId, source, target, defaultEndpointPolicy);
-    }
-
     public static CAMQPTargetInterface createTarget(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
         CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(containerId, source, target, endpointPolicy);
         CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
         linkReceiver.registerTarget(dovemqTarget);
+        linkReceiver.provideLinkCredit();
         return dovemqTarget;
     }
 
@@ -136,7 +132,7 @@ public final class CAMQPEndpointManager
                 CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
                 CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkEndpoint.getEndpointPolicy());
                 linkReceiver.registerTarget(dovemqTarget);
-                linkReceiver.configureSteadyStatePacedByMessageReceipt(10, 100); // TODO reconfigure
+                linkReceiver.provideLinkCredit();
                 doveMQEndpointManager.publisherAttached(target, dovemqTarget);
             }
         }

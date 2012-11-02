@@ -1090,9 +1090,4 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     {
         dispositionSender.insertDispositionRange(deliveryId, role, settleMode, newState);
     }
-
-    @Override
-    public void sendBatchedDisposition(Collection<Long> deliveryIds, boolean settleMode, boolean role, Object newState)
-    {
-    }
 }

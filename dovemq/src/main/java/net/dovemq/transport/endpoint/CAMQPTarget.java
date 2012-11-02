@@ -157,11 +157,4 @@ class CAMQPTarget implements CAMQPTargetInterface
     {
         linkReceiver.acnowledgeMessageProcessingComplete();
     }
-
-    @Override
-    public void startReceivingMessages()
-    {
-        // TODO Auto-generated method stub
-        linkReceiver.configureSteadyStatePacedByMessageProcessing(endpointPolicy.getMinLinkCreditThreshold(), endpointPolicy.getLinkCreditBoost());
-    }
 }

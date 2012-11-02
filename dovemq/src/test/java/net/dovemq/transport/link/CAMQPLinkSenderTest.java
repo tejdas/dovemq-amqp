@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
@@ -205,14 +204,6 @@ public class CAMQPLinkSenderTest
         public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState)
         {
             // TODO Auto-generated method stub
-        }
-
-        @Override
-        public void sendBatchedDisposition(Collection<Long> deliveryIds,
-                boolean settleMode,
-                boolean role,
-                Object newState)
-        {
         }
 
         @Override

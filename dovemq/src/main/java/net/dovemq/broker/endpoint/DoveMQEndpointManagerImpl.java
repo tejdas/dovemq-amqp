@@ -25,17 +25,17 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
 {
-    private final ConcurrentMap<String, PointToPointRouter> queueProcessors = new ConcurrentHashMap<String, PointToPointRouter>();
+    private final ConcurrentMap<String, PointToPointRouter> pointToPointRouters = new ConcurrentHashMap<String, PointToPointRouter>();
 
     @Override
     public void publisherAttached(String queueName, CAMQPTargetInterface source)
     {
-        PointToPointRouter queueProcessor = queueProcessors.get(queueName);
+        PointToPointRouter queueProcessor = pointToPointRouters.get(queueName);
         if (queueProcessor == null)
         {
             queueProcessor = new PointToPointRouter();
             queueProcessor.sourceAttached(source);
-            queueProcessors.put(queueName,  queueProcessor);
+            pointToPointRouters.put(queueName,  queueProcessor);
         }
         else
         {
@@ -46,13 +46,13 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     @Override
     public void publisherDetached(String queueName)
     {
-        PointToPointRouter queueProcessor = queueProcessors.get(queueName);
+        PointToPointRouter queueProcessor = pointToPointRouters.get(queueName);
         if (queueProcessor != null)
         {
             queueProcessor.sourceDetached();
             if (queueProcessor.isCompletelyDetached())
             {
-                queueProcessors.remove(queueName);
+                pointToPointRouters.remove(queueName);
             }
         }
     }
@@ -60,12 +60,12 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     @Override
     public void consumerAttached(String queueName, CAMQPSourceInterface target)
     {
-        PointToPointRouter queueProcessor = queueProcessors.get(queueName);
+        PointToPointRouter queueProcessor = pointToPointRouters.get(queueName);
         if (queueProcessor == null)
         {
             queueProcessor = new PointToPointRouter();
             queueProcessor.destinationAttached(target);
-            queueProcessors.put(queueName,  queueProcessor);
+            pointToPointRouters.put(queueName,  queueProcessor);
         }
         else
         {
@@ -76,13 +76,13 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     @Override
     public void consumerDetached(String queueName)
     {
-        PointToPointRouter queueProcessor = queueProcessors.get(queueName);
+        PointToPointRouter queueProcessor = pointToPointRouters.get(queueName);
         if (queueProcessor != null)
         {
             queueProcessor.destinationDetached();
             if (queueProcessor.isCompletelyDetached())
             {
-                queueProcessors.remove(queueName);
+                pointToPointRouters.remove(queueName);
             }
         }
     }

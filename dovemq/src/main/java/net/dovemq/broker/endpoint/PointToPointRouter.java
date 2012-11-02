@@ -27,7 +27,7 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.link.CAMQPLinkSenderFlowControlException;
 
-public class PointToPointRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObserver
+class PointToPointRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObserver
 {
     private final Queue<DoveMQMessage> messageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
     private final Queue<DoveMQMessage> inFlightMessageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
@@ -145,6 +145,6 @@ public class PointToPointRouter implements DoveMQMessageReceiver, CAMQPMessageDi
 
     public synchronized boolean isCompletelyDetached()
     {
-        return ((sourceSink == null) && (targetProxy == null));
+        return ((sourceSink == null) && (targetProxy == null) && messageQueue.isEmpty());
     }
 }

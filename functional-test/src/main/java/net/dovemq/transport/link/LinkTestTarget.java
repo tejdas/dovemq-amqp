@@ -72,10 +72,4 @@ public class LinkTestTarget implements CAMQPTargetInterface
     {
         // TODO Auto-generated method stub
     }
-
-    @Override
-    public void startReceivingMessages()
-    {
-        // TODO Auto-generated method stub
-    }
 }

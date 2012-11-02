@@ -233,12 +233,6 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         public void acnowledgeMessageProcessingComplete()
         {
         }
-
-        @Override
-        public void startReceivingMessages()
-        {
-            // TODO Auto-generated method stub
-        }
     }
 
     /**

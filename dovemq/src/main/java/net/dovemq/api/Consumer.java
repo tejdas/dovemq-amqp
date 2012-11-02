@@ -26,11 +26,6 @@ public class Consumer
         targetEndpoint.registerMessageReceiver(messageReceiver);
     }
 
-    public void start()
-    {
-        targetEndpoint.startReceivingMessages();
-    }
-
     public void stop()
     {
 

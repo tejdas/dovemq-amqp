@@ -117,12 +117,6 @@ public class CAMQPLinkReceiverTest
         {
             // TODO Auto-generated method stub
         }
-
-        @Override
-        public void startReceivingMessages()
-        {
-            // TODO Auto-generated method stub
-        }
     }
 
     /**

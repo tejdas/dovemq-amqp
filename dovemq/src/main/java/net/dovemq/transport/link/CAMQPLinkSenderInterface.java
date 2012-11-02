@@ -19,10 +19,37 @@ package net.dovemq.transport.link;
 
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
+/**
+ * CAMQPLinkSenderInterface provides methods for session and end-point layers
+ * to interact with the link layer while sending message.
+ *
+ * @author tejdas
+ *
+ */
 public interface CAMQPLinkSenderInterface
 {
+    /**
+     * Called by end-point layer to register a {@link CAMQPSourceInterface}.
+     *
+     * @param source: to be used for dispatching up the stack to the end-point
+     * layer.
+     */
     public void registerSource(CAMQPSourceInterface source);
+
+    /**
+     * Called by Source end-point {@link CAMQPSourceInterface} to send an
+     * encoded message.
+     *
+     * @param message
+     */
     public void sendMessage(CAMQPMessage message);
+
+    /**
+     * Called by underlying {@link CAMQPSessionInterface} after a transfer frame
+     * has been sent.
+     * @param transferFrame
+     */
     public void messageSent(CAMQPControlTransfer transferFrame);
 }

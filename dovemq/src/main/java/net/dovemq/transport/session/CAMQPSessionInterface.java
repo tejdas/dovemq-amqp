@@ -17,8 +17,6 @@
 
 package net.dovemq.transport.session;
 
-import java.util.Collection;
-
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkMessageHandler;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
@@ -37,13 +35,64 @@ import org.jboss.netty.buffer.ChannelBuffer;
  */
 public interface CAMQPSessionInterface
 {
+    /**
+     * Called by Link layer to send an encoded Link control frame.
+     * @param encodedLinkControlFrame
+     */
     public void sendLinkControlFrame(ChannelBuffer encodedLinkControlFrame);
+
+    /**
+     * Called by Link layer to register a LinkReceiver to receive transfer frames
+     * and Link Control frames. Incoming transfer and control frames are dispatched
+     * to the LinkReceiver based on the linkHandle.
+     * @param linkHandle
+     * @param linkReceiver
+     */
     public void registerLinkReceiver(Long linkHandle, CAMQPLinkMessageHandler linkReceiver);
+
+    /**
+     * Called by LinkSender to get the next session-scoped delivery Id, to be used to send a
+     * transfer frame.
+     * @return
+     *      session-scoped deliveryId
+     */
     public long getNextDeliveryId();
+
+    /**
+     * Called by LinkSender to send a transfer frame to the sender. After the frame is sent,
+     * {@link CAMQPLinkSenderInterface#messageSent()} is called to notify the link layer.
+     *
+     * @param transfer: transfer frame.
+     * @param payload: encoded message payload performative.
+     * @param linkSender: link sender that is notified upon transfer of the frame.
+     */
     public void sendTransfer(CAMQPControlTransfer transfer, CAMQPMessagePayload payload, CAMQPLinkSenderInterface linkSender);
+
+    /**
+     * Called by Link end-point to send a link flow frame.
+     * @param flow
+     */
     public void sendFlow(CAMQPControlFlow flow);
+
+    /**
+     * Called by Link receiver to acknowledge receipt of transfer frame.
+     * @param transferId
+     */
     public void ackTransfer(long transferId);
+
+    /**
+     * Called by Link Endpoint to send disposition frame corresponding to the transfer frame
+     * represented by deliveryId.
+     *
+     * @param deliveryId: deliveryId of the transfer frame being disposed.
+     * @param settleMode: whether settled by the link end-point.
+     * @param role: true (LinkReceiver) or false (LinkSender)
+     * @param newState: new state that the frame transitioned to (accepted, modified, released, rejected)
+     */
     public void sendDisposition(long deliveryId, boolean settleMode, boolean role, Object newState);
-    public void sendBatchedDisposition(Collection<Long> deliveryIds, boolean settleMode, boolean role, Object newState);
+
+    /**
+     * Close the session and notify the attached link end-points that the session has ended.
+     */
     public void close();
 }
