@@ -30,8 +30,9 @@ public class ConsumerTest
     public static void main(String[] args) throws InterruptedException
     {
         ConnectionFactory.initialize("consumer");
+        String brokerIP = args[0];
 
-        Session session = ConnectionFactory.createSession("10.33.26.247");
+        Session session = ConnectionFactory.createSession(brokerIP);
 
         Consumer consumer = session.createConsumer("firstQueue");
         consumer.registerMessageReceiver(new TestMessageReceiver());

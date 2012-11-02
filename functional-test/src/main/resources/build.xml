@@ -404,6 +404,7 @@
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/producer.log" />
+			<arg value="${broker.ip}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -414,6 +415,7 @@
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
+			<arg value="${broker.ip}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>		
