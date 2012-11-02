@@ -26,7 +26,7 @@ import net.dovemq.transport.connection.CAMQPListener;
 
 public class SessionSysTestServer
 {
-    public static void main(String[] args) throws InterruptedException, IOException, CAMQPSessionBeginException
+    public static void main(String[] args) throws InterruptedException, IOException
     {
         CAMQPConnectionManager.initialize("broker");
         System.out.println("container ID: " + CAMQPConnectionManager.getContainerId());

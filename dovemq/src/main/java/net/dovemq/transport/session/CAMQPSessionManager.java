@@ -29,14 +29,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
-
-import net.dovemq.transport.link.CAMQPLinkMessageHandlerFactory;
-import net.dovemq.transport.session.CAMQPSession;
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.CAMQPConnectionProperties;
+import net.dovemq.transport.link.CAMQPLinkMessageHandlerFactory;
+
+import org.apache.log4j.Logger;
 
 public class CAMQPSessionManager
 {
@@ -113,10 +112,6 @@ public class CAMQPSessionManager
         {
             CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
             connection = CAMQPConnectionFactory.createCAMQPConnection(targetContainerId, connectionProps);
-            if (connection == null)
-            {
-                throw new CAMQPSessionBeginException("AMQPConnection could not be established to remoteContainer: " + targetContainerId);
-            }
         }
         return connection;
     }

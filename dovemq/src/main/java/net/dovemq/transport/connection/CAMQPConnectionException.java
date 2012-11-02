@@ -15,20 +15,20 @@
  *
  */
 
-package net.dovemq.transport.session;
+package net.dovemq.transport.connection;
 
-class CAMQPSessionBeginException extends RuntimeException
+public class CAMQPConnectionException extends RuntimeException
 {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
-    
-    CAMQPSessionBeginException(String message) {
+
+    CAMQPConnectionException(String message) {
         super(message);
     }
 
-    CAMQPSessionBeginException(String message, Throwable cause) {
+    CAMQPConnectionException(String message, Throwable cause) {
         super(message, cause);
     }
 }

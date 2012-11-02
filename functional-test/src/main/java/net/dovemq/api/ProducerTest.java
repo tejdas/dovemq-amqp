@@ -35,7 +35,6 @@ public class ProducerTest
         message.addPayload(payload.getBytes());
         producer.sendMessage(message);
         System.out.println("sent message");
-        Thread.sleep(10000);
 
         //session.close();
         ConnectionFactory.shutdown();

@@ -34,11 +34,11 @@ public class SessionSysTestCmdDriver
         {
             System.out.println("registerFactory");
             System.out.println("getRegisteredFactory");
-            System.out.println("getFactoryList");            
+            System.out.println("getFactoryList");
             System.out.println("sessionList [targetContainerId]");
             System.out.println("sessionCreate [targetContainerId]");
             System.out.println("sessionCreateMT [targetContainerId] [numThreads]");
-            System.out.println("sessionIO [targetContainerId] [sessionAttachedChannelId] [source] [dest]");            
+            System.out.println("sessionIO [targetContainerId] [sessionAttachedChannelId] [source] [dest]");
             System.out.println("sessionClose [targetContainerId] [sessionAttachedChannelId]");
             return true;
         }
@@ -48,10 +48,10 @@ public class SessionSysTestCmdDriver
             {
                 return true;
             }
-            SysTestCommandReceiverFactory commandReceiverFactory = new SysTestCommandReceiverFactory(argList[1]);        
+            SysTestCommandReceiverFactory commandReceiverFactory = new SysTestCommandReceiverFactory(argList[1]);
             CAMQPSessionManager.registerLinkReceiverFactory(commandReceiverFactory);
             return true;
-        }        
+        }
         else if (cmd.equalsIgnoreCase("getFactoryList"))
         {
             Collection<String> list = SysTestCommandReceiverFactory.getAvailableFactoryList();
@@ -60,7 +60,7 @@ public class SessionSysTestCmdDriver
                 System.out.println(s);
             }
             return true;
-        }        
+        }
         else if (cmd.equalsIgnoreCase("getRegisteredFactory"))
         {
             CAMQPLinkMessageHandlerFactory factory = CAMQPSessionManager.getLinkReceiverFactory();
@@ -74,27 +74,27 @@ public class SessionSysTestCmdDriver
                 System.out.println(commandReceiverFactory.getCommandReceiverClassName());
             }
             return true;
-        }        
+        }
         else if (cmd.equalsIgnoreCase("sessionCreate"))
         {
-            if ((argList == null) || (argList.length < 2))                
+            if ((argList == null) || (argList.length < 2))
             {
                 return true;
-            }            
+            }
             CAMQPSessionFactory.createCAMQPSession(argList[1]);
             System.out.println("Session opened");
             return true;
-        }       
+        }
         else if (cmd.equalsIgnoreCase("sessionCreateMT"))
         {
             return true;
-        }        
+        }
         else if (cmd.equalsIgnoreCase("sessionClose"))
         {
             if ((argList == null) || (argList.length < 3))
             {
                 return true;
-            }            
+            }
             String targetContainerId = argList[1];
             int sessionAttachedChannelId = Integer.parseInt(argList[2]);
             CAMQPSession session = CAMQPSessionManager.getSession(targetContainerId, sessionAttachedChannelId);
@@ -109,12 +109,12 @@ public class SessionSysTestCmdDriver
             if ((argList == null) || (argList.length < 2))
             {
                 return true;
-            }            
+            }
             String targetContainerId = argList[1];
             Collection<Integer> sessionList = CAMQPSessionManager.getAllAttachedChannels(targetContainerId);
             for (int i : sessionList)
             {
-                System.out.println("Session outgoingChannelId: " + i); 
+                System.out.println("Session outgoingChannelId: " + i);
             }
             return true;
         }
@@ -123,10 +123,10 @@ public class SessionSysTestCmdDriver
             if ((argList == null) || (argList.length < 5))
             {
                 return true;
-            }            
+            }
             String targetContainerId = argList[1];
             int sessionAttachedChannelId = Integer.parseInt(argList[2]);
-  
+
             try
             {
                 CAMQPSession session = CAMQPSessionManager.getSession(targetContainerId, sessionAttachedChannelId);
@@ -142,11 +142,11 @@ public class SessionSysTestCmdDriver
                 e.printStackTrace();
             }
             return true;
-        }        
+        }
         else if (cmd.equalsIgnoreCase("sessionCloseAll"))
         {
             return true;
-        }        
+        }
         else
         {
             return ConnectionSysTestCmdDriver.processCommand(cmd, argList, isServer);
@@ -154,7 +154,7 @@ public class SessionSysTestCmdDriver
     }
 
     protected static void
-    processConsoleInput(boolean isServer) throws IOException, CAMQPSessionBeginException
+    processConsoleInput(boolean isServer) throws IOException
     {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         while (true)

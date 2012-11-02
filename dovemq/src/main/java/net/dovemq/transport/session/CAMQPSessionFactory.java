@@ -18,7 +18,6 @@
 package net.dovemq.transport.session;
 
 import java.util.List;
-import org.apache.log4j.Logger;
 
 /**
  * Factory to create AMQP sessions
@@ -27,7 +26,6 @@ import org.apache.log4j.Logger;
  */
 public final class CAMQPSessionFactory
 {
-    private static final Logger log = Logger.getLogger(CAMQPSessionFactory.class);
     private static final CAMQPSessionFactory sessionFactory = new CAMQPSessionFactory();
 
     private CAMQPSessionFactory()
@@ -37,7 +35,7 @@ public final class CAMQPSessionFactory
     /**
      * If a session already exists to the AMQP target, return it. Otherwise, create
      * a new session.
-     * 
+     *
      * @param targetContainerId
      * @return
      */
@@ -48,28 +46,19 @@ public final class CAMQPSessionFactory
         {
             return sessionFactory.createSession(targetContainerId);
         }
-        
-        return sessionList.get(0); // TODO get the session with minimal linkReceivers attached       
+
+        return sessionList.get(0); // TODO get the session with minimal linkReceivers attached
     }
-    
+
     public static CAMQPSessionInterface createCAMQPSession(String targetContainerId)
     {
          return sessionFactory.createSession(targetContainerId);
-    }    
-    
+    }
+
     private CAMQPSession createSession(String targetContainerId)
     {
         CAMQPSession session = new CAMQPSession();
-        
-        try
-        {
-            session.open(targetContainerId);
-        } catch (CAMQPSessionBeginException e)
-        {
-            // TODO
-            log.error("Could not open the session to: " + targetContainerId); 
-        }
-        
+        session.open(targetContainerId);
         return session;
     }
 }

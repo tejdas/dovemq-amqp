@@ -74,8 +74,9 @@ public final class CAMQPConnectionFactory
             remoteAddress = new InetSocketAddress(targetHostNameUnqualified, CAMQPConnectionConstants.AMQP_IANA_PORT);
             if (remoteAddress.isUnresolved())
             {
-                log.error("Could not resolve remote address");
-                return null;
+                String errorMessage = String.format("Could not resolve remote address to endpoint: %s", targetHostName);
+                log.error(errorMessage);
+                throw new CAMQPConnectionException(errorMessage);
             }
         }
         connectFuture = bootstrap.connect(remoteAddress);
@@ -83,8 +84,9 @@ public final class CAMQPConnectionFactory
         Channel channel = connectFuture.awaitUninterruptibly().getChannel();
         if ((channel == null) || (!channel.isConnected()))
         {
-            log.error("Connection could not be established");
-            return null;
+            String errorMessage = String.format("Connection could not be established to endpoint: %s", targetHostName);
+            log.error(errorMessage);
+            throw new CAMQPConnectionException(errorMessage, connectFuture.getCause());
         }
 
         /*

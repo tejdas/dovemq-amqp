@@ -216,9 +216,8 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
      * which it transitions to MAPPED state.
      *
      * @param targetContainerId
-     * @throws CAMQPSessionBeginException
      */
-    public void open(String targetContainerId) throws CAMQPSessionBeginException
+    public void open(String targetContainerId)
     {
         connection = CAMQPSessionManager.getCAMQPConnection(targetContainerId);
         /*
