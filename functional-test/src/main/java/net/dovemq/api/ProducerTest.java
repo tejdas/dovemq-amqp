@@ -17,17 +17,22 @@
 
 package net.dovemq.api;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
 public class ProducerTest
 {
-    public static void main(String[] args) throws InterruptedException
+    public static void main(String[] args) throws InterruptedException, IOException
     {
         ConnectionFactory.initialize("producer");
         String brokerIP = args[0];
+        String queueName = args[1];
 
         Session session = ConnectionFactory.createSession(brokerIP);
         System.out.println("created session");
 
-        Producer producer = session.createProducer("firstQueue");
+        Producer producer = session.createProducer(queueName);
         System.out.println("created producer");
 
         DoveMQMessage message = MessageFactory.createMessage();
@@ -36,7 +41,25 @@ public class ProducerTest
         producer.sendMessage(message);
         System.out.println("sent message");
 
+        String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/build.xml";
+        sendFileContents(sourceName, producer);
+
+        Thread.sleep(20000);
+
         //session.close();
         ConnectionFactory.shutdown();
+    }
+
+    private static void sendFileContents(String fileName, Producer producer) throws IOException
+    {
+        BufferedReader freader = new BufferedReader(new FileReader(fileName));
+        String sLine = null;
+        while ((sLine = freader.readLine()) != null)
+        {
+            DoveMQMessage message = MessageFactory.createMessage();
+            message.addPayload(sLine.getBytes());
+            producer.sendMessage(message);
+        }
+        freader.close();
     }
 }

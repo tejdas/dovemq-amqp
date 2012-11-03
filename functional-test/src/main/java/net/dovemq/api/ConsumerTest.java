@@ -17,6 +17,8 @@
 
 package net.dovemq.api;
 
+import java.util.Collection;
+
 public class ConsumerTest
 {
     private static class TestMessageReceiver implements DoveMQMessageReceiver
@@ -24,20 +26,26 @@ public class ConsumerTest
         @Override
         public void messageReceived(DoveMQMessage message)
         {
-            System.out.println("Received message");
+            Collection<byte[]> body = message.getPayloads();
+            for (byte[] b : body)
+            {
+                String bString = new String(b);
+                System.out.println(bString);
+            }
         }
     }
     public static void main(String[] args) throws InterruptedException
     {
         ConnectionFactory.initialize("consumer");
         String brokerIP = args[0];
+        String queueName = args[1];
 
         Session session = ConnectionFactory.createSession(brokerIP);
 
-        Consumer consumer = session.createConsumer("firstQueue");
+        Consumer consumer = session.createConsumer(queueName);
         consumer.registerMessageReceiver(new TestMessageReceiver());
         System.out.println("waiting for message");
-        Thread.sleep(60000);
+        Thread.sleep(30000);
 
         //session.close();
         ConnectionFactory.shutdown();
