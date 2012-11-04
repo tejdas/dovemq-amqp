@@ -242,12 +242,6 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
         }
     }
 
-    @Override
-    public void sessionClosed()
-    {
-        // TODO Auto-generated method stub
-    }
-
     /**
      * Called by target to alter linkCredit of receiver.
      * Note that the linkCredit is not changed right away.

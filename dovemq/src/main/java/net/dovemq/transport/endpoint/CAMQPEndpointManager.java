@@ -117,7 +117,7 @@ public final class CAMQPEndpointManager
         {
             if (linkEndpoint.getRole() == LinkRole.LinkSender)
             {
-                doveMQEndpointManager.consumerDetached(target);
+                doveMQEndpointManager.consumerDetached(source);
             }
             else
             {

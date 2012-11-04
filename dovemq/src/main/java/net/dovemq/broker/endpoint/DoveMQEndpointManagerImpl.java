@@ -23,8 +23,11 @@ import java.util.concurrent.ConcurrentMap;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
+import org.apache.log4j.Logger;
+
 public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
 {
+    private static final Logger log = Logger.getLogger(DoveMQEndpointManagerImpl.class);
     private final ConcurrentMap<String, PointToPointRouter> pointToPointRouters = new ConcurrentHashMap<String, PointToPointRouter>();
 
     @Override
@@ -52,9 +55,11 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
             queueProcessor.sourceDetached();
             if (queueProcessor.isCompletelyDetached())
             {
+                log.debug("Removing queue: " + queueName);
                 pointToPointRouters.remove(queueName);
             }
         }
+        log.debug("Publisher detached from queue: " + queueName);
     }
 
     @Override
@@ -82,8 +87,10 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
             queueProcessor.destinationDetached();
             if (queueProcessor.isCompletelyDetached())
             {
+                log.debug("Removing queue: " + queueName);
                 pointToPointRouters.remove(queueName);
             }
         }
+        log.debug("Publisher detached from queue: " + queueName);
     }
 }

@@ -39,7 +39,6 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
  */
 class CAMQPTarget implements CAMQPTargetInterface
 {
-
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
     private final CAMQPLinkReceiverInterface linkReceiver;
     private final CAMQPEndpointPolicy endpointPolicy;

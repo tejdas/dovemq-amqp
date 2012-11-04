@@ -13,16 +13,6 @@
 	<property name="dovemq.jars.dir" location="${mvn.repo.dir}/net/dovemq" />
 	<property name="dovemq.version" value="1.0-SNAPSHOT" />
 
-	<!-- Add the Sonar task -->
-	<taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
-		<classpath path="${env.ANT_HOME}/lib" />
-	</taskdef>
-
-	<property name="sonar.jdbc.url" value="jdbc:h2:tcp://localhost:9092/sonar" />
-	<property name="sonar.jdbc.driverClassName" value="org.h2.Driver" />
-	<property name="sonar.jdbc.username" value="sonar" />
-	<property name="sonar.jdbc.password" value="sonar" />
-
 	<path id="dovemq-functest-classpath">
 		<pathelement location="." />
 		<fileset dir="${lib}">
@@ -55,8 +45,10 @@
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName SessionTest</echo>
 		<echo>To run all Link tests:</echo>
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName LinkTest</echo>
-		<echo>To run Broker standalone:</echo>
-		<echo>ant -Dbroker.ip=FullyQualifiedHostName RunDoveMQBroker</echo>
+		<echo>To run Functional test server standalone:</echo>
+		<echo>ant RunDoveMQBroker</echo>
+		<echo>To run DoveMQ Broker:</echo>
+		<echo>ant RunDoveMQFullBroker</echo>
 	</target>
 
 	<target name="clean" description="clean up">
@@ -66,14 +58,12 @@
 	<target name="RunDoveMQBroker" depends="init">
 		<echo>...Starting DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.transport.common.DoveMQTestJMXServer" maxmemory="2048M" failonerror="true">
-			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="com.sun.management.jmxremote.port" value="${jmxPortNumber}" />
 			<sysproperty key="com.sun.management.jmxremote.authenticate" value="false" />
 			<sysproperty key="com.sun.management.jmxremote.ssl" value="false" />
 			<sysproperty key="dovemq.dir" value="${basedir}/server.log" />
-			<!-- sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -81,7 +71,10 @@
 	<target name="RunDoveMQFullBroker" depends="init">
 		<echo>...Starting DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.broker.driver.DoveMQBrokerDriver" maxmemory="2048M" failonerror="true">
-			<!--if we run into an out of memory error, dump it-->
+			<!-- Enable the following two arguments for remote debugging
+			<jvmarg value="-Xdebug"/>
+ 			<jvmarg value="-Xrunjdwp:server=y,transport=dt_socket,address=4142,suspend=n"/>
+			-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="com.sun.management.jmxremote.port" value="${jmxPortNumber}" />
@@ -95,7 +88,6 @@
 	<target name="ShutdownBroker">
 		<echo>...Shutting down DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.transport.connection.ConnectionSysTestJMXProxy" maxmemory="2048M" failonerror="true">
-			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<arg value="${broker.ip}" />
@@ -107,11 +99,9 @@
 
 	<target name="RunClient">
 		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">			
-			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
-			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="${publisherName}" />
 			<arg value="${broker.ip}" />
 			<arg value="${numThreads}" />
@@ -202,11 +192,9 @@
 	<target name="RunSessionClient">
 		<echo>...Run DoveMQ Session client</echo>
 		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
-			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
-			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
@@ -274,11 +262,9 @@
 	<target name="RunLinksClient">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
-			<!--if we run into an out of memory error, dump it-->
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
-			<!--sysproperty key="log4j.configuration" value="${basedir}/log4j.properties" /-->
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
@@ -381,6 +367,16 @@
 			</sequential>
 		</parallel>
 	</target>
+
+	<!-- Add the Sonar task -->
+	<taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+		<classpath path="${env.ANT_HOME}/lib" />
+	</taskdef>
+
+	<property name="sonar.jdbc.url" value="jdbc:h2:tcp://localhost:9092/sonar" />
+	<property name="sonar.jdbc.driverClassName" value="org.h2.Driver" />
+	<property name="sonar.jdbc.username" value="sonar" />
+	<property name="sonar.jdbc.password" value="sonar" />
 
 	<target name="SonarRunDoveMQBroker">
 		<property name="sonar.jacoco.antTargets" value="RunDoveMQBroker" />

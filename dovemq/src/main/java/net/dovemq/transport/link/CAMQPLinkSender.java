@@ -163,12 +163,6 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
         }
     }
 
-    @Override
-    public void sessionClosed()
-    {
-        // TODO Auto-generated method stub
-    }
-
     /**
      * Called by Link source to send a message.
      */

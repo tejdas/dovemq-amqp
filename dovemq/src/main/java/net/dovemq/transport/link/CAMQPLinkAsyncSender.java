@@ -128,13 +128,6 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
     }
 
     @Override
-    public void sessionClosed()
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public void sendMessage(CAMQPMessage message)
     {
         /*

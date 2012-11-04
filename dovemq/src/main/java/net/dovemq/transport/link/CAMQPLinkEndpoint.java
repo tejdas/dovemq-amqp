@@ -364,6 +364,13 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         session.sendDisposition(deliveryId, settleMode, (getRole() == LinkRole.LinkReceiver), newState);
     }
 
+    @Override
+    public void sessionClosed()
+    {
+        // TODO Auto-generated method stub
+    }
+
+
     /**
      * Send the message on the underlying AMQP session
      * as a transfer frame.
