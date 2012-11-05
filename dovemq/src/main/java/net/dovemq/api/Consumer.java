@@ -17,7 +17,9 @@
 
 package net.dovemq.api;
 
+import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
+import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
 public class Consumer
 {
@@ -28,15 +30,34 @@ public class Consumer
 
     public void stop()
     {
+    }
 
+    public void acknowledge(DoveMQMessage message)
+    {
+        if (endpointPolicy.getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS)
+        {
+            long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
+            targetEndpoint.acnowledgeMessageProcessingComplete(deliveryId);
+        }
     }
 
     Consumer(String targetName, CAMQPTargetInterface targetEndpoint)
     {
         super();
         this.targetName = targetName;
+        this.endpointPolicy = new DoveMQEndpointPolicy();
         this.targetEndpoint = targetEndpoint;
     }
+
+    Consumer(String targetName, CAMQPTargetInterface targetEndpoint, DoveMQEndpointPolicy endpointPolicy)
+    {
+        super();
+        this.targetName = targetName;
+        this.endpointPolicy = endpointPolicy;
+        this.targetEndpoint = targetEndpoint;
+    }
+
     private final String targetName;
+    private final DoveMQEndpointPolicy endpointPolicy;
     private final CAMQPTargetInterface targetEndpoint;
 }

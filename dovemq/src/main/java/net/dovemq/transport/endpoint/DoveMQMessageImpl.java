@@ -363,6 +363,16 @@ public class DoveMQMessageImpl implements DoveMQMessage
         return DoveMQMessageImpl.decode(decoder);
     }
 
+    public long getDeliveryId()
+    {
+        return deliveryId;
+    }
+
+    public void setDeliveryId(long deliveryId)
+    {
+        this.deliveryId = deliveryId;
+    }
+
     private final HeaderPropertiesImpl headerProperties;
     private Map<String, String> deliveryAnnotations = null;
     private Map<String, String> messageAnnotations = null;
@@ -371,4 +381,5 @@ public class DoveMQMessageImpl implements DoveMQMessage
     private DoveMQPayload payload = null;
     private List<DoveMQPayload> payloads = null;
     private Map<String, String> footers = null;
+    private long deliveryId = -1;
 }

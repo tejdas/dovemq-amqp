@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
 import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkEndpoint;
@@ -40,6 +41,8 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
 class CAMQPTarget implements CAMQPTargetInterface
 {
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
+
+    private final Map<Long, Boolean> deliveriesWaitingExplicitAck = new ConcurrentHashMap<Long, Boolean>();
     private final CAMQPLinkReceiverInterface linkReceiver;
     private final CAMQPEndpointPolicy endpointPolicy;
     private volatile DoveMQMessageReceiver messageReceiver = null;
@@ -76,12 +79,21 @@ class CAMQPTarget implements CAMQPTargetInterface
             unsettledDeliveries.put(deliveryId, new CAMQPMessage(deliveryTag, message));
         }
 
+        if (!settledBySender)
+        {
+            if (expectAck())
+            {
+                deliveriesWaitingExplicitAck.put(deliveryId, settled);
+            }
+        }
+
         /*
          * Dispatch the message to target receiver.
          */
         if (messageReceiver != null)
         {
             DoveMQMessageImpl decodedMessage = DoveMQMessageImpl.unmarshal(message);
+            decodedMessage.setDeliveryId(deliveryId);
             messageReceiver.messageReceived(decodedMessage);
         }
 
@@ -90,8 +102,11 @@ class CAMQPTarget implements CAMQPTargetInterface
          */
         if (!settledBySender)
         {
-            // send the disposition
-            sendDisposition(deliveryId, settled, new CAMQPDefinitionAccepted());
+            if (!expectAck())
+            {
+                // send the disposition
+                sendDisposition(deliveryId, settled, new CAMQPDefinitionAccepted());
+            }
         }
     }
 
@@ -143,8 +158,22 @@ class CAMQPTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void acnowledgeMessageProcessingComplete()
+    public void acnowledgeMessageProcessingComplete(long deliveryId)
     {
         linkReceiver.acnowledgeMessageProcessingComplete();
+        if (expectAck())
+        {
+            Boolean settled = deliveriesWaitingExplicitAck.remove(deliveryId);
+            if (settled != null)
+            {
+                // send the disposition
+                sendDisposition(deliveryId, settled, new CAMQPDefinitionAccepted());
+            }
+        }
+    }
+
+    private boolean expectAck()
+    {
+        return ((messageReceiver != null) && (endpointPolicy.getDoveMQEndpointPolicy().getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS));
     }
 }

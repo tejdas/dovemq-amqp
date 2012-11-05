@@ -17,6 +17,8 @@
 
 package net.dovemq.broker.driver;
 
+import net.dovemq.api.DoveMQEndpointPolicy;
+import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
 import net.dovemq.broker.endpoint.DoveMQEndpointManager;
 import net.dovemq.broker.endpoint.DoveMQEndpointManagerImpl;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
@@ -45,6 +47,8 @@ public class DoveMQBrokerDriver
 
         CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
         defaultEndpointPolicy.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
+        defaultEndpointPolicy.setDoveMQEndpointPolicy(new DoveMQEndpointPolicy(MessageAcknowledgementPolicy.CONSUMER_ACKS));
+
         CAMQPEndpointManager.setDefaultEndpointPolicy(defaultEndpointPolicy);
 
         DoveMQEndpointManager doveMQEndpointManager = new DoveMQEndpointManagerImpl();

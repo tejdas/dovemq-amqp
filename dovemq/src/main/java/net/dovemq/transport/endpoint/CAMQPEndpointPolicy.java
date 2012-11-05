@@ -17,6 +17,7 @@
 
 package net.dovemq.transport.endpoint;
 
+import net.dovemq.api.DoveMQEndpointPolicy;
 import net.dovemq.transport.link.CAMQPLinkConstants;
 import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
@@ -42,6 +43,17 @@ public final class CAMQPEndpointPolicy
     private final int receiverSettleMode;
     private final CAMQPMessageDeliveryPolicy deliveryPolicy;
     private ReceiverLinkCreditPolicy linkCreditPolicy;
+    private DoveMQEndpointPolicy doveMQEndpointPolicy = new DoveMQEndpointPolicy();
+
+    public DoveMQEndpointPolicy getDoveMQEndpointPolicy()
+    {
+        return doveMQEndpointPolicy;
+    }
+    public void setDoveMQEndpointPolicy(DoveMQEndpointPolicy doveMQEndpointPolicy)
+    {
+        this.doveMQEndpointPolicy = doveMQEndpointPolicy;
+    }
+
     public void setLinkCreditPolicy(ReceiverLinkCreditPolicy linkCreditPolicy)
     {
         this.linkCreditPolicy = linkCreditPolicy;
@@ -151,6 +163,8 @@ public final class CAMQPEndpointPolicy
         {
             deliveryPolicy = that.deliveryPolicy;
         }
+
+        doveMQEndpointPolicy = new DoveMQEndpointPolicy(that.doveMQEndpointPolicy);
     }
 
     public CAMQPEndpointPolicy(CAMQPMessageDeliveryPolicy deliveryPolicy)

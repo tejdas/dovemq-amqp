@@ -61,7 +61,7 @@ public class LinkTestTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void acnowledgeMessageProcessingComplete()
+    public void acnowledgeMessageProcessingComplete(long deliveryId)
     {
         // TODO Auto-generated method stub
     }

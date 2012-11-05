@@ -25,6 +25,7 @@ import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
+import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 import net.dovemq.transport.link.CAMQPLinkSenderFlowControlException;
 
 class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObserver
@@ -101,7 +102,8 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
             CAMQPTargetInterface sink = getSourceSink();
             if (sink != null)
             {
-                sink.acnowledgeMessageProcessingComplete();
+                long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
+                sink.acnowledgeMessageProcessingComplete(deliveryId);
             }
         }
     }

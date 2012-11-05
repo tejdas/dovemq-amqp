@@ -223,7 +223,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         }
 
         @Override
-        public void acnowledgeMessageProcessingComplete()
+        public void acnowledgeMessageProcessingComplete(long deliveryId)
         {
         }
     }

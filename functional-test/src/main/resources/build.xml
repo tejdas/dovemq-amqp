@@ -416,6 +416,18 @@
 			<arg value="${queueName}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
-	</target>		
+	</target>
+	
+	<target name="RunAckConsumer">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.ConsumerAckExplicitTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
+			<arg value="${broker.ip}" />
+			<arg value="${queueName}" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>
 
 </project>

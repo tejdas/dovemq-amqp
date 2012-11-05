@@ -56,6 +56,15 @@ public class Session
         return new Consumer(target, receiver);
     }
 
+    public Consumer createConsumer(String queueName, DoveMQEndpointPolicy doveMQEndpointPolicy)
+    {
+        String target = String.format("%s.%s", endpointId, queueName);
+        CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
+        endpointPolicy.setDoveMQEndpointPolicy(doveMQEndpointPolicy);
+        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(brokerContainerId, queueName, target, endpointPolicy);
+        return new Consumer(target, receiver, doveMQEndpointPolicy);
+    }
+
     public Publisher createPublisher(String topicName)
     {
         return null;
