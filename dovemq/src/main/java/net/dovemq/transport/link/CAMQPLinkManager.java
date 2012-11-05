@@ -29,6 +29,8 @@ import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.CAMQPConnectionProperties;
 import net.dovemq.transport.connection.CAMQPListener;
+import net.dovemq.transport.endpoint.CAMQPEndpointManager;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
@@ -130,6 +132,26 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         {
             listener.shutdown();
         }
+    }
+
+    public CAMQPTargetInterface attachLinkTargetEndpoint(String linkSource, String linkTarget)
+    {
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
+        if (linkEndpoint == null)
+        {
+            log.warn("could not find linkEndpoint");
+            return null;
+        }
+        if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
+        {
+            return CAMQPEndpointManager.targetEndpointAttached(linkTarget, (CAMQPLinkReceiverInterface) linkEndpoint,
+                    linkEndpoint.getEndpointPolicy());
+        }
+        else
+        {
+            log.warn("LinkEndpoint is not a LinkReceiver");
+        }
+        return null;
     }
 
     public CAMQPLinkEndpoint getLinkEndpoint(String source, String target)
