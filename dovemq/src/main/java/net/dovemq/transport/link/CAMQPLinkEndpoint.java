@@ -24,6 +24,7 @@ import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
@@ -198,9 +199,17 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         if (linkKey != null)
         {
             CAMQPLinkManager.getLinkmanager().registerLinkEndpoint(linkName, linkKey, this);
+
             if (!isInitiator)
             {
-                CAMQPEndpointManager.linkEndpointAttached(linkKey.getSource(), linkKey.getTarget(), this);
+                if (getRole() == LinkRole.LinkSender)
+                {
+                    CAMQPEndpointManager.sourceEndpointAttached(linkKey.getSource(), (CAMQPLinkSenderInterface) this, endpointPolicy);
+                }
+                else
+                {
+                    CAMQPEndpointManager.targetEndpointAttached(linkKey.getTarget(), (CAMQPLinkReceiverInterface) this, endpointPolicy);
+                }
             }
         }
         String initiatedBy =  isInitiator? "self" : "peer";
@@ -214,7 +223,14 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
             CAMQPLinkManager.getLinkmanager().unregisterLinkEndpoint(linkName, linkKey);
             if (!isInitiator)
             {
-                CAMQPEndpointManager.linkEndpointDetached(linkKey.getSource(), linkKey.getTarget(), this);
+                if (getRole() == LinkRole.LinkSender)
+                {
+                    CAMQPEndpointManager.sourceEndpointDetached(linkKey.getSource(), (CAMQPSourceInterface) getEndpoint());
+                }
+                else
+                {
+                    CAMQPEndpointManager.targetEndpointDetached(linkKey.getTarget(), (CAMQPTargetInterface) getEndpoint());
+                }
             }
         }
         String initiatedBy =  isInitiator? "self" : "peer";
@@ -370,6 +386,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         // TODO Auto-generated method stub
     }
 
+    abstract Object getEndpoint();
 
     /**
      * Send the message on the underlying AMQP session

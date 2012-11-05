@@ -483,4 +483,10 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
             session.sendFlow(outFlow);
         }
     }
+
+    @Override
+    Object getEndpoint()
+    {
+        return target;
+    }
 }

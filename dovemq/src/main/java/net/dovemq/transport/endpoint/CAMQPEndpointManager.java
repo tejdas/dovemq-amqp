@@ -89,40 +89,40 @@ public final class CAMQPEndpointManager
         return dovemqTarget;
     }
 
-    public static void linkEndpointAttached(String source, String target, CAMQPLinkEndpoint linkEndpoint)
+    public static void sourceEndpointAttached(String source, CAMQPLinkSenderInterface linkSender, CAMQPEndpointPolicy endpointPolicy)
     {
         if (doveMQEndpointManager != null)
         {
-            if (linkEndpoint.getRole() == LinkRole.LinkSender)
-            {
-                CAMQPLinkSenderInterface linkSender = (CAMQPLinkSenderInterface) linkEndpoint;
-                CAMQPSource dovemqSource = new CAMQPSource(linkSender, linkEndpoint.getEndpointPolicy());
-                linkSender.registerSource(dovemqSource);
-                doveMQEndpointManager.consumerAttached(source, dovemqSource);
-            }
-            else
-            {
-                CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
-                CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, linkEndpoint.getEndpointPolicy());
-                linkReceiver.registerTarget(dovemqTarget);
-                linkReceiver.provideLinkCredit();
-                doveMQEndpointManager.publisherAttached(target, dovemqTarget);
-            }
+            CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
+            linkSender.registerSource(dovemqSource);
+            doveMQEndpointManager.consumerAttached(source, dovemqSource);
         }
     }
 
-    public static void linkEndpointDetached(String source, String target, CAMQPLinkEndpoint linkEndpoint)
+    public static void targetEndpointAttached(String target, CAMQPLinkReceiverInterface linkReceiver, CAMQPEndpointPolicy endpointPolicy)
     {
         if (doveMQEndpointManager != null)
         {
-            if (linkEndpoint.getRole() == LinkRole.LinkSender)
-            {
-                doveMQEndpointManager.consumerDetached(source);
-            }
-            else
-            {
-                doveMQEndpointManager.publisherDetached(target);
-            }
+            CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
+            linkReceiver.registerTarget(dovemqTarget);
+            linkReceiver.provideLinkCredit();
+            doveMQEndpointManager.publisherAttached(target, dovemqTarget);
+        }
+    }
+
+    public static void sourceEndpointDetached(String sourceName, CAMQPSourceInterface source)
+    {
+        if (doveMQEndpointManager != null)
+        {
+            doveMQEndpointManager.consumerDetached(sourceName, source);
+        }
+    }
+
+    public static void targetEndpointDetached(String targetName, CAMQPTargetInterface target)
+    {
+        if (doveMQEndpointManager != null)
+        {
+            doveMQEndpointManager.publisherDetached(targetName, target);
         }
     }
 }

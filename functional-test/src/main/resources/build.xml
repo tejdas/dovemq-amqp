@@ -401,6 +401,7 @@
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
+			<arg value="${endpointName}" />			
 			<arg value="${queueName}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
@@ -413,6 +414,7 @@
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
+			<arg value="${endpointName}" />			
 			<arg value="${queueName}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
@@ -425,6 +427,7 @@
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
+			<arg value="${endpointName}" />
 			<arg value="${queueName}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>

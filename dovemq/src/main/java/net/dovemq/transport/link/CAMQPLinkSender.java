@@ -379,4 +379,10 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
         }
         return deliveryIds;
     }
+
+    @Override
+    Object getEndpoint()
+    {
+        return source;
+    }
 }

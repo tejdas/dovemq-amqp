@@ -25,9 +25,10 @@ public class ProducerTest
 {
     public static void main(String[] args) throws InterruptedException, IOException
     {
-        ConnectionFactory.initialize("producer");
         String brokerIP = args[0];
-        String queueName = args[1];
+        String endpointName = args[1];
+        String queueName = args[2];
+        ConnectionFactory.initialize(endpointName);
 
         Session session = ConnectionFactory.createSession(brokerIP);
         System.out.println("created session");

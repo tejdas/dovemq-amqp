@@ -31,28 +31,28 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<String, QueueRouter>();
 
     @Override
-    public void publisherAttached(String queueName, CAMQPTargetInterface source)
+    public void publisherAttached(String queueName, CAMQPTargetInterface publisher)
     {
         QueueRouter queueProcessor = queueRouters.get(queueName);
         if (queueProcessor == null)
         {
             queueProcessor = new QueueRouter();
-            queueProcessor.sourceAttached(source);
+            queueProcessor.sourceAttached(publisher);
             queueRouters.put(queueName,  queueProcessor);
         }
         else
         {
-            queueProcessor.sourceAttached(source);
+            queueProcessor.sourceAttached(publisher);
         }
     }
 
     @Override
-    public void publisherDetached(String queueName)
+    public void publisherDetached(String queueName, CAMQPTargetInterface publisher)
     {
         QueueRouter queueProcessor = queueRouters.get(queueName);
         if (queueProcessor != null)
         {
-            queueProcessor.sourceDetached();
+            queueProcessor.sourceDetached(publisher);
             if (queueProcessor.isCompletelyDetached())
             {
                 log.debug("Removing queue: " + queueName);
@@ -63,28 +63,28 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     }
 
     @Override
-    public void consumerAttached(String queueName, CAMQPSourceInterface target)
+    public void consumerAttached(String queueName, CAMQPSourceInterface consumer)
     {
         QueueRouter queueProcessor = queueRouters.get(queueName);
         if (queueProcessor == null)
         {
             queueProcessor = new QueueRouter();
-            queueProcessor.destinationAttached(target);
+            queueProcessor.destinationAttached(consumer);
             queueRouters.put(queueName,  queueProcessor);
         }
         else
         {
-            queueProcessor.destinationAttached(target);
+            queueProcessor.destinationAttached(consumer);
         }
     }
 
     @Override
-    public void consumerDetached(String queueName)
+    public void consumerDetached(String queueName, CAMQPSourceInterface consumer)
     {
         QueueRouter queueProcessor = queueRouters.get(queueName);
         if (queueProcessor != null)
         {
-            queueProcessor.destinationDetached();
+            queueProcessor.destinationDetached(consumer);
             if (queueProcessor.isCompletelyDetached())
             {
                 log.debug("Removing queue: " + queueName);

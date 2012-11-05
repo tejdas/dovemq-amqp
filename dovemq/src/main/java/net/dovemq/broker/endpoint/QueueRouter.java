@@ -17,6 +17,7 @@
 
 package net.dovemq.broker.endpoint;
 
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -32,9 +33,27 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
 {
     private final Queue<DoveMQMessage> messageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
     private final Queue<DoveMQMessage> inFlightMessageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
-    private CAMQPSourceInterface targetProxy = null;
+    private final Queue<CAMQPSourceInterface> targetProxies = new LinkedList<CAMQPSourceInterface>();
     private CAMQPTargetInterface sourceSink = null;
     private boolean sendInProgress = false;
+
+    private CAMQPSourceInterface getNextDestination()
+    {
+        if (targetProxies.isEmpty())
+        {
+            return null;
+        }
+        else if (targetProxies.size() == 1)
+        {
+            return targetProxies.peek();
+        }
+        else
+        {
+            CAMQPSourceInterface nextDestination = targetProxies.poll();
+            targetProxies.add(nextDestination);
+            return nextDestination;
+        }
+    }
 
     @Override
     public void messageReceived(DoveMQMessage message)
@@ -47,12 +66,12 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
         CAMQPSourceInterface currentDestination = null;
         synchronized (this)
         {
-            if (sendInProgress || (targetProxy == null))
+            if (sendInProgress || (targetProxies.isEmpty()))
             {
                 return;
             }
             sendInProgress = true;
-            currentDestination = targetProxy;
+            currentDestination = getNextDestination();
         }
 
         sendMessages(currentDestination);
@@ -60,37 +79,48 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
 
     private void sendMessages(CAMQPSourceInterface currentDestination)
     {
-        try
+        while (true)
         {
-            while (true)
+            DoveMQMessage messageToSend = messageQueue.poll();
+            if (messageToSend == null)
             {
-                DoveMQMessage messageToSend = messageQueue.poll();
-                if (messageToSend == null)
+                break;
+            }
+
+            inFlightMessageQueue.add(messageToSend);
+
+            if (currentDestination == null)
+            {
+                synchronized (this)
                 {
-                    break;
-                }
-                inFlightMessageQueue.add(messageToSend);
-                try
-                {
-                    currentDestination.sendMessage(messageToSend);
-                }
-                catch (RuntimeException ex)
-                {
-                    // TODO
-                    if (ex instanceof CAMQPLinkSenderFlowControlException)
+                    currentDestination = getNextDestination();
+                    if (currentDestination == null)
                     {
-                        inFlightMessageQueue.remove(messageToSend);
-                        break;
+                        sendInProgress = false;
+                        return;
                     }
                 }
             }
-        }
-        finally
-        {
-            synchronized (this)
+
+            try
             {
-                sendInProgress = false;
+                currentDestination.sendMessage(messageToSend);
+                currentDestination = null;
             }
+            catch (RuntimeException ex)
+            {
+                // TODO
+                if (ex instanceof CAMQPLinkSenderFlowControlException)
+                {
+                    inFlightMessageQueue.remove(messageToSend);
+                    break;
+                }
+            }
+        }
+
+        synchronized (this)
+        {
+            sendInProgress = false;
         }
     }
 
@@ -113,32 +143,32 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
         return sourceSink;
     }
 
-    public void destinationAttached(CAMQPSourceInterface destination)
+    void destinationAttached(CAMQPSourceInterface destination)
     {
         CAMQPSourceInterface currentDestination = null;
         synchronized(this)
         {
-            targetProxy = destination;
+            targetProxies.add(destination);
             destination.registerDispositionObserver(this);
             if (sendInProgress)
             {
                 return;
             }
             sendInProgress = true;
-            currentDestination = destination;
+            currentDestination = getNextDestination();
         }
         sendMessages(currentDestination);
     }
 
-    public void destinationDetached()
+    void destinationDetached(CAMQPSourceInterface targetProxy)
     {
         synchronized(this)
         {
-            targetProxy = null;
+            targetProxies.remove(targetProxy);
         }
     }
 
-    public void sourceAttached(CAMQPTargetInterface sourceSink)
+    void sourceAttached(CAMQPTargetInterface sourceSink)
     {
         synchronized (this)
         {
@@ -147,7 +177,7 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
         sourceSink.registerMessageReceiver(this);
     }
 
-    public void sourceDetached()
+    void sourceDetached(CAMQPTargetInterface source)
     {
         synchronized (this)
         {
@@ -155,8 +185,8 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
         }
     }
 
-    public synchronized boolean isCompletelyDetached()
+    synchronized boolean isCompletelyDetached()
     {
-        return ((sourceSink == null) && (targetProxy == null) && messageQueue.isEmpty());
+        return ((sourceSink == null) && (targetProxies.isEmpty()) && messageQueue.isEmpty());
     }
 }
