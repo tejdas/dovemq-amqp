@@ -73,7 +73,7 @@ public interface CAMQPLinkReceiverInterface
      * for a steady-state flow of incoming messages.
      *
      * The link credit is incremented after it has been processed by the target and notified
-     * via {@link #acnowledgeMessageProcessingComplete()}. whenever the link sender's link credit drops below
+     * via {@link #acknowledgeMessageProcessingComplete()}. whenever the link sender's link credit drops below
      * the configurable threshold, the link credit is boosted, and a flow frame generated.
      *
      * @param minLinkCreditThreshold: the link credit at which the credit is boosted.
@@ -96,7 +96,7 @@ public interface CAMQPLinkReceiverInterface
      * have been processed since the last flow-frame was sent, so that it can boost
      * the link credit.
      */
-    public void acnowledgeMessageProcessingComplete();
+    public void acknowledgeMessageProcessingComplete();
 
     /**
      * Called by target end-point to (re)configure link-credit state based on CAMQPEndpointPolicy

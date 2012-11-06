@@ -17,6 +17,16 @@
 
 package net.dovemq.api;
 
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
+
 public class Subscriber
 {
+    public Subscriber(String targetName, CAMQPTargetInterface targetEndpoint)
+    {
+        super();
+        this.targetName = targetName;
+        this.targetEndpoint = targetEndpoint;
+    }
+    private final String targetName;
+    private final CAMQPTargetInterface targetEndpoint;
 }

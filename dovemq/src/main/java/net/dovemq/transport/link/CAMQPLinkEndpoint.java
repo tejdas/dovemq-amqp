@@ -23,6 +23,7 @@ import java.util.UUID;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPolicy;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.EndpointType;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
@@ -36,6 +37,7 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionTarget;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.jcip.annotations.GuardedBy;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -116,6 +118,10 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
 
         CAMQPDefinitionSource source = new CAMQPDefinitionSource();
         source.setAddress(sourceAddress);
+        if (endpointPolicy.getEndpointType() == EndpointType.TOPIC)
+        {
+            source.setDistributionMode(CAMQPConstants.STD_DIST_MODE_COPY);
+        }
         data.setSource(source);
 
         CAMQPDefinitionTarget target = new CAMQPDefinitionTarget();
@@ -225,11 +231,11 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
             {
                 if (getRole() == LinkRole.LinkSender)
                 {
-                    CAMQPEndpointManager.sourceEndpointDetached(linkKey.getSource(), (CAMQPSourceInterface) getEndpoint());
+                    CAMQPEndpointManager.sourceEndpointDetached(linkKey.getSource(), (CAMQPSourceInterface) getEndpoint(), endpointPolicy);
                 }
                 else
                 {
-                    CAMQPEndpointManager.targetEndpointDetached(linkKey.getTarget(), (CAMQPTargetInterface) getEndpoint());
+                    CAMQPEndpointManager.targetEndpointDetached(linkKey.getTarget(), (CAMQPTargetInterface) getEndpoint(), endpointPolicy);
                 }
             }
         }
@@ -302,6 +308,16 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         {
             CAMQPDefinitionSource inSource = (CAMQPDefinitionSource) data.getSource();
             sourceAddress = (String) inSource.getAddress();
+
+            if (inSource.isSetDistributionMode())
+            {
+                String distMode = inSource.getDistributionMode();
+                if (StringUtils.equalsIgnoreCase(distMode, CAMQPConstants.STD_DIST_MODE_COPY))
+                {
+                    endpointPolicy.setEndpointType(EndpointType.TOPIC);
+                    endpointPolicy.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE);
+                }
+            }
         }
 
         if (data.getTarget() != null)

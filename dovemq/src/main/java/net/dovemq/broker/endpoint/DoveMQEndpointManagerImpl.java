@@ -31,7 +31,7 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<String, QueueRouter>();
 
     @Override
-    public void publisherAttached(String queueName, CAMQPTargetInterface publisher)
+    public void producerAttached(String queueName, CAMQPTargetInterface publisher)
     {
         QueueRouter queueProcessor = queueRouters.get(queueName);
         if (queueProcessor == null)
@@ -47,7 +47,7 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     }
 
     @Override
-    public void publisherDetached(String queueName, CAMQPTargetInterface publisher)
+    public void producerDetached(String queueName, CAMQPTargetInterface publisher)
     {
         QueueRouter queueProcessor = queueRouters.get(queueName);
         if (queueProcessor != null)
@@ -92,5 +92,31 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
             }
         }
         log.debug("Publisher detached from queue: " + queueName);
+    }
+
+    @Override
+    public void publisherAttached(String topicName, CAMQPTargetInterface producer)
+    {
+        System.out.println("publisher attached to topic: " + topicName);
+    }
+
+    @Override
+    public void publisherDetached(String topicName, CAMQPTargetInterface producer)
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void subscriberAttached(String topicName, CAMQPSourceInterface consumer)
+    {
+        System.out.println("subscriber attached to topic: " + topicName);
+    }
+
+    @Override
+    public void subscriberDetached(String topicName, CAMQPSourceInterface consumer)
+    {
+        // TODO Auto-generated method stub
+
     }
 }

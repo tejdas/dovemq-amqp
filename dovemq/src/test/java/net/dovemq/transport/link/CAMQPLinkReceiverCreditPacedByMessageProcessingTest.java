@@ -178,7 +178,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
                     if ((msgDetail != null) && msgDetail.hasExpired(currentTime))
                     {
                         messagesBeingProcessed.remove(msg);
-                        linkReceiver.acnowledgeMessageProcessingComplete();
+                        linkReceiver.acknowledgeMessageProcessingComplete();
                     }
                 }
             }
@@ -223,7 +223,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         }
 
         @Override
-        public void acnowledgeMessageProcessingComplete(long deliveryId)
+        public void acknowledgeMessageProcessingComplete(long deliveryId)
         {
         }
     }

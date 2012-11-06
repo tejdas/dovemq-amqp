@@ -399,7 +399,7 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
      *
      */
     @Override
-    public void acnowledgeMessageProcessingComplete()
+    public void acknowledgeMessageProcessingComplete()
     {
         CAMQPControlFlow flow = null;
         synchronized (this)

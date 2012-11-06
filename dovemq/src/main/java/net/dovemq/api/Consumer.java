@@ -37,7 +37,7 @@ public class Consumer
         if (endpointPolicy.getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS)
         {
             long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
-            targetEndpoint.acnowledgeMessageProcessingComplete(deliveryId);
+            targetEndpoint.acknowledgeMessageProcessingComplete(deliveryId);
         }
     }
 

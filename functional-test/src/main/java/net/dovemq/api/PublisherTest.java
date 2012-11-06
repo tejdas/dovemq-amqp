@@ -17,21 +17,25 @@
 
 package net.dovemq.api;
 
-import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import java.io.IOException;
 
-public class Publisher
+public class PublisherTest
 {
-    public void sendMessage(DoveMQMessage message)
+    public static void main(String[] args) throws InterruptedException, IOException
     {
-        sourceEndpoint.sendMessage(message);
+        String brokerIP = args[0];
+        String endpointName = args[1];
+        String topicName = args[2];
+        ConnectionFactory.initialize(endpointName);
+
+        Session session = ConnectionFactory.createSession(brokerIP);
+        System.out.println("created session");
+
+        Publisher publisher = session.createPublisher(topicName);
+        System.out.println("created publisher");
+
+        //session.close();
+        ConnectionFactory.shutdown();
     }
 
-    Publisher(String sourceName, CAMQPSourceInterface sourceEndpoint)
-    {
-        super();
-        this.sourceName = sourceName;
-        this.sourceEndpoint = sourceEndpoint;
-    }
-    private final String sourceName;
-    private final CAMQPSourceInterface sourceEndpoint;
 }

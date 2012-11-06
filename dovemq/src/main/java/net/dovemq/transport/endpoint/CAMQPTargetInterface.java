@@ -70,5 +70,5 @@ public interface CAMQPTargetInterface
      * Called by DoveMQMessageReceiver to acknowledge processing of a message.
      * @param deliveryId
      */
-    public void acnowledgeMessageProcessingComplete(long deliveryId);
+    public void acknowledgeMessageProcessingComplete(long deliveryId);
 }

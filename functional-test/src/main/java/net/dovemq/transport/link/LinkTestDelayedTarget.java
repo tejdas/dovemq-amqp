@@ -82,7 +82,7 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
                 if ((msgDetail != null) && msgDetail.hasExpired(currentTime))
                 {
                     messagesBeingProcessed.remove(msg);
-                    linkReceiver.acnowledgeMessageProcessingComplete();
+                    linkReceiver.acknowledgeMessageProcessingComplete();
                 }
             }
         }
@@ -136,7 +136,7 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void acnowledgeMessageProcessingComplete(long deliveryId)
+    public void acknowledgeMessageProcessingComplete(long deliveryId)
     {
         // TODO Auto-generated method stub
     }

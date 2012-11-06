@@ -158,9 +158,9 @@ class CAMQPTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void acnowledgeMessageProcessingComplete(long deliveryId)
+    public void acknowledgeMessageProcessingComplete(long deliveryId)
     {
-        linkReceiver.acnowledgeMessageProcessingComplete();
+        linkReceiver.acknowledgeMessageProcessingComplete();
         if (expectAck())
         {
             Boolean settled = deliveriesWaitingExplicitAck.remove(deliveryId);

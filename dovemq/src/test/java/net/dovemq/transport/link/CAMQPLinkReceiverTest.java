@@ -105,7 +105,7 @@ public class CAMQPLinkReceiverTest
         }
 
         @Override
-        public void acnowledgeMessageProcessingComplete(long deliveryId)
+        public void acknowledgeMessageProcessingComplete(long deliveryId)
         {
             // TODO Auto-generated method stub
         }

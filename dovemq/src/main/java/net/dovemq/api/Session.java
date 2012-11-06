@@ -19,6 +19,7 @@ package net.dovemq.api;
 
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.EndpointType;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.session.CAMQPSessionInterface;
@@ -67,11 +68,19 @@ public class Session
 
     public Publisher createPublisher(String topicName)
     {
-        return null;
+        String source = String.format("%s.%s", endpointId, topicName);
+        CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
+        endpointPolicy.setEndpointType(EndpointType.TOPIC);
+        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, topicName, endpointPolicy);
+        return new Publisher(source, sender);
     }
 
     public Subscriber createSubscriber(String topicName)
     {
-        return null;
+        String target = String.format("%s.%s", endpointId, topicName);
+        CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
+        endpointPolicy.setEndpointType(EndpointType.TOPIC);
+        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(brokerContainerId, topicName, target, endpointPolicy);
+        return new Subscriber(target, receiver);
     }
 }

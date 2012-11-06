@@ -22,8 +22,12 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 public interface DoveMQEndpointManager
 {
-    public void publisherAttached(String queueName, CAMQPTargetInterface publisher);
-    public void publisherDetached(String queueName, CAMQPTargetInterface publisher);
+    public void producerAttached(String queueName, CAMQPTargetInterface producer);
+    public void producerDetached(String queueName, CAMQPTargetInterface producer);
     public void consumerAttached(String queueName, CAMQPSourceInterface consumer);
     public void consumerDetached(String queueName, CAMQPSourceInterface consumer);
+    public void publisherAttached(String topicName, CAMQPTargetInterface producer);
+    public void publisherDetached(String topicName, CAMQPTargetInterface producer);
+    public void subscriberAttached(String topicName, CAMQPSourceInterface consumer);
+    public void subscriberDetached(String topicName, CAMQPSourceInterface consumer);
 }

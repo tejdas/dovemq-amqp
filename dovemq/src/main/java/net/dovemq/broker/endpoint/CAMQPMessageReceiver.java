@@ -15,23 +15,12 @@
  *
  */
 
-package net.dovemq.api;
+package net.dovemq.broker.endpoint;
 
-import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.dovemq.api.DoveMQMessage;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
-public class Publisher
+public interface CAMQPMessageReceiver
 {
-    public void sendMessage(DoveMQMessage message)
-    {
-        sourceEndpoint.sendMessage(message);
-    }
-
-    Publisher(String sourceName, CAMQPSourceInterface sourceEndpoint)
-    {
-        super();
-        this.sourceName = sourceName;
-        this.sourceEndpoint = sourceEndpoint;
-    }
-    private final String sourceName;
-    private final CAMQPSourceInterface sourceEndpoint;
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target);
 }

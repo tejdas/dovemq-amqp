@@ -133,7 +133,7 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
             if (sink != null)
             {
                 long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
-                sink.acnowledgeMessageProcessingComplete(deliveryId);
+                sink.acknowledgeMessageProcessingComplete(deliveryId);
             }
         }
     }
@@ -145,11 +145,12 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
 
     void destinationAttached(CAMQPSourceInterface destination)
     {
+        destination.registerDispositionObserver(this);
+
         CAMQPSourceInterface currentDestination = null;
         synchronized(this)
         {
             targetProxies.add(destination);
-            destination.registerDispositionObserver(this);
             if (sendInProgress)
             {
                 return;

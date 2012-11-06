@@ -167,7 +167,7 @@ public class LinkCommand implements LinkCommandMBean
     public void attachTarget(String source, String target)
     {
         linkTargetReceiver = new LinkTestTargetReceiver();
-        CAMQPTargetInterface linkTarget = //CAMQPEndpointManager.attachTarget(source, target);
+        CAMQPTargetInterface linkTarget =
                 CAMQPLinkManager.getLinkmanager().attachLinkTargetEndpoint(source, target);
         linkTarget.registerMessageReceiver(linkTargetReceiver);
     }
