@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import net.dovemq.api.DoveMQMessageReceiver;
+import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
@@ -209,7 +209,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         }
 
         @Override
-        public void registerMessageReceiver(DoveMQMessageReceiver targetReceiver)
+        public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver)
         {
             // TODO Auto-generated method stub
 

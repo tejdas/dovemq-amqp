@@ -20,7 +20,7 @@ package net.dovemq.transport.link;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
-import net.dovemq.api.DoveMQMessageReceiver;
+import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 
@@ -54,7 +54,7 @@ public class LinkTestTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void registerMessageReceiver(DoveMQMessageReceiver targetReceiver)
+    public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver)
     {
         // TODO Auto-generated method stub
 

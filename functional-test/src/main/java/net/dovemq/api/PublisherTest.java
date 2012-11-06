@@ -17,6 +17,8 @@
 
 package net.dovemq.api;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 
 public class PublisherTest
@@ -34,8 +36,31 @@ public class PublisherTest
         Publisher publisher = session.createPublisher(topicName);
         System.out.println("created publisher");
 
+        DoveMQMessage message = MessageFactory.createMessage();
+        String payload = "Hello World";
+        message.addPayload(payload.getBytes());
+        publisher.sendMessage(message);
+        System.out.println("sent message");
+
+        String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/build.xml";
+        sendFileContents(sourceName, publisher);
+
+        Thread.sleep(20000);
+
         //session.close();
         ConnectionFactory.shutdown();
     }
 
+    private static void sendFileContents(String fileName, Publisher publisher) throws IOException
+    {
+        BufferedReader freader = new BufferedReader(new FileReader(fileName));
+        String sLine = null;
+        while ((sLine = freader.readLine()) != null)
+        {
+            DoveMQMessage message = MessageFactory.createMessage();
+            message.addPayload(sLine.getBytes());
+            publisher.sendMessage(message);
+        }
+        freader.close();
+    }
 }

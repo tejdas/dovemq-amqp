@@ -22,14 +22,13 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.dovemq.api.DoveMQMessage;
-import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 import net.dovemq.transport.link.CAMQPLinkSenderFlowControlException;
 
-class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObserver
+final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver
 {
     private final Queue<DoveMQMessage> messageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
     private final Queue<DoveMQMessage> inFlightMessageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
@@ -56,7 +55,7 @@ class QueueRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
     }
 
     @Override
-    public void messageReceived(DoveMQMessage message)
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
     {
         if (!messageQueue.add(message))
         {

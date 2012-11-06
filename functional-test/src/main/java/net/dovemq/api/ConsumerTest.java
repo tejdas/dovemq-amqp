@@ -34,6 +34,7 @@ public class ConsumerTest
             }
         }
     }
+
     public static void main(String[] args) throws InterruptedException
     {
         String brokerIP = args[0];

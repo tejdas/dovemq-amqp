@@ -17,16 +17,31 @@
 
 package net.dovemq.api;
 
+import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
-public class Subscriber
+public class Subscriber implements CAMQPMessageReceiver
 {
+    @Override
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
+    {
+        doveMQMessageReceiver.messageReceived(message);
+    }
+
+    public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver)
+    {
+        this.doveMQMessageReceiver = messageReceiver;
+        targetEndpoint.registerMessageReceiver(this);
+    }
+
     public Subscriber(String targetName, CAMQPTargetInterface targetEndpoint)
     {
         super();
         this.targetName = targetName;
         this.targetEndpoint = targetEndpoint;
     }
+
     private final String targetName;
     private final CAMQPTargetInterface targetEndpoint;
+    private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;
 }

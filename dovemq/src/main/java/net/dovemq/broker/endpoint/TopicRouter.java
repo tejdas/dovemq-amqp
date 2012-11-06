@@ -24,31 +24,28 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.dovemq.api.DoveMQMessage;
-import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
-class TopicRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObserver
+class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver
 {
     private static class MessageContext
     {
-        MessageContext(DoveMQMessage message, int numSubscribers, CAMQPTargetInterface sourceSink)
+        MessageContext(int numSubscribers, CAMQPTargetInterface sourceSink)
         {
             super();
-            this.message = message;
             this.numSubscribers = new AtomicInteger(numSubscribers);
             this.sourceSink = sourceSink;
         }
-        final DoveMQMessage message;
         final AtomicInteger numSubscribers;
         final CAMQPTargetInterface sourceSink;
     }
     private final ConcurrentMap<Long, MessageContext> inFlightMessageQueue = new ConcurrentHashMap<Long, MessageContext>();
 
-    private final Set<CAMQPSourceInterface> targetProxies = new CopyOnWriteArraySet<CAMQPSourceInterface>();
-    private final Set<CAMQPTargetInterface> sourceSinks = new CopyOnWriteArraySet<CAMQPTargetInterface>();
+    private final Set<CAMQPSourceInterface> subscriberProxies = new CopyOnWriteArraySet<CAMQPSourceInterface>();
+    private final Set<CAMQPTargetInterface> publisherSinks = new CopyOnWriteArraySet<CAMQPTargetInterface>();
 
     @Override
     public void messageAckedByConsumer(DoveMQMessage message)
@@ -60,40 +57,46 @@ class TopicRouter implements DoveMQMessageReceiver, CAMQPMessageDispositionObser
             if (0 == msgContext.numSubscribers.decrementAndGet())
             {
                 inFlightMessageQueue.remove(deliveryId);
+                msgContext.sourceSink.acknowledgeMessageProcessingComplete(deliveryId);
             }
         }
     }
 
     @Override
-    public void messageReceived(DoveMQMessage message)
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
     {
         long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
-        inFlightMessageQueue.put(deliveryId, new MessageContext(message, targetProxies.size(), null)); // TODO TEJ pass CAMQPTargetInterface
-        for (CAMQPSourceInterface subscriber : targetProxies)
+        inFlightMessageQueue.put(deliveryId, new MessageContext(subscriberProxies.size(), target));
+        for (CAMQPSourceInterface subscriber : subscriberProxies)
         {
             subscriber.sendMessage(message);
         }
     }
 
-    void destinationAttached(CAMQPSourceInterface destination)
+    void subscriberAttached(CAMQPSourceInterface destination)
     {
-        targetProxies.add(destination);
+        subscriberProxies.add(destination);
         destination.registerDispositionObserver(this);
     }
 
-    void destinationDetached(CAMQPSourceInterface targetProxy)
+    void subscriberDetached(CAMQPSourceInterface targetProxy)
     {
-        targetProxies.remove(targetProxy);
+        subscriberProxies.remove(targetProxy);
     }
 
-    void sourceAttached(CAMQPTargetInterface sourceSink)
+    void publisherAttached(CAMQPTargetInterface sourceSink)
     {
-        sourceSinks.add(sourceSink);
+        publisherSinks.add(sourceSink);
         sourceSink.registerMessageReceiver(this);
     }
 
-    void sourceDetached(CAMQPTargetInterface source)
+    void publisherDetached(CAMQPTargetInterface source)
     {
-        sourceSinks.remove(source);
+        publisherSinks.remove(source);
+    }
+
+    boolean isCompletelyDetached()
+    {
+        return (publisherSinks.isEmpty() && subscriberProxies.isEmpty() && inFlightMessageQueue.isEmpty());
     }
 }

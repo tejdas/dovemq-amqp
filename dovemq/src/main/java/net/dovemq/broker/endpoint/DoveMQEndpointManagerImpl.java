@@ -29,94 +29,131 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
 {
     private static final Logger log = Logger.getLogger(DoveMQEndpointManagerImpl.class);
     private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<String, QueueRouter>();
+    private final ConcurrentMap<String, TopicRouter> topicRouters = new ConcurrentHashMap<String, TopicRouter>();
 
     @Override
-    public void producerAttached(String queueName, CAMQPTargetInterface publisher)
+    public void producerAttached(String queueName, CAMQPTargetInterface producer)
     {
-        QueueRouter queueProcessor = queueRouters.get(queueName);
-        if (queueProcessor == null)
+        QueueRouter queueRouter = new QueueRouter();
+        QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
+        if (queueRouterInMap == null)
         {
-            queueProcessor = new QueueRouter();
-            queueProcessor.sourceAttached(publisher);
-            queueRouters.put(queueName,  queueProcessor);
+            log.debug("creating queue: " + queueName);
+            queueRouter.sourceAttached(producer);
         }
         else
         {
-            queueProcessor.sourceAttached(publisher);
+            queueRouterInMap.sourceAttached(producer);
         }
     }
 
     @Override
-    public void producerDetached(String queueName, CAMQPTargetInterface publisher)
+    public void producerDetached(String queueName, CAMQPTargetInterface producer)
     {
-        QueueRouter queueProcessor = queueRouters.get(queueName);
-        if (queueProcessor != null)
+        QueueRouter queueRouter = queueRouters.get(queueName);
+        if (queueRouter != null)
         {
-            queueProcessor.sourceDetached(publisher);
-            if (queueProcessor.isCompletelyDetached())
+            queueRouter.sourceDetached(producer);
+            if (queueRouter.isCompletelyDetached())
             {
                 log.debug("Removing queue: " + queueName);
                 queueRouters.remove(queueName);
             }
         }
-        log.debug("Publisher detached from queue: " + queueName);
+        log.debug("Producer detached from queue: " + queueName);
     }
 
     @Override
     public void consumerAttached(String queueName, CAMQPSourceInterface consumer)
     {
-        QueueRouter queueProcessor = queueRouters.get(queueName);
-        if (queueProcessor == null)
+        QueueRouter queueRouter = new QueueRouter();
+        QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
+        if (queueRouterInMap == null)
         {
-            queueProcessor = new QueueRouter();
-            queueProcessor.destinationAttached(consumer);
-            queueRouters.put(queueName,  queueProcessor);
+            queueRouter.destinationAttached(consumer);
         }
         else
         {
-            queueProcessor.destinationAttached(consumer);
+            queueRouterInMap.destinationAttached(consumer);
         }
     }
 
     @Override
     public void consumerDetached(String queueName, CAMQPSourceInterface consumer)
     {
-        QueueRouter queueProcessor = queueRouters.get(queueName);
-        if (queueProcessor != null)
+        QueueRouter queueRouter = queueRouters.get(queueName);
+        if (queueRouter != null)
         {
-            queueProcessor.destinationDetached(consumer);
-            if (queueProcessor.isCompletelyDetached())
+            queueRouter.destinationDetached(consumer);
+            if (queueRouter.isCompletelyDetached())
             {
                 log.debug("Removing queue: " + queueName);
                 queueRouters.remove(queueName);
             }
         }
-        log.debug("Publisher detached from queue: " + queueName);
+        log.debug("Consumer detached from queue: " + queueName);
     }
 
     @Override
-    public void publisherAttached(String topicName, CAMQPTargetInterface producer)
+    public void publisherAttached(String topicName, CAMQPTargetInterface publisher)
     {
-        System.out.println("publisher attached to topic: " + topicName);
+        TopicRouter topicRouter = new TopicRouter();
+        TopicRouter topicRouterInMap = topicRouters.putIfAbsent(topicName, topicRouter);
+        if (topicRouterInMap == null)
+        {
+            log.debug("creating topic: " + topicName);
+            topicRouter.publisherAttached(publisher);
+        }
+        else
+        {
+            topicRouterInMap.publisherAttached(publisher);
+        }
     }
 
     @Override
-    public void publisherDetached(String topicName, CAMQPTargetInterface producer)
+    public void publisherDetached(String topicName, CAMQPTargetInterface publisher)
     {
-        // TODO Auto-generated method stub
-
+        TopicRouter topicRouter = topicRouters.get(topicName);
+        if (topicRouter != null)
+        {
+            topicRouter.publisherDetached(publisher);
+            if (topicRouter.isCompletelyDetached())
+            {
+                log.debug("Removing topic: " + topicName);
+                topicRouters.remove(topicName);
+            }
+        }
+        log.debug("Publisher detached from topic: " + topicName);
     }
 
     @Override
-    public void subscriberAttached(String topicName, CAMQPSourceInterface consumer)
+    public void subscriberAttached(String topicName, CAMQPSourceInterface subscriber)
     {
-        System.out.println("subscriber attached to topic: " + topicName);
+        TopicRouter topicRouter = new TopicRouter();
+        TopicRouter topicRouterInMap = topicRouters.putIfAbsent(topicName, topicRouter);
+        if (topicRouterInMap == null)
+        {
+            topicRouter.subscriberAttached(subscriber);
+        }
+        else
+        {
+            topicRouterInMap.subscriberAttached(subscriber);
+        }
     }
 
     @Override
-    public void subscriberDetached(String topicName, CAMQPSourceInterface consumer)
+    public void subscriberDetached(String topicName, CAMQPSourceInterface subscriber)
     {
-        // TODO Auto-generated method stub
-
+        TopicRouter topicRouter = topicRouters.get(topicName);
+        if (topicRouter != null)
+        {
+            topicRouter.subscriberDetached(subscriber);
+            if (topicRouter.isCompletelyDetached())
+            {
+                log.debug("Removing topic: " + topicName);
+                topicRouters.remove(topicName);
+            }
+        }
+        log.debug("Subscriber detached from topic: " + topicName);
     }
 }

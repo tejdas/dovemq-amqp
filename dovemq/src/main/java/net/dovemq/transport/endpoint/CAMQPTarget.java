@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
-import net.dovemq.api.DoveMQMessageReceiver;
+import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPLinkEndpoint;
 import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
@@ -45,7 +45,7 @@ class CAMQPTarget implements CAMQPTargetInterface
     private final Map<Long, Boolean> deliveriesWaitingExplicitAck = new ConcurrentHashMap<Long, Boolean>();
     private final CAMQPLinkReceiverInterface linkReceiver;
     private final CAMQPEndpointPolicy endpointPolicy;
-    private volatile DoveMQMessageReceiver messageReceiver = null;
+    private volatile CAMQPMessageReceiver messageReceiver = null;
 
     CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver,  CAMQPEndpointPolicy endpointPolicy)
     {
@@ -94,7 +94,7 @@ class CAMQPTarget implements CAMQPTargetInterface
         {
             DoveMQMessageImpl decodedMessage = DoveMQMessageImpl.unmarshal(message);
             decodedMessage.setDeliveryId(deliveryId);
-            messageReceiver.messageReceived(decodedMessage);
+            messageReceiver.messageReceived(decodedMessage, this);
         }
 
         /*
@@ -152,7 +152,7 @@ class CAMQPTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void registerMessageReceiver(DoveMQMessageReceiver targetReceiver)
+    public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver)
     {
         this.messageReceiver = targetReceiver;
     }

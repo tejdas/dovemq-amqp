@@ -19,7 +19,7 @@ package net.dovemq.transport.endpoint;
 
 import java.util.Collection;
 
-import net.dovemq.api.DoveMQMessageReceiver;
+import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 /**
@@ -32,12 +32,12 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 public interface CAMQPTargetInterface
 {
     /**
-     * Used by Broker and Consumer/Subscriber to register a DoveMQMessageReceiver
+     * Used by Broker and Consumer/Subscriber to register a {@link CAMQPMessageReceiver}
      * to receive messages.
      *
      * @param messageReceiver
      */
-    public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver);
+    public void registerMessageReceiver(CAMQPMessageReceiver messageReceiver);
 
     /**
      * Called by LinkReceiver upon receipt of a message.

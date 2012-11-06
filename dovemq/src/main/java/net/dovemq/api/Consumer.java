@@ -18,14 +18,22 @@
 package net.dovemq.api;
 
 import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
+import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
-public class Consumer
+public class Consumer implements CAMQPMessageReceiver
 {
+    @Override
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
+    {
+        doveMQMessageReceiver.messageReceived(message);
+    }
+
     public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver)
     {
-        targetEndpoint.registerMessageReceiver(messageReceiver);
+        this.doveMQMessageReceiver = messageReceiver;
+        targetEndpoint.registerMessageReceiver(this);
     }
 
     public void stop()
@@ -60,4 +68,5 @@ public class Consumer
     private final String targetName;
     private final DoveMQEndpointPolicy endpointPolicy;
     private final CAMQPTargetInterface targetEndpoint;
+    private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;
 }
