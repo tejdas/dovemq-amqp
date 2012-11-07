@@ -155,11 +155,14 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
 
     void consumerAttached(CAMQPSourceInterface consumerProxy)
     {
-        consumerProxy.registerDispositionObserver(this);
-
         CAMQPSourceInterface currentDestination = null;
         synchronized(this)
         {
+            if (consumerProxies.contains(consumerProxy))
+            {
+                return;
+            }
+
             consumerProxies.add(consumerProxy);
             if (sendInProgress)
             {
@@ -168,6 +171,7 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
             sendInProgress = true;
             currentDestination = getNextDestination();
         }
+        consumerProxy.registerDispositionObserver(this);
         sendMessages(currentDestination);
     }
 
