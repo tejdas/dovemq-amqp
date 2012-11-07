@@ -34,16 +34,16 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     @Override
     public void producerAttached(String queueName, CAMQPTargetInterface producer)
     {
-        QueueRouter queueRouter = new QueueRouter();
+        QueueRouter queueRouter = new QueueRouter(queueName);
         QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
         if (queueRouterInMap == null)
         {
             log.debug("creating queue: " + queueName);
-            queueRouter.sourceAttached(producer);
+            queueRouter.producerAttached(producer);
         }
         else
         {
-            queueRouterInMap.sourceAttached(producer);
+            queueRouterInMap.producerAttached(producer);
         }
     }
 
@@ -53,7 +53,7 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
         QueueRouter queueRouter = queueRouters.get(queueName);
         if (queueRouter != null)
         {
-            queueRouter.sourceDetached(producer);
+            queueRouter.producerDetached(producer);
             if (queueRouter.isCompletelyDetached())
             {
                 log.debug("Removing queue: " + queueName);
@@ -66,15 +66,15 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     @Override
     public void consumerAttached(String queueName, CAMQPSourceInterface consumer)
     {
-        QueueRouter queueRouter = new QueueRouter();
+        QueueRouter queueRouter = new QueueRouter(queueName);
         QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
         if (queueRouterInMap == null)
         {
-            queueRouter.destinationAttached(consumer);
+            queueRouter.consumerAttached(consumer);
         }
         else
         {
-            queueRouterInMap.destinationAttached(consumer);
+            queueRouterInMap.consumerAttached(consumer);
         }
     }
 
@@ -84,7 +84,7 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
         QueueRouter queueRouter = queueRouters.get(queueName);
         if (queueRouter != null)
         {
-            queueRouter.destinationDetached(consumer);
+            queueRouter.consumerDetached(consumer);
             if (queueRouter.isCompletelyDetached())
             {
                 log.debug("Removing queue: " + queueName);

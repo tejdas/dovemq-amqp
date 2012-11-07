@@ -28,28 +28,39 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 import net.dovemq.transport.link.CAMQPLinkSenderFlowControlException;
 
+import org.apache.log4j.Logger;
+
 final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver
 {
+    private static final Logger log = Logger.getLogger(QueueRouter.class);
+
+    public QueueRouter(String queueName)
+    {
+        super();
+        this.queueName = queueName;
+    }
+
+    private final String queueName;
     private final Queue<DoveMQMessage> messageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
     private final Queue<DoveMQMessage> inFlightMessageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
-    private final Queue<CAMQPSourceInterface> targetProxies = new LinkedList<CAMQPSourceInterface>();
-    private CAMQPTargetInterface sourceSink = null;
+    private final Queue<CAMQPSourceInterface> consumerProxies = new LinkedList<CAMQPSourceInterface>();
+    private CAMQPTargetInterface producerSink = null;
     private boolean sendInProgress = false;
 
     private CAMQPSourceInterface getNextDestination()
     {
-        if (targetProxies.isEmpty())
+        if (consumerProxies.isEmpty())
         {
             return null;
         }
-        else if (targetProxies.size() == 1)
+        else if (consumerProxies.size() == 1)
         {
-            return targetProxies.peek();
+            return consumerProxies.peek();
         }
         else
         {
-            CAMQPSourceInterface nextDestination = targetProxies.poll();
-            targetProxies.add(nextDestination);
+            CAMQPSourceInterface nextDestination = consumerProxies.poll();
+            consumerProxies.add(nextDestination);
             return nextDestination;
         }
     }
@@ -65,7 +76,7 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
         CAMQPSourceInterface currentDestination = null;
         synchronized (this)
         {
-            if (sendInProgress || (targetProxies.isEmpty()))
+            if (sendInProgress || (consumerProxies.isEmpty()))
             {
                 return;
             }
@@ -139,17 +150,17 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
 
     private synchronized CAMQPTargetInterface getSourceSink()
     {
-        return sourceSink;
+        return producerSink;
     }
 
-    void destinationAttached(CAMQPSourceInterface destination)
+    void consumerAttached(CAMQPSourceInterface consumerProxy)
     {
-        destination.registerDispositionObserver(this);
+        consumerProxy.registerDispositionObserver(this);
 
         CAMQPSourceInterface currentDestination = null;
         synchronized(this)
         {
-            targetProxies.add(destination);
+            consumerProxies.add(consumerProxy);
             if (sendInProgress)
             {
                 return;
@@ -160,33 +171,45 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
         sendMessages(currentDestination);
     }
 
-    void destinationDetached(CAMQPSourceInterface targetProxy)
+    void consumerDetached(CAMQPSourceInterface consumerProxy)
     {
         synchronized(this)
         {
-            targetProxies.remove(targetProxy);
+            consumerProxies.remove(consumerProxy);
         }
     }
 
-    void sourceAttached(CAMQPTargetInterface sourceSink)
+    void producerAttached(CAMQPTargetInterface producerSink)
     {
         synchronized (this)
         {
-            this.sourceSink = sourceSink;
+            if (this.producerSink != null)
+            {
+                log.warn("Producer already attached to queue: " + queueName);
+                return;
+            }
+            this.producerSink = producerSink;
         }
-        sourceSink.registerMessageReceiver(this);
+        producerSink.registerMessageReceiver(this);
     }
 
-    void sourceDetached(CAMQPTargetInterface source)
+    void producerDetached(CAMQPTargetInterface producerSink)
     {
         synchronized (this)
         {
-            sourceSink = null;
+            if (this.producerSink != producerSink)
+            {
+                log.error("The Producer is not attached to queue: " + queueName);
+            }
+            else
+            {
+                this.producerSink = null;
+            }
         }
     }
 
     synchronized boolean isCompletelyDetached()
     {
-        return ((sourceSink == null) && (targetProxies.isEmpty()) && messageQueue.isEmpty());
+        return ((producerSink == null) && (consumerProxies.isEmpty()) && messageQueue.isEmpty());
     }
 }
