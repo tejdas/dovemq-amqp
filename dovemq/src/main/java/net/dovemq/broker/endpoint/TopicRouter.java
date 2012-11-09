@@ -29,17 +29,23 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
-class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver
+class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver, Runnable
 {
     private static class MessageContext
     {
+        boolean hasExpired(long currentTime)
+        {
+            return (currentTime-contextCreationTime > 60000);
+        }
         MessageContext(int numSubscribers, CAMQPTargetInterface sourceSink)
         {
             super();
             this.numSubscribers = new AtomicInteger(numSubscribers);
             this.sourceSink = sourceSink;
+            contextCreationTime = System.currentTimeMillis();
         }
         final AtomicInteger numSubscribers;
+        final long contextCreationTime;
         final CAMQPTargetInterface sourceSink;
     }
     private final ConcurrentMap<Long, MessageContext> inFlightMessageQueue = new ConcurrentHashMap<Long, MessageContext>();
@@ -56,8 +62,10 @@ class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserv
         {
             if (0 == msgContext.numSubscribers.decrementAndGet())
             {
-                inFlightMessageQueue.remove(deliveryId);
-                msgContext.sourceSink.acknowledgeMessageProcessingComplete(deliveryId);
+                if (null != inFlightMessageQueue.remove(deliveryId))
+                {
+                    msgContext.sourceSink.acknowledgeMessageProcessingComplete(deliveryId);
+                }
             }
         }
     }
@@ -98,5 +106,30 @@ class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserv
     boolean isCompletelyDetached()
     {
         return (publisherSinks.isEmpty() && subscriberProxies.isEmpty() && inFlightMessageQueue.isEmpty());
+    }
+
+    @Override
+    public void run()
+    {
+        long currentTime = System.currentTimeMillis();
+        try
+        {
+            Set<Long> inflightMessageIDs = inFlightMessageQueue.keySet();
+            for (Long messageId : inflightMessageIDs)
+            {
+                MessageContext messageContext = inFlightMessageQueue.get(messageId);
+                if ((messageContext != null) && messageContext.hasExpired(currentTime))
+                {
+                    if (null != inFlightMessageQueue.remove(messageId))
+                    {
+                        messageContext.sourceSink.acknowledgeMessageProcessingComplete(messageId);
+                    }
+                }
+            }
+        }
+        finally
+        {
+
+        }
     }
 }
