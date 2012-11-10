@@ -17,10 +17,13 @@
 
 package net.dovemq.api;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Collection;
 
 public class SubscriberTest
 {
+    private static volatile PrintWriter fw = null;
     private static class TestMessageReceiver implements DoveMQMessageReceiver
     {
         @Override
@@ -30,16 +33,20 @@ public class SubscriberTest
             for (byte[] b : body)
             {
                 String bString = new String(b);
-                System.out.println(bString);
+                //System.out.println(bString);
+                fw.println(bString);
             }
         }
     }
 
-    public static void main(String[] args) throws InterruptedException
+    public static void main(String[] args) throws InterruptedException, FileNotFoundException
     {
         String brokerIP = args[0];
         String endpointName = args[1];
         String topicName = args[2];
+
+        fw = new PrintWriter(endpointName + ".txt");
+
         ConnectionFactory.initialize(endpointName);
 
         Session session = ConnectionFactory.createSession(brokerIP);
@@ -49,6 +56,9 @@ public class SubscriberTest
         subscriber.registerMessageReceiver(new TestMessageReceiver());
         System.out.println("waiting for message");
         Thread.sleep(30000);
+
+        fw.flush();
+        fw.close();
 
         //session.close();
         ConnectionFactory.shutdown();

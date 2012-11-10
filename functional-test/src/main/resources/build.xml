@@ -67,7 +67,7 @@
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="RunDoveMQFullBroker" depends="init">
 		<echo>...Starting DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.broker.driver.DoveMQBrokerDriver" maxmemory="2048M" failonerror="true">
@@ -84,7 +84,7 @@
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-		
+
 	<target name="ShutdownBroker">
 		<echo>...Shutting down DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.transport.connection.ConnectionSysTestJMXProxy" maxmemory="2048M" failonerror="true">
@@ -98,7 +98,7 @@
 	</target>
 
 	<target name="RunClient">
-		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">			
+		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
@@ -159,33 +159,33 @@
 					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestMTClient" />
 					<param name="publisherName" value="pub7" />
 					<param name="numThreads" value="50" />
-				</antcall>				
+				</antcall>
 			</parallel>
-			
+
 			<sleep seconds="5" />
-				<echo>...Run DoveMQ clients</echo>
-				<parallel>
-					<antcall target="RunClient">
-						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
-						<param name="publisherName" value="pub1" />
-					</antcall>
-					<antcall target="RunClient">
-						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
-						<param name="publisherName" value="pub2" />
-					</antcall>
-					<antcall target="RunClient">
-						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
-						<param name="publisherName" value="pub3" />
-					</antcall>
-					<antcall target="RunClient">
-						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
-						<param name="publisherName" value="pub4" />
-					</antcall>
-					<antcall target="RunClient">
-						<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
-						<param name="publisherName" value="pub5" />
-					</antcall>
-				</parallel>			
+			<echo>...Run DoveMQ clients</echo>
+			<parallel>
+				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+					<param name="publisherName" value="pub1" />
+				</antcall>
+				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+					<param name="publisherName" value="pub2" />
+				</antcall>
+				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+					<param name="publisherName" value="pub3" />
+				</antcall>
+				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+					<param name="publisherName" value="pub4" />
+				</antcall>
+				<antcall target="RunClient">
+					<param name="paramClassName" value="net.dovemq.transport.connection.ConnectionSysTestClient" />
+					<param name="publisherName" value="pub5" />
+				</antcall>
+			</parallel>
 		</sequential>
 	</target>
 
@@ -238,21 +238,21 @@
 			</antcall>
 
 			<antcall target="RunSessionClient">
-				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestJMXClient" />					
+				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestJMXClient" />
 				<param name="param1" value="1" />
 				<param name="param2" value="SysTestDelayedAckLinkReceiver" />
 				<param name="param3" value="true" />
 			</antcall>
 
 			<antcall target="RunSessionClient">
-				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestBiDir" />					
+				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestBiDir" />
 				<param name="param1" value="5" />
 				<param name="param2" value="SysTestCommandReceiver" />
 				<param name="param3" value="false" />
 			</antcall>
 
 			<antcall target="RunSessionClient">
-				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestBiDirIO" />				
+				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestBiDirIO" />
 				<param name="param1" value="SysTestDelayedAckLinkReceiver" />
 			</antcall>
 
@@ -281,7 +281,7 @@
 			<antcall target="RunDoveMQBroker" />
 			<sequential>
 				<antcall target="LinkTestWithBrokerRunning" />
-				<antcall target="ShutdownBroker" />				
+				<antcall target="ShutdownBroker" />
 			</sequential>
 		</parallel>
 	</target>
@@ -289,7 +289,7 @@
 	<target name="LinkTestWithBrokerRunning" description="running all link tests">
 		<sequential>
 			<sleep seconds="5" />
-			
+
 			<antcall target="RunLinksClient">
 				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleLinksNoSharing" />
 				<param name="param1" value="5" />
@@ -336,12 +336,12 @@
 				<param name="param1" value="1000" />
 				<param name="param2" value="AtmostOnce" />
 			</antcall>
-			
+
 			<antcall target="RunLinksClient">
 				<param name="paramClassName" value="net.dovemq.transport.link.LinkTestMultipleSendersSharingOneDelayedLink" />
 				<param name="param1" value="5" />
 				<param name="param2" value="10000" />
-			</antcall>				
+			</antcall>
 
 		</sequential>
 	</target>
@@ -393,7 +393,7 @@
 		<property name="sonar.binaries" value="${dovemq.jars.dir}/dovemq/${dovemq.version}/dovemq-${dovemq.version}.jar,${mvn.repo.dir}/commons-lang/commons-lang/2.5/commons-lang-2.5.jar,${mvn.repo.dir}/org/jboss/netty/netty/3.2.4.Final/netty-3.2.4.Final.jar,${mvn.repo.dir}/log4j/log4j/1.2.15/log4j-1.2.15.jar" />
 		<sonar:sonar key="net.dovemq" version="1.0-SNAPSHOT" xmlns:sonar="antlib:org.sonar.ant" />
 	</target>
-	
+
 	<target name="RunProducer">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.ProducerTest" maxmemory="2048M" failonerror="true">
@@ -401,12 +401,12 @@
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
-			<arg value="${endpointName}" />			
+			<arg value="${endpointName}" />
 			<arg value="${queueName}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="RunConsumer">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.ConsumerTest" maxmemory="2048M" failonerror="true">
@@ -414,12 +414,12 @@
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
-			<arg value="${endpointName}" />			
+			<arg value="${endpointName}" />
 			<arg value="${queueName}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="RunAckConsumer">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.ConsumerAckExplicitTest" maxmemory="2048M" failonerror="true">
@@ -440,12 +440,13 @@
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
-			<arg value="${endpointName}" />			
+			<arg value="${endpointName}" />
 			<arg value="${topicName}" />
+			<arg value="${fileName}" />				
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="RunSubscriber">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.SubscriberTest" maxmemory="2048M" failonerror="true">
@@ -453,9 +454,47 @@
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
-			<arg value="${endpointName}" />			
+			<arg value="${endpointName}" />
 			<arg value="${topicName}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
+
+	<target name="TopicTest" description="running topic test">
+		<parallel>
+			<antcall target="RunSubscriber">
+				<param name="endpointName" value="sub1" />
+				<param name="topicName" value="first" />
+			</antcall>
+
+			<antcall target="RunSubscriber">
+				<param name="endpointName" value="sub2" />
+				<param name="topicName" value="first" />
+			</antcall>
+
+			<antcall target="RunSubscriber">
+				<param name="endpointName" value="sub3" />
+				<param name="topicName" value="second" />
+			</antcall>
+			
+			<antcall target="RunSubscriber">
+				<param name="endpointName" value="sub4" />
+				<param name="topicName" value="second" />
+			</antcall>			
+
+			<antcall target="RunPublisher">
+				<param name="endpointName" value="pub" />
+				<param name="topicName" value="first" />
+				<param name="fileName" value="build.xml" />				
+			</antcall>
+			
+			<antcall target="RunPublisher">
+				<param name="endpointName" value="pub2" />
+				<param name="topicName" value="second" />
+				<param name="fileName" value="err.txt" />				
+			</antcall>			
+
+		</parallel>
+	</target>
+
 </project>

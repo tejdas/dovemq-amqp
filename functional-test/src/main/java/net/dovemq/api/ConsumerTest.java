@@ -17,10 +17,13 @@
 
 package net.dovemq.api;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collection;
 
 public class ConsumerTest
 {
+    private static volatile PrintWriter fw = null;
     private static class TestMessageReceiver implements DoveMQMessageReceiver
     {
         @Override
@@ -30,16 +33,20 @@ public class ConsumerTest
             for (byte[] b : body)
             {
                 String bString = new String(b);
-                System.out.println(bString);
+                //System.out.println(bString);
+                fw.print(bString);
             }
         }
     }
 
-    public static void main(String[] args) throws InterruptedException
+    public static void main(String[] args) throws InterruptedException, IOException
     {
         String brokerIP = args[0];
         String endpointName = args[1];
         String queueName = args[2];
+
+        fw = new PrintWriter(endpointName + ".txt");
+
         ConnectionFactory.initialize(endpointName);
 
         Session session = ConnectionFactory.createSession(brokerIP);
@@ -48,6 +55,9 @@ public class ConsumerTest
         consumer.registerMessageReceiver(new TestMessageReceiver());
         System.out.println("waiting for message");
         Thread.sleep(30000);
+
+        fw.flush();
+        fw.close();
 
         //session.close();
         ConnectionFactory.shutdown();

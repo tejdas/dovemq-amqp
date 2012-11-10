@@ -28,6 +28,7 @@ public class PublisherTest
         String brokerIP = args[0];
         String endpointName = args[1];
         String topicName = args[2];
+        String fileName = args[3];
         ConnectionFactory.initialize(endpointName);
 
         Session session = ConnectionFactory.createSession(brokerIP);
@@ -36,16 +37,18 @@ public class PublisherTest
         Publisher publisher = session.createPublisher(topicName);
         System.out.println("created publisher");
 
+        Thread.sleep(10000);
+/*
         DoveMQMessage message = MessageFactory.createMessage();
         String payload = "Hello World";
         message.addPayload(payload.getBytes());
         publisher.sendMessage(message);
         System.out.println("sent message");
-
-        String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/build.xml";
+*/
+        String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/" + fileName;
         sendFileContents(sourceName, publisher);
 
-        Thread.sleep(20000);
+        Thread.sleep(10000);
 
         //session.close();
         ConnectionFactory.shutdown();
