@@ -343,15 +343,6 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
 
             closePending = true;
         }
-        log.debug("Sleeping for 1 sec before session close");
-        try
-        {
-            Thread.sleep(1000);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-        }
 
         CAMQPControlEnd endControl = new CAMQPControlEnd();
         if (error != null)

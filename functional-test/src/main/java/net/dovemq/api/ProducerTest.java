@@ -20,34 +20,98 @@ package net.dovemq.api;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import net.dovemq.transport.common.CAMQPTestTask;
 
 public class ProducerTest
 {
+    private static String brokerIP;
+    private static String endpointName;
+    private static String queueName;
+    private static int NUM_THREADS;
+
+    private static class TestProducer extends CAMQPTestTask implements Runnable
+    {
+        public TestProducer(CountDownLatch startSignal, CountDownLatch doneSignal, Session session, int id)
+        {
+            super(startSignal, doneSignal);
+            this.session = session;
+            this.id = id;
+        }
+
+        @Override
+        public void run()
+        {
+            waitForReady();
+            try
+            {
+                Thread.sleep(new Random().nextInt(200) + 100);
+            }
+            catch (InterruptedException e)
+            {
+            }
+
+            Producer producer = session.createProducer(String.format("%s.%d", queueName, id));
+
+            String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/build.xml";
+            try
+            {
+                sendFileContents(sourceName, producer);
+            }
+            catch (IOException e)
+            {
+                Thread.currentThread().interrupt();
+            }
+
+            System.out.println("producer sleeping for 60 secs");
+            try
+            {
+                Thread.sleep(60000);
+            }
+            catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            done();
+        }
+        private Session session;
+        private final int id;
+
+    }
+
     public static void main(String[] args) throws InterruptedException, IOException
     {
-        String brokerIP = args[0];
-        String endpointName = args[1];
-        String queueName = args[2];
+        brokerIP = args[0];
+        endpointName = args[1];
+        queueName = args[2];
+        NUM_THREADS = Integer.parseInt(args[3]);
+
         ConnectionFactory.initialize(endpointName);
 
         Session session = ConnectionFactory.createSession(brokerIP);
         System.out.println("created session");
 
-        Producer producer = session.createProducer(queueName);
-        System.out.println("created producer");
+        ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
+        CountDownLatch startSignal = new CountDownLatch(1);
+        CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
 
-        DoveMQMessage message = MessageFactory.createMessage();
-        String payload = "Hello World";
-        message.addPayload(payload.getBytes());
-        producer.sendMessage(message);
-        System.out.println("sent message");
+        for (int i = 0; i < NUM_THREADS; i++)
+        {
+            TestProducer producer = new TestProducer(startSignal, doneSignal, session, i);
+            executor.submit(producer);
+        }
 
-        String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/build.xml";
-        sendFileContents(sourceName, producer);
+        Thread.sleep(10000);
+        startSignal.countDown();
+        doneSignal.await();
+        executor.shutdown();
 
-        Thread.sleep(20000);
-
-        //session.close();
         ConnectionFactory.shutdown();
     }
 

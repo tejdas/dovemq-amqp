@@ -407,6 +407,7 @@
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${queueName}" />
+			<arg value="${numThreads}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -420,19 +421,8 @@
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${queueName}" />
-			<classpath refid="dovemq-functest-classpath" />
-		</java>
-	</target>
-
-	<target name="RunAckConsumer">
-		<echo>...Run DoveMQ Link client</echo>
-		<java fork="true" classname="net.dovemq.api.ConsumerAckExplicitTest" maxmemory="2048M" failonerror="true">
-			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
-			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
-			<arg value="${broker.ip}" />
-			<arg value="${endpointName}" />
-			<arg value="${queueName}" />
+			<arg value="${numThreads}" />
+			<arg value="${ackExplicit}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -540,6 +530,48 @@
 		</parallel>
 	</target>
 
+	<target name="QueueMTTest" description="run MT queue test">
+		<delete>
+			<fileset dir="." includes="**/consumer*.txt" />
+		</delete>
+
+		<parallel>
+			<antcall target="RunConsumer">
+				<param name="endpointName" value="consumer" />
+				<param name="queueName" value="first" />
+				<param name="numThreads" value="64" />
+				<param name="ackExplicit" value="false" />
+			</antcall>
+
+			<antcall target="RunProducer">
+				<param name="endpointName" value="producer" />
+				<param name="queueName" value="first" />
+				<param name="numThreads" value="64" />
+			</antcall>
+		</parallel>
+	</target>
+	
+	<target name="QueueMTTestAckExplicit" description="run MT queue test">
+		<delete>
+			<fileset dir="." includes="**/consumer*.txt" />
+		</delete>
+
+		<parallel>
+			<antcall target="RunConsumer">
+				<param name="endpointName" value="consumer" />
+				<param name="queueName" value="first" />
+				<param name="numThreads" value="64" />
+				<param name="ackExplicit" value="true" />
+			</antcall>
+
+			<antcall target="RunProducer">
+				<param name="endpointName" value="producer" />
+				<param name="queueName" value="first" />
+				<param name="numThreads" value="64" />
+			</antcall>
+		</parallel>
+	</target>
+		
 	<target name="TopicMTTest" description="running MT topic test">
 		<delete>
 			<fileset dir="." includes="**/sub*.txt" />

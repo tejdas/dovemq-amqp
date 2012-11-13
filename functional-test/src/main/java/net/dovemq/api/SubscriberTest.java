@@ -53,13 +53,12 @@ public class SubscriberTest
         Subscriber subscriber = session.createSubscriber(topicName);
 
         subscriber.registerMessageReceiver(new TestMessageReceiver());
-        System.out.println("waiting for message");
+        System.out.println("subscriber sleeping for 30 secs");
         Thread.sleep(30000);
 
         fw.flush();
         fw.close();
 
-        //session.close();
         ConnectionFactory.shutdown();
     }
 }

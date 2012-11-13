@@ -95,6 +95,7 @@ public class SubscriberMTTest
 
             subscriber.registerMessageReceiver(new TestMessageReceiver(fw));
 
+            System.out.println("subscriber sleeping for 30 secs");
             try
             {
                 Thread.sleep(30000);
@@ -109,7 +110,6 @@ public class SubscriberMTTest
         }
         private Session session;
         private final int id;
-
     }
 
     public static void main(String[] args) throws InterruptedException, FileNotFoundException
