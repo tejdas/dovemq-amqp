@@ -17,28 +17,25 @@
 
 package net.dovemq.transport.session;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.protocol.CAMQPSyncDecoder;
 import net.dovemq.transport.protocol.data.CAMQPControlBegin;
 import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.log4j.Logger;
 
 public class CAMQPSessionFrameHandler
 {
     private static final Logger log = Logger.getLogger(CAMQPSessionFrameHandler.class);
-
-    private static final CAMQPSessionFrameHandler sessionHandler = new CAMQPSessionFrameHandler();
-
     private final ConcurrentMap<Integer, CAMQPSession> sessionsHandshakeInProgress = new ConcurrentHashMap<Integer, CAMQPSession>();
 
-    public static CAMQPSessionFrameHandler getSingleton()
+    public static CAMQPSessionFrameHandler createInstance()
     {
-        return sessionHandler;
+        return new CAMQPSessionFrameHandler();
     }
 
     void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSession session)

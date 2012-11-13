@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -116,34 +114,34 @@ public class CAMQPSessionManager
         return connection;
     }
 
-    private final SortedMap<String, Map<Integer, CAMQPSession>> mappedSessions =
-        new TreeMap<String, Map<Integer, CAMQPSession>>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, List<CAMQPSession>> mappedSessions = new HashMap<String, List<CAMQPSession>>();
 
     protected static void sessionCreated(String amqpContainerId, int sessionChannelId, CAMQPSession session)
     {
         synchronized (_sessionManager)
         {
-            Map<Integer, CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
+            List<CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
             if (sessions == null)
             {
-                sessions = new HashMap<Integer, CAMQPSession>();
+                sessions = new ArrayList<CAMQPSession>();
                 _sessionManager.mappedSessions.put(amqpContainerId, sessions);
             }
-            sessions.put(sessionChannelId, session);
+            sessions.add(session);
         }
     }
 
-    protected static void sessionClosed(String amqpContainerId, int sessionChannelId)
+    protected static void sessionClosed(String amqpContainerId, CAMQPSession session, int sessionChannelId)
     {
         synchronized (_sessionManager)
         {
-            Map<Integer, CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
+           List<CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
             if (sessions == null)
             {
                 log.error("Could not find sessions for amqpContainerId: " + amqpContainerId);
                 return;
             }
-            if (null == sessions.remove(sessionChannelId))
+
+            if (!sessions.remove(session))
             {
                 log.error("Could not find session for sessionChannelId: " + sessionChannelId);
                 return;
@@ -155,12 +153,19 @@ public class CAMQPSessionManager
     {
         synchronized (_sessionManager)
         {
-            Map<Integer, CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
+            List<CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
             if (sessions == null)
             {
                 return null;
             }
-            return sessions.get(sessionChannelId);
+            for (CAMQPSession session : sessions)
+            {
+                if (session.getOutgoingChannelNumber() == sessionChannelId)
+                {
+                    return session;
+                }
+            }
+            return null;
         }
     }
 
@@ -169,11 +174,13 @@ public class CAMQPSessionManager
         Collection<Integer> sessionList = new ArrayList<Integer>();
         synchronized (_sessionManager)
         {
-            Map<Integer, CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
+            List<CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
             if (sessions != null)
             {
-                Collection<Integer> sessionValues = sessions.keySet();
-                sessionList.addAll(sessionValues);
+                for (CAMQPSession session : sessions)
+                {
+                    sessionList.add(session.getOutgoingChannelNumber());
+                }
             }
             return sessionList;
         }
@@ -184,11 +191,10 @@ public class CAMQPSessionManager
         List<CAMQPSession> sessionList = new ArrayList<CAMQPSession>();
         synchronized (_sessionManager)
         {
-            Map<Integer, CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
+            List<CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpContainerId);
             if (sessions != null)
             {
-                Collection<CAMQPSession> sessionValues = sessions.values();
-                sessionList.addAll(sessionValues);
+                sessionList.addAll(sessions);
             }
             return sessionList;
         }
@@ -208,7 +214,9 @@ public class CAMQPSessionManager
             for (CAMQPSession session : sessions)
             {
                 if (session != null)
+                {
                     session.close();
+                }
             }
         }
     }

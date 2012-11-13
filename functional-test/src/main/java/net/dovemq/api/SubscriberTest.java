@@ -33,7 +33,6 @@ public class SubscriberTest
             for (byte[] b : body)
             {
                 String bString = new String(b);
-                //System.out.println(bString);
                 fw.println(bString);
             }
         }

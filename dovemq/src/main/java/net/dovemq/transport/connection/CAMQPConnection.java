@@ -55,6 +55,12 @@ public class CAMQPConnection
     @GuardedBy("stateActor")
     private final boolean[] outgoingChannelsInUse = new boolean[CAMQPConnectionConstants.MAX_CHANNELS_SUPPORTED];
 
+    private final CAMQPSessionFrameHandler sessionFrameHandler = CAMQPSessionFrameHandler.createInstance();
+    public CAMQPSessionFrameHandler getSessionFrameHandler()
+    {
+        return sessionFrameHandler;
+    }
+
     CAMQPConnection(CAMQPConnectionStateActor stateActor)
     {
         Arrays.fill(outgoingChannelsInUse, false);
@@ -127,8 +133,8 @@ public class CAMQPConnection
     void waitForReady()
     {
         stateActor.waitForOpenExchange();
-        CAMQPConnectionManager.connectionCreated(stateActor.key, this);
         sender = stateActor.sender;
+        CAMQPConnectionManager.connectionCreated(stateActor.key, this);
     }
 
     public void explicitOpen(CAMQPControlOpen openControlData)
@@ -245,7 +251,7 @@ public class CAMQPConnection
              * CAMQPSessionFrameHandler so it can attach a channelHandler
              * to it.
              */
-            CAMQPSessionFrameHandler.getSingleton().frameReceived(channelNumber, frame, this);
+            sessionFrameHandler.frameReceived(channelNumber, frame, this);
         }
         else
         {

@@ -138,10 +138,17 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
      */
     @GuardedBy("stateActor")
     private int outgoingChannelNumber = 0;
+    int getOutgoingChannelNumber()
+    {
+        synchronized (stateActor)
+        {
+            return outgoingChannelNumber;
+        }
+    }
     @GuardedBy("stateActor")
     private int incomingChannelNumber = 0;
-    @GuardedBy("stateActor")
-    private CAMQPConnection connection = null;
+
+    private volatile CAMQPConnection connection = null;
 
     private CAMQPDispositionSender dispositionSender = null;
 
@@ -229,7 +236,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
          * the CAMQPConnection.
          */
         outgoingChannelNumber = connection.reserveOutgoingChannel();
-        CAMQPSessionFrameHandler.getSingleton().registerSessionHandshakeInProgress(outgoingChannelNumber, this);
+        connection.getSessionFrameHandler().registerSessionHandshakeInProgress(outgoingChannelNumber, this);
 
         CAMQPControlBegin beginControl = new CAMQPControlBegin();
 
@@ -256,9 +263,9 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     void beginReceived(CAMQPSessionControlWrapper receivedData)
     {
         /*
-         * In the case of session initiator's peer: a. Get the rxChannel from
-         * FrameHeader and register with underlying CAMQPConnection b. reserve a
-         * txChannel from underlying CAMQPConnection
+         * In the case of session initiator's peer:
+         * a. Get the rxChannel from FrameHeader and register with underlying CAMQPConnection
+         * b. reserve a txChannel from underlying CAMQPConnection
          */
         incomingChannelNumber = receivedData.getChannelNumber();
         outgoingChannelNumber = connection.reserveOutgoingChannel();
@@ -365,7 +372,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
 
     void unmapped()
     {
-        CAMQPSessionManager.sessionClosed(connection.getRemoteContainerId(), outgoingChannelNumber);
+        CAMQPSessionManager.sessionClosed(connection.getRemoteContainerId(), this, outgoingChannelNumber);
         connection.detach(outgoingChannelNumber, incomingChannelNumber);
         synchronized (stateActor)
         {
@@ -397,7 +404,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         CAMQPChannel channel = getChannel();
         if (channel != null)
         {
-            channel.getAmqpConnection().sendFrame(encodedLinkControlFrame, channel.getChannelId());;
+            channel.getAmqpConnection().sendFrame(encodedLinkControlFrame, channel.getChannelId());
         }
     }
 

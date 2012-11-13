@@ -223,6 +223,10 @@
 		<sequential>
 			<sleep seconds="5" />
 
+			<delete>
+				<fileset dir="." includes="**/foo*"/>
+			</delete>
+
 			<antcall target="RunSessionClient">
 				<param name="paramClassName" value="net.dovemq.transport.session.SessionSysTestJMXClient" />
 				<param name="param1" value="5" />
@@ -442,7 +446,7 @@
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${topicName}" />
-			<arg value="${fileName}" />				
+			<arg value="${fileName}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -460,7 +464,26 @@
 		</java>
 	</target>
 
+	<target name="RunMTSubscriber">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.SubscriberMTTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
+			<arg value="${broker.ip}" />
+			<arg value="${endpointName}" />
+			<arg value="${topicName}" />
+			<arg value="${numThreads}" />
+			<arg value="${sharedSession}" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>
+
 	<target name="TopicTest" description="running topic test">
+		<delete>
+			<fileset dir="." includes="**/sub*.txt" />
+		</delete>
+
 		<parallel>
 			<antcall target="RunSubscriber">
 				<param name="endpointName" value="sub1" />
@@ -476,25 +499,86 @@
 				<param name="endpointName" value="sub3" />
 				<param name="topicName" value="second" />
 			</antcall>
-			
+
 			<antcall target="RunSubscriber">
 				<param name="endpointName" value="sub4" />
 				<param name="topicName" value="second" />
-			</antcall>			
+			</antcall>
+
+			<antcall target="RunSubscriber">
+				<param name="endpointName" value="sub5" />
+				<param name="topicName" value="first" />
+			</antcall>
+
+			<antcall target="RunSubscriber">
+				<param name="endpointName" value="sub6" />
+				<param name="topicName" value="first" />
+			</antcall>
+
+			<antcall target="RunSubscriber">
+				<param name="endpointName" value="sub7" />
+				<param name="topicName" value="second" />
+			</antcall>
+
+			<antcall target="RunSubscriber">
+				<param name="endpointName" value="sub8" />
+				<param name="topicName" value="second" />
+			</antcall>
 
 			<antcall target="RunPublisher">
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
-				<param name="fileName" value="build.xml" />				
+				<param name="fileName" value="build.xml" />
 			</antcall>
-			
+
 			<antcall target="RunPublisher">
 				<param name="endpointName" value="pub2" />
 				<param name="topicName" value="second" />
-				<param name="fileName" value="err.txt" />				
-			</antcall>			
+				<param name="fileName" value="err.txt" />
+			</antcall>
 
 		</parallel>
 	</target>
 
+	<target name="TopicMTTest" description="running MT topic test">
+		<sequential>
+			<delete>
+				<fileset dir="." includes="**/sub*.txt"/>
+			</delete>
+
+			<parallel>
+				<antcall target="RunMTSubscriber">
+					<param name="endpointName" value="sub1" />
+					<param name="topicName" value="first" />
+					<param name="numThreads" value="64" />
+					<param name="sharedSession" value="false" />
+				</antcall>
+
+				<antcall target="RunPublisher">
+					<param name="endpointName" value="pub" />
+					<param name="topicName" value="first" />
+					<param name="fileName" value="build.xml" />
+				</antcall>
+			</parallel>
+
+			<delete>
+				<fileset dir="." includes="**/sub*.txt"/>
+			</delete>
+
+			<parallel>
+				<antcall target="RunMTSubscriber">
+					<param name="endpointName" value="sub1" />
+					<param name="topicName" value="first" />
+					<param name="numThreads" value="64" />
+					<param name="sharedSession" value="true" />
+				</antcall>
+
+				<antcall target="RunPublisher">
+					<param name="endpointName" value="pub" />
+					<param name="topicName" value="first" />
+					<param name="fileName" value="build.xml" />
+				</antcall>
+			</parallel>
+		</sequential>
+	</target>
 </project>

@@ -22,6 +22,7 @@ import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.EndpointType;
 import net.dovemq.transport.link.CAMQPLinkFactory;
 import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public final class CAMQPEndpointManager
 {
@@ -51,9 +52,26 @@ public final class CAMQPEndpointManager
         return dovemqSource;
     }
 
+    public static CAMQPSourceInterface createSource(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy)
+    {
+        CAMQPLinkSenderInterface linkSender = CAMQPLinkFactory.createLinkSender(session, source, target, endpointPolicy);
+        CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
+        linkSender.registerSource(dovemqSource);
+        return dovemqSource;
+    }
+
     public static CAMQPTargetInterface createTarget(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
         CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(containerId, source, target, endpointPolicy);
+        CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
+        linkReceiver.registerTarget(dovemqTarget);
+        linkReceiver.provideLinkCredit();
+        return dovemqTarget;
+    }
+
+    public static CAMQPTargetInterface createTarget(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy)
+    {
+        CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(session, source, target, endpointPolicy);
         CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
         linkReceiver.registerTarget(dovemqTarget);
         linkReceiver.provideLinkCredit();

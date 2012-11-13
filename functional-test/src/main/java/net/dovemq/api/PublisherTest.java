@@ -38,17 +38,12 @@ public class PublisherTest
         System.out.println("created publisher");
 
         Thread.sleep(10000);
-/*
-        DoveMQMessage message = MessageFactory.createMessage();
-        String payload = "Hello World";
-        message.addPayload(payload.getBytes());
-        publisher.sendMessage(message);
-        System.out.println("sent message");
-*/
+
         String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/" + fileName;
         sendFileContents(sourceName, publisher);
 
-        Thread.sleep(10000);
+        System.out.println("publisher sleeping for 30 secs");
+        Thread.sleep(30000);
 
         //session.close();
         ConnectionFactory.shutdown();

@@ -25,6 +25,7 @@ import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.link.CAMQPLinkManager;
 import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
+import net.dovemq.transport.session.CAMQPSessionManager;
 
 public class DoveMQBrokerDriver
 {
@@ -43,6 +44,7 @@ public class DoveMQBrokerDriver
         final DoveMQBrokerShutdownHook sh = new DoveMQBrokerShutdownHook();
         Runtime.getRuntime().addShutdownHook(sh);
 
+        CAMQPSessionManager.setMaxSessionWindowSize(8192, 8192);
         CAMQPLinkManager.initialize(true, "broker");
 
         CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();

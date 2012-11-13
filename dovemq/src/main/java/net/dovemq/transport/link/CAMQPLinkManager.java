@@ -77,7 +77,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
 
     private static final AtomicLong nextLinkHandle = new AtomicLong(0);
     private static final CAMQPLinkManager linkManager = new CAMQPLinkManager();
-    private static CAMQPListener listener = null;
+    private static volatile CAMQPListener listener = null;
 
     public static CAMQPLinkManager getLinkmanager()
     {

@@ -98,7 +98,9 @@ public final class CAMQPConnectionManager
             for (CAMQPConnection amqpConnection : amqpConnections)
             {
                 if (amqpConnection.getRemoteContainerId().equalsIgnoreCase(targetContainerId))
+                {
                     return amqpConnection;
+                }
             }
         }
         return null;

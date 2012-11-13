@@ -46,14 +46,14 @@ public class Session
     public Producer createProducer(String queueName)
     {
         String source = String.format("%s.%s", endpointId, queueName);
-        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, queueName, new CAMQPEndpointPolicy());
+        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, queueName, new CAMQPEndpointPolicy());
         return new Producer(source, sender);
     }
 
     public Consumer createConsumer(String queueName)
     {
         String target = String.format("%s.%s", endpointId, queueName);
-        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(brokerContainerId, queueName, target, new CAMQPEndpointPolicy());
+        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(session, queueName, target, new CAMQPEndpointPolicy());
         return new Consumer(target, receiver);
     }
 
@@ -62,7 +62,7 @@ public class Session
         String target = String.format("%s.%s", endpointId, queueName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setDoveMQEndpointPolicy(doveMQEndpointPolicy);
-        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(brokerContainerId, queueName, target, endpointPolicy);
+        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(session, queueName, target, endpointPolicy);
         return new Consumer(target, receiver, doveMQEndpointPolicy);
     }
 
@@ -71,7 +71,7 @@ public class Session
         String source = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
-        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, topicName, endpointPolicy);
+        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, topicName, endpointPolicy);
         return new Publisher(source, sender);
     }
 
@@ -80,7 +80,7 @@ public class Session
         String target = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
-        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(brokerContainerId, topicName, target, endpointPolicy);
+        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(session, topicName, target, endpointPolicy);
         return new Subscriber(target, receiver);
     }
 }

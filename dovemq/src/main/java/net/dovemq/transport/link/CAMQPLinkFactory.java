@@ -27,11 +27,6 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
  */
 public final class CAMQPLinkFactory
 {
-    public static CAMQPLinkSenderInterface createLinkSender(String targetContainerId, String source, String target)
-    {
-        return createLinkSender(targetContainerId, source, target, new CAMQPEndpointPolicy());
-    }
-
     public static CAMQPLinkSenderInterface createLinkSender(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
         CAMQPSessionInterface session = CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
@@ -44,9 +39,11 @@ public final class CAMQPLinkFactory
         return null;
     }
 
-    public static CAMQPLinkReceiverInterface createLinkReceiver(String targetContainerId, String source, String target)
+    public static CAMQPLinkSenderInterface createLinkSender(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
-        return createLinkReceiver(targetContainerId, source, target, new CAMQPEndpointPolicy());
+        CAMQPLinkSender sender = new CAMQPLinkSender(session);
+        sender.createLink(source, target, endpointPolicy);
+        return sender;
     }
 
     public static CAMQPLinkReceiverInterface createLinkReceiver(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
@@ -61,7 +58,10 @@ public final class CAMQPLinkFactory
         return null;
     }
 
-    public void linkReceiverCreated()
+    public static CAMQPLinkReceiverInterface createLinkReceiver(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy)
     {
+        CAMQPLinkReceiver receiver = new CAMQPLinkReceiver(session);
+        receiver.createLink(source, target, endpointPolicy);
+        return receiver;
     }
 }
