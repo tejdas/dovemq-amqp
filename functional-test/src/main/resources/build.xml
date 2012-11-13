@@ -541,44 +541,44 @@
 	</target>
 
 	<target name="TopicMTTest" description="running MT topic test">
-		<sequential>
-			<delete>
-				<fileset dir="." includes="**/sub*.txt"/>
-			</delete>
+		<delete>
+			<fileset dir="." includes="**/sub*.txt" />
+		</delete>
 
-			<parallel>
-				<antcall target="RunMTSubscriber">
-					<param name="endpointName" value="sub1" />
-					<param name="topicName" value="first" />
-					<param name="numThreads" value="64" />
-					<param name="sharedSession" value="false" />
-				</antcall>
+		<parallel>
+			<antcall target="RunMTSubscriber">
+				<param name="endpointName" value="sub1" />
+				<param name="topicName" value="first" />
+				<param name="numThreads" value="64" />
+				<param name="sharedSession" value="false" />
+			</antcall>
 
-				<antcall target="RunPublisher">
-					<param name="endpointName" value="pub" />
-					<param name="topicName" value="first" />
-					<param name="fileName" value="build.xml" />
-				</antcall>
-			</parallel>
+			<antcall target="RunPublisher">
+				<param name="endpointName" value="pub" />
+				<param name="topicName" value="first" />
+				<param name="fileName" value="build.xml" />
+			</antcall>
+		</parallel>
+	</target>
 
-			<delete>
-				<fileset dir="." includes="**/sub*.txt"/>
-			</delete>
+	<target name="TopicMTSharedSessionTest" description="running MT topic test">
+		<delete>
+			<fileset dir="." includes="**/sub*.txt"/>
+		</delete>
 
-			<parallel>
-				<antcall target="RunMTSubscriber">
-					<param name="endpointName" value="sub1" />
-					<param name="topicName" value="first" />
-					<param name="numThreads" value="64" />
-					<param name="sharedSession" value="true" />
-				</antcall>
+		<parallel>
+			<antcall target="RunMTSubscriber">
+				<param name="endpointName" value="sub1" />
+				<param name="topicName" value="first" />
+				<param name="numThreads" value="64" />
+				<param name="sharedSession" value="true" />
+			</antcall>
 
-				<antcall target="RunPublisher">
-					<param name="endpointName" value="pub" />
-					<param name="topicName" value="first" />
-					<param name="fileName" value="build.xml" />
-				</antcall>
-			</parallel>
-		</sequential>
+			<antcall target="RunPublisher">
+				<param name="endpointName" value="pub" />
+				<param name="topicName" value="first" />
+				<param name="fileName" value="build.xml" />
+			</antcall>
+		</parallel>
 	</target>
 </project>

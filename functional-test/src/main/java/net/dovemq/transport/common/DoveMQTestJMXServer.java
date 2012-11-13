@@ -29,6 +29,7 @@ import net.dovemq.transport.link.CAMQPLinkManager;
 import net.dovemq.transport.link.CAMQPLinkManager.LinkSenderType;
 import net.dovemq.transport.link.LinkCommand;
 import net.dovemq.transport.link.LinkCommandMBean;
+import net.dovemq.transport.session.CAMQPSessionManager;
 import net.dovemq.transport.session.SessionCommand;
 import net.dovemq.transport.session.SessionCommandMBean;
 
@@ -37,6 +38,7 @@ public class DoveMQTestJMXServer
     public static void main(String[] args) throws InterruptedException, IOException
     {
         CAMQPLinkManager.setLinkSenderType(LinkSenderType.PULL);
+        CAMQPSessionManager.setMaxSessionWindowSize(256, 256);
         CAMQPLinkManager.initialize(true, "broker");
 
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
