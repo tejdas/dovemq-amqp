@@ -21,6 +21,8 @@ public class BasicProducer
         String msg = "Hello from Producer";
         message.addPayload(msg.getBytes());
         producer.sendMessage(message);
+
+        session.close();
         ConnectionFactory.shutdown();
     }
 }

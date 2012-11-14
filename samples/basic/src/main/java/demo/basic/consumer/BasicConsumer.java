@@ -57,6 +57,7 @@ public class BasicConsumer
             }
         }
 
+        session.close();
         ConnectionFactory.shutdown();
     }
 }

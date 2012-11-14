@@ -399,7 +399,8 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     @Override
     public void sessionClosed()
     {
-        // TODO Auto-generated method stub
+        linkStateActor.sessionClosed();
+        detached(false); // TODO
     }
 
     abstract Object getEndpoint();

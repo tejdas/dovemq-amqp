@@ -135,6 +135,11 @@ class CAMQPLinkStateActor
         processEvents();
     }
 
+    void sessionClosed()
+    {
+        preProcessSessionUnmapped(null);
+    }
+
     synchronized void waitForDetached()
     {
         try
