@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public class CAMQPConnectionKey
 {
-    private static final String BROKER_ID = "broker";
     public CAMQPConnectionKey(String remoteContainerId, int ephemeralPort)
     {
         super();
