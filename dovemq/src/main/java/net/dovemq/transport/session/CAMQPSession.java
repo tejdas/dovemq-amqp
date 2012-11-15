@@ -315,7 +315,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
 
     void mapped()
     {
-        CAMQPSessionManager.sessionCreated(connection.getRemoteContainerId(), outgoingChannelNumber, this);
+        CAMQPSessionManager.sessionCreated(connection.getKey(), outgoingChannelNumber, this);
         String logInfo = String.format("Session is attached to txChannel: %d and rxChannel: %d", outgoingChannelNumber, incomingChannelNumber);
         log.info(logInfo);
         dispositionSender = new CAMQPDispositionSender(this);
@@ -363,7 +363,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
 
     void unmapped()
     {
-        CAMQPSessionManager.sessionClosed(connection.getRemoteContainerId(), this, outgoingChannelNumber);
+        CAMQPSessionManager.sessionClosed(connection.getKey(), this, outgoingChannelNumber);
         connection.detach(outgoingChannelNumber, incomingChannelNumber);
         synchronized (stateActor)
         {

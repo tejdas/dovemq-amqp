@@ -20,17 +20,17 @@ package net.dovemq.transport.connection;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-class CAMQPConnectionKey
+public class CAMQPConnectionKey
 {
     private static final String BROKER_ID = "broker";
-    CAMQPConnectionKey(String remoteContainerId, int ephemeralPort)
+    public CAMQPConnectionKey(String remoteContainerId, int ephemeralPort)
     {
         super();
         this.remoteContainerId = remoteContainerId;
         this.ephemeralPort = ephemeralPort;
     }
 
-    String getRemoteContainerId()
+    public String getRemoteContainerId()
     {
         return remoteContainerId;
     }
@@ -61,24 +61,22 @@ class CAMQPConnectionKey
     public boolean equals(Object obj)
     {
         if ((obj == null) || (!(obj instanceof CAMQPConnectionKey)))
-            return false;       
-        
+            return false;
+
         CAMQPConnectionKey otherKey = (CAMQPConnectionKey) obj;
-        
+
         if ((ephemeralPort == 0) || (otherKey.ephemeralPort == 0))
             return (remoteContainerId.equalsIgnoreCase(otherKey.remoteContainerId));
 
         return EqualsBuilder.reflectionEquals(this, obj);
     }
-    
+
     @Override
     public int hashCode()
     {
-        if (remoteContainerId.contains(BROKER_ID))
-            return remoteContainerId.hashCode();
         return HashCodeBuilder.reflectionHashCode(this);
     }
-    
+
     @Override
     public String toString()
     {

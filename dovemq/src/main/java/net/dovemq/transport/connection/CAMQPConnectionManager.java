@@ -26,8 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import net.dovemq.transport.session.CAMQPSessionManager;
 import net.jcip.annotations.GuardedBy;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -51,7 +53,7 @@ public final class CAMQPConnectionManager
     @GuardedBy("this")
     private CAMQPConnectionObserver connectionObserver = null;
 
-    private String containerId = null;
+    private volatile String containerId = null;
 
     @GuardedBy("this")
     private boolean shutdownInProgress = false;
@@ -71,6 +73,9 @@ public final class CAMQPConnectionManager
         return connectionManager ;
     }
 
+    /*
+     * Used only by CAMQP functional tests
+     */
     public static CAMQPConnection getCAMQPConnection(String targetContainerId)
     {
         return getConnectionManager().getCAMQPConnectionInternal(targetContainerId);
@@ -78,11 +83,15 @@ public final class CAMQPConnectionManager
 
     private CAMQPConnection getCAMQPConnectionInternal(String targetContainerId)
     {
-        CAMQPConnectionKey key = new CAMQPConnectionKey(targetContainerId, 0);
-        synchronized (this)
+        Collection<CAMQPConnectionKey> keys = openConnections.keySet();
+        for (CAMQPConnectionKey key : keys)
         {
-            return openConnections.get(key);
+            if (StringUtils.equalsIgnoreCase(key.getRemoteContainerId(), targetContainerId))
+            {
+                return openConnections.get(key);
+            }
         }
+        return null;
     }
 
     public static CAMQPConnection getAnyCAMQPConnection(String targetContainerId)
@@ -164,6 +173,7 @@ public final class CAMQPConnectionManager
     static void connectionClosed(CAMQPConnectionKey key)
     {
         getConnectionManager().connectionClosedInternal(key);
+        CAMQPSessionManager.connectionClosed(key);
     }
 
     static void connectionAborted(CAMQPConnectionKey key)
@@ -173,6 +183,7 @@ public final class CAMQPConnectionManager
         {
             abortedConnection.aborted();
         }
+        CAMQPSessionManager.connectionClosed(key);
     }
 
     private synchronized CAMQPConnection connectionClosedInternal(CAMQPConnectionKey key)
