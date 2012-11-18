@@ -48,5 +48,16 @@ public class DoveMQEndpointPolicy
         return ackPolicy;
     }
 
+    public void createEndpointOnNewConnection()
+    {
+        this.createConnection = true;
+    }
+
+    public boolean doCreateEndpointOnNewConnection()
+    {
+        return this.createConnection;
+    }
+
     private final MessageAcknowledgementPolicy ackPolicy;
+    private boolean createConnection = false;
 }

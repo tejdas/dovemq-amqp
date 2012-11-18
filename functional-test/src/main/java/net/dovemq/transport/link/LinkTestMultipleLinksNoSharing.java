@@ -68,6 +68,15 @@ public class LinkTestMultipleLinksNoSharing
 
             String linkName = linkSender.getLinkName();
 
+            try
+            {
+                Thread.sleep(5000);
+            }
+            catch (InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
+            }
+
             mbeanProxy.registerTarget(linkSource, linkTarget);
             mbeanProxy.issueLinkCredit(linkName, 10);
 

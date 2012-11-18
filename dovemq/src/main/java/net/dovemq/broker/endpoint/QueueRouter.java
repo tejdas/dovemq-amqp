@@ -201,9 +201,13 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
     {
         synchronized (this)
         {
-            if (this.producerSink != producerSink)
+            if (this.producerSink == null)
             {
-                log.error("The Producer is not attached to queue: " + queueName);
+                log.error("The QueueRouter: " + queueName + " is not attached to any producer");
+            }
+            else if (this.producerSink != producerSink)
+            {
+                log.error("The Producer: " + producerSink + " is not attached to queue: " + queueName + " . The queue is attached by: " + this.producerSink);
             }
             else
             {

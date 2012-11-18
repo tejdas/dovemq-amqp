@@ -205,7 +205,7 @@ public final class CAMQPEndpointPolicy
         this.receiverSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
         deliveryPolicy = CAMQPMessageDeliveryPolicy.ExactlyOnce;
         linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE;
-        minLinkCreditThreshold = 10;
-        linkCreditBoost = 100;
+        minLinkCreditThreshold = 128;
+        linkCreditBoost = 1024;
     }
 }

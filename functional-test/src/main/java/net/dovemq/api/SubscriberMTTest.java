@@ -95,10 +95,10 @@ public class SubscriberMTTest
 
             subscriber.registerMessageReceiver(new TestMessageReceiver(fw));
 
-            System.out.println("subscriber sleeping for 30 secs");
+            System.out.println("subscriber sleeping for 60 secs");
             try
             {
-                Thread.sleep(30000);
+                Thread.sleep(60000);
             }
             catch (InterruptedException e)
             {

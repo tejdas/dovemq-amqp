@@ -38,6 +38,7 @@ public class ConsumerTest
     private static String queueName;
     private static int NUM_THREADS;
     private static boolean ackExplicit = false;
+    private static int sleepSeconds;
     private static ExecutorService executor;
 
     private static class TestMessageReceiver implements DoveMQMessageReceiver
@@ -160,10 +161,10 @@ public class ConsumerTest
             if (ackExplicit)
                 executor.submit(acker);
 
-            System.out.println("consumer sleeping for 60 secs");
+            System.out.println("consumer sleeping for " + sleepSeconds + " seconds");
             try
             {
-                Thread.sleep(60000);
+                Thread.sleep(1000*sleepSeconds);
             }
             catch (InterruptedException e)
             {
@@ -187,10 +188,11 @@ public class ConsumerTest
         queueName = args[2];
         NUM_THREADS = Integer.parseInt(args[3]);
         ackExplicit = Boolean.parseBoolean(args[4]);
+        sleepSeconds = Integer.parseInt(args[5]);
 
         ConnectionFactory.initialize(endpointName);
 
-        Session session = ConnectionFactory.createSession(brokerIP);
+        Session session = null;
 
         executor = Executors.newFixedThreadPool(NUM_THREADS*2);
         CountDownLatch startSignal = new CountDownLatch(1);

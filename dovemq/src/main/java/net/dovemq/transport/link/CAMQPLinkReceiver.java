@@ -70,7 +70,7 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
     }
 
     private ReceiverLinkCreditPolicy linkCreditPolicy = ReceiverLinkCreditPolicy.CREDIT_OFFERED_BY_TARGET;
-    void setLinkCreditPolicy(ReceiverLinkCreditPolicy linkCreditPolicy)
+    synchronized void setLinkCreditPolicy(ReceiverLinkCreditPolicy linkCreditPolicy)
     {
         this.linkCreditPolicy = linkCreditPolicy;
     }

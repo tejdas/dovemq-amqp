@@ -29,6 +29,8 @@ public class PublisherTest
         String endpointName = args[1];
         String topicName = args[2];
         String fileName = args[3];
+        int numIterations = Integer.parseInt(args[4]);
+
         ConnectionFactory.initialize(endpointName);
 
         Session session = ConnectionFactory.createSession(brokerIP);
@@ -40,12 +42,14 @@ public class PublisherTest
         Thread.sleep(10000);
 
         String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/" + fileName;
-        sendFileContents(sourceName, publisher);
+        for (int i = 0; i < numIterations; i++)
+        {
+            sendFileContents(sourceName, publisher);
+        }
 
-        System.out.println("publisher sleeping for 30 secs");
-        Thread.sleep(30000);
+        System.out.println("publisher sleeping for 60 secs");
+        Thread.sleep(60000);
 
-        //session.close();
         ConnectionFactory.shutdown();
     }
 

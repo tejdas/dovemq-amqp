@@ -408,6 +408,8 @@
 			<arg value="${endpointName}" />
 			<arg value="${queueName}" />
 			<arg value="${numThreads}" />
+			<arg value="${numIterations}" />
+			<arg value="${sleepSeconds}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -423,6 +425,7 @@
 			<arg value="${queueName}" />
 			<arg value="${numThreads}" />
 			<arg value="${ackExplicit}" />
+			<arg value="${sleepSeconds}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -437,6 +440,7 @@
 			<arg value="${endpointName}" />
 			<arg value="${topicName}" />
 			<arg value="${fileName}" />
+			<arg value="${numIterations}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -519,12 +523,14 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
+				<param name="numIterations" value="1" />
 			</antcall>
 
 			<antcall target="RunPublisher">
 				<param name="endpointName" value="pub2" />
 				<param name="topicName" value="second" />
 				<param name="fileName" value="err.txt" />
+				<param name="numIterations" value="1" />
 			</antcall>
 
 		</parallel>
@@ -541,12 +547,15 @@
 				<param name="queueName" value="first" />
 				<param name="numThreads" value="64" />
 				<param name="ackExplicit" value="false" />
+				<param name="sleepSeconds" value="120" />
 			</antcall>
 
 			<antcall target="RunProducer">
 				<param name="endpointName" value="producer" />
 				<param name="queueName" value="first" />
 				<param name="numThreads" value="64" />
+				<param name="numIterations" value="5" />
+				<param name="sleepSeconds" value="120" />
 			</antcall>
 		</parallel>
 	</target>
@@ -562,12 +571,15 @@
 				<param name="queueName" value="first" />
 				<param name="numThreads" value="64" />
 				<param name="ackExplicit" value="true" />
+				<param name="sleepSeconds" value="60" />
 			</antcall>
 
 			<antcall target="RunProducer">
 				<param name="endpointName" value="producer" />
 				<param name="queueName" value="first" />
 				<param name="numThreads" value="64" />
+				<param name="numIterations" value="1" />
+				<param name="sleepSeconds" value="60" />
 			</antcall>
 		</parallel>
 	</target>
@@ -589,6 +601,7 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
+				<param name="numIterations" value="5" />
 			</antcall>
 		</parallel>
 	</target>
@@ -610,6 +623,7 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
+				<param name="numIterations" value="5" />
 			</antcall>
 		</parallel>
 	</target>

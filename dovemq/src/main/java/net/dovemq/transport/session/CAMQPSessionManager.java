@@ -117,6 +117,12 @@ public class CAMQPSessionManager
         return connection;
     }
 
+    protected static CAMQPConnection createCAMQPConnection(String targetContainerId)
+    {
+        CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
+        return CAMQPConnectionFactory.createCAMQPConnection(targetContainerId, connectionProps);
+    }
+
     private final ConcurrentMap<CAMQPConnectionKey, List<CAMQPSession>> mappedSessions = new ConcurrentHashMap<CAMQPConnectionKey, List<CAMQPSession>>();
 
     public static void connectionClosed(CAMQPConnectionKey remoteContainerId)

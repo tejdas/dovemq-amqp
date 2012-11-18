@@ -58,6 +58,7 @@ public class SessionSysTestJMXClient
         Thread.sleep(2000);
 
         SessionCommandMBean mbeanProxy = jmxWrapper.getSessionBean();
+        mbeanProxy.setSessionWindowSize(256, 256);
 
         mbeanProxy.registerFactory(linkReceiverFactory);
 
@@ -85,6 +86,7 @@ public class SessionSysTestJMXClient
 
         localConnectionCommand.close(brokerContainerId);
         assertTrue(localConnectionCommand.checkClosed(brokerContainerId));
+        mbeanProxy.setSessionWindowSize(CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE, CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE);
 
         SessionIOTestUtils.cleanup();
 

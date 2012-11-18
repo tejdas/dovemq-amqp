@@ -224,9 +224,16 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
      *
      * @param targetContainerId
      */
-    public void open(String targetContainerId)
+    public void open(String targetContainerId, boolean exclusiveConnection)
     {
-        connection = CAMQPSessionManager.getCAMQPConnection(targetContainerId);
+        if (exclusiveConnection)
+        {
+            connection = CAMQPSessionManager.createCAMQPConnection(targetContainerId);
+        }
+        else
+        {
+            connection = CAMQPSessionManager.getCAMQPConnection(targetContainerId);
+        }
         /*
          * In the case of session initiator, a. reserve a txChannel from
          * underlying CAMQPConnection b. register with CAMQPSessionFrameHandler
@@ -1005,7 +1012,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
             CAMQPDefinitionDeliveryState deliveryState = (CAMQPDefinitionDeliveryState) newState;
             outcome = deliveryState.getOutcome();
         }
-        boolean isMessageSettledByPeer = data.isSetSettled()? data.getSettled() : null;
+        boolean isMessageSettledByPeer = data.isSetSettled()? data.getSettled() : false;
         boolean role = data.getRole();
         long firstDisposedId = data.getFirst();
         long lastDisposedId = data.isSetLast()? data.getLast() : data.getFirst();

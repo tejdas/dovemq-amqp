@@ -44,7 +44,7 @@ public final class CAMQPSessionFactory
         List<CAMQPSession> sessionList = CAMQPSessionManager.getAllSessions(targetContainerId);
         if (sessionList.isEmpty())
         {
-            return sessionFactory.createSession(targetContainerId);
+            return sessionFactory.createSession(targetContainerId, false);
         }
 
         return sessionList.get(0); // TODO get the session with minimal linkReceivers attached
@@ -52,13 +52,18 @@ public final class CAMQPSessionFactory
 
     public static CAMQPSessionInterface createCAMQPSession(String targetContainerId)
     {
-         return sessionFactory.createSession(targetContainerId);
+         return sessionFactory.createSession(targetContainerId, false);
     }
 
-    private CAMQPSession createSession(String targetContainerId)
+    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId, boolean exclusiveConnection)
+    {
+         return sessionFactory.createSession(targetContainerId, true);
+    }
+
+    private CAMQPSession createSession(String targetContainerId, boolean exclusiveConnection)
     {
         CAMQPSession session = new CAMQPSession();
-        session.open(targetContainerId);
+        session.open(targetContainerId, exclusiveConnection);
         return session;
     }
 }

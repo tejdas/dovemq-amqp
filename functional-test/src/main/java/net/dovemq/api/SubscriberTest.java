@@ -53,8 +53,8 @@ public class SubscriberTest
         Subscriber subscriber = session.createSubscriber(topicName);
 
         subscriber.registerMessageReceiver(new TestMessageReceiver());
-        System.out.println("subscriber sleeping for 30 secs");
-        Thread.sleep(30000);
+        System.out.println("subscriber sleeping for 60 secs");
+        Thread.sleep(60000);
 
         fw.flush();
         fw.close();

@@ -25,7 +25,7 @@ public class SessionCommand implements SessionCommandMBean
     @Override
     public void registerFactory(String factoryName)
     {
-        SysTestCommandReceiverFactory commandReceiverFactory = new SysTestCommandReceiverFactory(factoryName);        
+        SysTestCommandReceiverFactory commandReceiverFactory = new SysTestCommandReceiverFactory(factoryName);
         CAMQPSessionManager.registerLinkReceiverFactory(commandReceiverFactory);
         System.out.println("Registered factory: " + factoryName);
     }
@@ -48,7 +48,7 @@ public class SessionCommand implements SessionCommandMBean
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }        
+        }
     }
 
     @Override
@@ -70,7 +70,7 @@ public class SessionCommand implements SessionCommandMBean
                 System.out.println("Null session for channel: " + channelId);
                 return;
             }
-            
+
             String sourceFileName = SessionIOTestUtils.convertToLocalFileName(source);
             String destfile = String.format("%s.%d", dest, channelId);
             try
@@ -102,8 +102,14 @@ public class SessionCommand implements SessionCommandMBean
 
     @Override
     public boolean isIODone()
-    {       
+    {
         SysTestCommandReceiverFactory commandReceiverFactory  = (SysTestCommandReceiverFactory) CAMQPSessionManager.getLinkReceiverFactory();
         return commandReceiverFactory.isDone();
+    }
+
+    @Override
+    public void setSessionWindowSize(long maxOutgoingWindowSize, long maxIncomingWindowSize)
+    {
+        CAMQPSessionManager.setMaxSessionWindowSize(maxOutgoingWindowSize, maxIncomingWindowSize);
     }
 }

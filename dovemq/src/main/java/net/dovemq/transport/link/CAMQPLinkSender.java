@@ -78,7 +78,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
 
     private long maxAvailableLimit;
 
-    public void setMaxAvailableLimit(long maxAvailableLimit)
+    public synchronized void setMaxAvailableLimit(long maxAvailableLimit)
     {
         this.maxAvailableLimit = maxAvailableLimit;
     }

@@ -33,6 +33,8 @@ public class ProducerTest
     private static String endpointName;
     private static String queueName;
     private static int NUM_THREADS;
+    private static int numIterations;
+    private static int sleepSeconds;
 
     private static class TestProducer extends CAMQPTestTask implements Runnable
     {
@@ -55,22 +57,28 @@ public class ProducerTest
             {
             }
 
+            if (session == null)
+                session = ConnectionFactory.createSession(brokerIP);
+
             Producer producer = session.createProducer(String.format("%s.%d", queueName, id));
 
             String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/build.xml";
             try
             {
-                sendFileContents(sourceName, producer);
+                for (int i = 0; i < numIterations; i++)
+                {
+                    sendFileContents(sourceName, producer);
+                }
             }
             catch (IOException e)
             {
                 Thread.currentThread().interrupt();
             }
 
-            System.out.println("producer sleeping for 60 secs");
+            System.out.println("producer sleeping for: " + sleepSeconds + " secs");
             try
             {
-                Thread.sleep(60000);
+                Thread.sleep(1000*sleepSeconds);
             }
             catch (InterruptedException e)
             {
@@ -91,10 +99,12 @@ public class ProducerTest
         endpointName = args[1];
         queueName = args[2];
         NUM_THREADS = Integer.parseInt(args[3]);
+        numIterations = Integer.parseInt(args[4]);
+        sleepSeconds = Integer.parseInt(args[5]);
 
         ConnectionFactory.initialize(endpointName);
 
-        Session session = ConnectionFactory.createSession(brokerIP);
+        Session session = null;
         System.out.println("created session");
 
         ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);

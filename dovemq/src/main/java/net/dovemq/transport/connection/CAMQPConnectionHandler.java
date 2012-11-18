@@ -24,6 +24,7 @@ import net.dovemq.transport.protocol.CAMQPSyncDecoder;
 import net.dovemq.transport.protocol.data.CAMQPControlClose;
 import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
@@ -59,7 +60,7 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
     private static final Logger log = Logger.getLogger(CAMQPConnectionHandler.class);
 
     private final CAMQPConnectionStateActor stateActor;
-    private CAMQPConnection connection = null;
+    private volatile CAMQPConnection connection = null;
 
     void registerConnection(CAMQPConnection connection)
     {
@@ -108,7 +109,13 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
     {
-        log.warn("exceptionCaught: " + e.getCause().getMessage());
+        String connectionKey = (connection != null)? connection.getKey().toString() : StringUtils.EMPTY;
+        log.warn("CAMQPConnectionHandler.exceptionCaught: " + connectionKey);
+        StackTraceElement[] elems = Thread.currentThread().getStackTrace();
+        for (StackTraceElement elem : elems)
+        {
+            log.warn("StackTrace: " + elem.toString());
+        }
     }
 
     @Override

@@ -377,7 +377,7 @@ class CAMQPConnectionStateActor
         }
         else
         {
-            log.error("MalformedHeader received: " + receivedAMQPHeader);
+            log.error("MalformedHeader received: " + new String(receivedAMQPHeader));
             queuedGeneratedEvents.add(new QueuedContext(Event.MALFORMED_CONN_HEADER_RECEIVED, null));
         }
 

@@ -65,4 +65,19 @@ public final class ConnectionFactory
         CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId);
         return new Session(brokerContainerId, endpointId, camqpSession);
     }
+
+    public static Session createSession(String targetDoveMQBrokerAddress, DoveMQEndpointPolicy endpointPolicy)
+    {
+        String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
+        CAMQPSessionInterface camqpSession;
+        if (endpointPolicy.doCreateEndpointOnNewConnection())
+        {
+            camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId, true);
+        }
+        else
+        {
+            camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId);
+        }
+        return new Session(brokerContainerId, endpointId, camqpSession);
+    }
 }
