@@ -1,4 +1,4 @@
-package demo.basic.consumer;
+package net.dovemq.samples.basic;
 
 import java.util.Collection;
 

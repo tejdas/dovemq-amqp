@@ -63,7 +63,7 @@
 			<sysproperty key="com.sun.management.jmxremote.port" value="${jmxPortNumber}" />
 			<sysproperty key="com.sun.management.jmxremote.authenticate" value="false" />
 			<sysproperty key="com.sun.management.jmxremote.ssl" value="false" />
-			<sysproperty key="dovemq.dir" value="${basedir}/server.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/server.log" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -80,7 +80,7 @@
 			<sysproperty key="com.sun.management.jmxremote.port" value="${jmxPortNumber}" />
 			<sysproperty key="com.sun.management.jmxremote.authenticate" value="false" />
 			<sysproperty key="com.sun.management.jmxremote.ssl" value="false" />
-			<sysproperty key="dovemq.dir" value="${basedir}/server.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/server.log" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -101,7 +101,7 @@
 		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/client.log" />
 			<arg value="${publisherName}" />
 			<arg value="${broker.ip}" />
 			<arg value="${numThreads}" />
@@ -194,7 +194,7 @@
 		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/client.log" />
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
@@ -268,7 +268,7 @@
 		<java fork="true" classname="${paramClassName}" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/client.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/client.log" />
 			<arg value="pub1" />
 			<arg value="${broker.ip}" />
 			<arg value="${jmxPortNumber}" />
@@ -403,7 +403,7 @@
 		<java fork="true" classname="net.dovemq.api.ProducerTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/producer.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${queueName}" />
@@ -419,7 +419,7 @@
 		<java fork="true" classname="net.dovemq.api.ConsumerTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${queueName}" />
@@ -435,7 +435,7 @@
 		<java fork="true" classname="net.dovemq.api.PublisherTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/producer.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${topicName}" />
@@ -450,7 +450,7 @@
 		<java fork="true" classname="net.dovemq.api.SubscriberTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${topicName}" />
@@ -463,7 +463,7 @@
 		<java fork="true" classname="net.dovemq.api.SubscriberMTTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.dir" value="${basedir}/consumer.log" />
+			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${topicName}" />

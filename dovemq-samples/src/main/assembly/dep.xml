@@ -9,32 +9,14 @@
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
 
-    <fileSets>
-        <fileSet>
-            <directory>${basedir}/src/main/resources</directory>
-            <outputDirectory>bin</outputDirectory>
-            <includes>
-                <include>runbroker.bat</include>
-            </includes>
-        </fileSet>
-         <fileSet>
-            <directory>${basedir}/src/main/resources</directory>
-            <outputDirectory>bin</outputDirectory>
-            <includes>
-                <include>runbroker.sh</include>
-            </includes>
-            <fileMode>0777</fileMode>
-        </fileSet>       
-    </fileSets>
-
     <dependencySets>
         <dependencySet>
-             <excludes>
-                <exclude>net.jcip:jcip-annotations</exclude>
-            </excludes>        
             <includes>
                 <include>*:jar</include>
             </includes>
+             <excludes>
+                <exclude>net.jcip:jcip-annotations</exclude>
+            </excludes>            
             <outputDirectory>lib</outputDirectory>
         </dependencySet>
     </dependencySets>

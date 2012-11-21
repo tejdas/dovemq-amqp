@@ -1,4 +1,4 @@
-package demo.basic.producer;
+package net.dovemq.samples.basic;
 
 import net.dovemq.api.ConnectionFactory;
 import net.dovemq.api.DoveMQMessage;
