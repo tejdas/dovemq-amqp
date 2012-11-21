@@ -29,9 +29,8 @@ public class Publisher
     Publisher(String sourceName, CAMQPSourceInterface sourceEndpoint)
     {
         super();
-        this.sourceName = sourceName;
         this.sourceEndpoint = sourceEndpoint;
     }
-    private final String sourceName;
+
     private final CAMQPSourceInterface sourceEndpoint;
 }

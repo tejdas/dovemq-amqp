@@ -37,11 +37,9 @@ public class Subscriber implements CAMQPMessageReceiver
     public Subscriber(String targetName, CAMQPTargetInterface targetEndpoint)
     {
         super();
-        this.targetName = targetName;
         this.targetEndpoint = targetEndpoint;
     }
 
-    private final String targetName;
     private final CAMQPTargetInterface targetEndpoint;
     private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;
 }

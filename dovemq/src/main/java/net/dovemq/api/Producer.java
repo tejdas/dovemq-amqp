@@ -26,12 +26,18 @@ public class Producer
         sourceEndpoint.sendMessage(message);
     }
 
+    public void sendMessage(byte[] payload)
+    {
+        DoveMQMessage message = MessageFactory.createMessage();
+        message.addPayload(payload);
+        sourceEndpoint.sendMessage(message);
+    }
+
     Producer(String sourceName, CAMQPSourceInterface sourceEndpoint)
     {
         super();
-        this.sourceName = sourceName;
         this.sourceEndpoint = sourceEndpoint;
     }
-    private final String sourceName;
+
     private final CAMQPSourceInterface sourceEndpoint;
 }

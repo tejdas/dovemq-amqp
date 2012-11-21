@@ -239,6 +239,22 @@ public class DoveMQMessageImpl implements DoveMQMessage
     }
 
     @Override
+    public boolean hasMultiplePayloads()
+    {
+        return (payloads != null);
+    }
+
+    @Override
+    public byte[] getPayload()
+    {
+        if (payload != null)
+        {
+            return payload.getPayload();
+        }
+        return null;
+    }
+
+    @Override
     public Collection<byte[]> getPayloads()
     {
         Collection<byte[]> payloadCollection = null;

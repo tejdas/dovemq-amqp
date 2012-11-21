@@ -52,7 +52,6 @@ public class Consumer implements CAMQPMessageReceiver
     Consumer(String targetName, CAMQPTargetInterface targetEndpoint)
     {
         super();
-        this.targetName = targetName;
         this.endpointPolicy = new DoveMQEndpointPolicy();
         this.targetEndpoint = targetEndpoint;
     }
@@ -60,12 +59,10 @@ public class Consumer implements CAMQPMessageReceiver
     Consumer(String targetName, CAMQPTargetInterface targetEndpoint, DoveMQEndpointPolicy endpointPolicy)
     {
         super();
-        this.targetName = targetName;
         this.endpointPolicy = endpointPolicy;
         this.targetEndpoint = targetEndpoint;
     }
 
-    private final String targetName;
     private final DoveMQEndpointPolicy endpointPolicy;
     private final CAMQPTargetInterface targetEndpoint;
     private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;

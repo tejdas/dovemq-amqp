@@ -1,7 +1,5 @@
 package net.dovemq.samples.basic;
 
-import java.util.Collection;
-
 import net.dovemq.api.ConnectionFactory;
 import net.dovemq.api.Consumer;
 import net.dovemq.api.DoveMQMessage;
@@ -16,12 +14,9 @@ public class BasicConsumer
         @Override
         public void messageReceived(DoveMQMessage message)
         {
-            Collection<byte[]> body = message.getPayloads();
-            for (byte[] b : body)
-            {
-                String bString = new String(b);
-                System.out.println(bString);
-            }
+            byte[] body = message.getPayload();
+            String payload = new String(body);
+            System.out.println("Received message: " + payload);
         }
     }
 
@@ -35,9 +30,11 @@ public class BasicConsumer
             }
         });
 
+        String brokerIp = System.getProperty("dovemq.broker", "localhost");
         ConnectionFactory.initialize("consumer");
 
-        Session session = ConnectionFactory.createSession("localhost");
+        Session session = ConnectionFactory.createSession(brokerIp);
+        System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
         Consumer consumer = session.createConsumer("firstQueue");
 

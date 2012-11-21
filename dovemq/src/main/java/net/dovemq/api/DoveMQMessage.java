@@ -33,6 +33,8 @@ public interface DoveMQMessage
     public String getApplicationProperty(String key);
     public Collection<String> getApplicationPropertyKeys();
     public void addPayload(byte[] payload);
+    public boolean hasMultiplePayloads();
+    public byte[] getPayload();
     public Collection<byte[]> getPayloads();
     public void addFooter(String key, String val);
     public String getFooter(String key);

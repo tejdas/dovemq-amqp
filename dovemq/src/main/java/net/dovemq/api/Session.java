@@ -26,14 +26,12 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public class Session
 {
-    private final String brokerContainerId;
     private final String endpointId;
     private final CAMQPSessionInterface session;
 
     Session(String brokerContainerId, String endpointId, CAMQPSessionInterface session)
     {
         super();
-        this.brokerContainerId = brokerContainerId;
         this.endpointId = endpointId;
         this.session = session;
     }
