@@ -33,7 +33,7 @@ public final class CAMQPListener
     private boolean hasShutdown = false;
     private final String listenAddress = "0.0.0.0";
     private final CAMQPConnectionProperties defaultConnectionProps;
-    
+
     private ChannelFactory factory = null;
     private Channel serverChannel = null;
     private CAMQPConnectionPipelineFactory pipelineFactory = null;
@@ -53,15 +53,15 @@ public final class CAMQPListener
         // Configure the server.
         factory =
                 new NioServerSocketChannelFactory(Executors
-                        .newCachedThreadPool(), Executors.newCachedThreadPool(), 3);
+                        .newCachedThreadPool(), Executors.newCachedThreadPool());
 
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
-        
+
         pipelineFactory = new CAMQPConnectionPipelineFactory(false, defaultConnectionProps);
         bootstrap.setPipelineFactory(pipelineFactory);
         serverChannel = bootstrap.bind(new InetSocketAddress(listenAddress, CAMQPConnectionConstants.AMQP_IANA_PORT));
         log.info("CAMQP Listener on port: " + CAMQPConnectionConstants.AMQP_IANA_PORT);
-        System.out.println("DoveMQ Listener on port: " + CAMQPConnectionConstants.AMQP_IANA_PORT);       
+        System.out.println("DoveMQ Listener on port: " + CAMQPConnectionConstants.AMQP_IANA_PORT);
     }
 
     public void shutdown()
@@ -79,6 +79,6 @@ public final class CAMQPListener
         future.awaitUninterruptibly();
         factory.releaseExternalResources();
         log.info("DoveMQ Listener shut down");
-        System.out.println("DoveMQ Listener shut down");        
+        System.out.println("DoveMQ Listener shut down");
     }
 }

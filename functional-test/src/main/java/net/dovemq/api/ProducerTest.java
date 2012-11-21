@@ -58,7 +58,11 @@ public class ProducerTest
             }
 
             if (session == null)
-                session = ConnectionFactory.createSession(brokerIP);
+            {
+                DoveMQEndpointPolicy policy = new DoveMQEndpointPolicy();
+                policy.createEndpointOnNewConnection();
+                session = ConnectionFactory.createSession(brokerIP, policy);
+            }
 
             Producer producer = session.createProducer(String.format("%s.%d", queueName, id));
 
@@ -105,7 +109,6 @@ public class ProducerTest
         ConnectionFactory.initialize(endpointName);
 
         Session session = null;
-        System.out.println("created session");
 
         ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
         CountDownLatch startSignal = new CountDownLatch(1);
