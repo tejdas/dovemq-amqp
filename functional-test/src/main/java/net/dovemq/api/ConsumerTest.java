@@ -38,12 +38,17 @@ public class ConsumerTest
     private static String queueName;
     private static int NUM_THREADS;
     private static boolean ackExplicit = false;
-    private static int sleepSeconds;
     private static ExecutorService executor;
 
     private static class TestMessageReceiver implements DoveMQMessageReceiver
     {
         private final BlockingQueue<DoveMQMessage> receivedMessages = new LinkedBlockingQueue<DoveMQMessage>();
+        private volatile boolean receivedFinalMessage = false;
+
+        public boolean hasReceivedFinalMessage()
+        {
+            return receivedFinalMessage;
+        }
 
         public TestMessageReceiver(PrintWriter fw, Consumer consumer)
         {
@@ -59,7 +64,15 @@ public class ConsumerTest
             for (byte[] b : body)
             {
                 String bString = new String(b);
-                fw.println(bString);
+                if ("QUEUE_TEST_DONE".equalsIgnoreCase(bString))
+                {
+                    if (!ackExplicit)
+                    {
+                        receivedFinalMessage = true;
+                    }
+                }
+                else
+                    fw.println(bString);
 
                 if (ackExplicit)
                     receivedMessages.add(message);
@@ -71,13 +84,22 @@ public class ConsumerTest
             DoveMQMessage message = receivedMessages.poll();
             try
             {
-                Thread.sleep(new Random().nextInt(25) + 25);
+                Thread.sleep(new Random().nextInt(5) + 5);
             }
             catch (InterruptedException e)
             {
             }
             if (message != null)
             {
+                byte[] body = message.getPayload();
+                if (body != null)
+                {
+                    String bString = new String(body);
+                    if ("QUEUE_TEST_DONE".equalsIgnoreCase(bString))
+                    {
+                        receivedFinalMessage = true;
+                    }
+                }
                 consumer.acknowledge(message);
             }
         }
@@ -114,10 +136,9 @@ public class ConsumerTest
 
     private static class TestConsumer extends CAMQPTestTask implements Runnable
     {
-        public TestConsumer(CountDownLatch startSignal, CountDownLatch doneSignal, Session session, int id)
+        public TestConsumer(CountDownLatch startSignal, CountDownLatch doneSignal, int id)
         {
             super(startSignal, doneSignal);
-            this.session = session;
             this.id = id;
         }
 
@@ -133,12 +154,9 @@ public class ConsumerTest
             {
             }
 
-            if (session == null)
-            {
-                DoveMQEndpointPolicy policy = new DoveMQEndpointPolicy();
-                policy.createEndpointOnNewConnection();
-                session = ConnectionFactory.createSession(brokerIP, policy);
-            }
+            DoveMQEndpointPolicy policy = new DoveMQEndpointPolicy();
+            policy.createEndpointOnNewConnection();
+            session = ConnectionFactory.createSession(brokerIP, policy);
 
             String suffixedQueueName = String.format("%s.%d", queueName, id);
             Consumer consumer = null;
@@ -165,13 +183,17 @@ public class ConsumerTest
             if (ackExplicit)
                 executor.submit(acker);
 
-            System.out.println("consumer sleeping for " + sleepSeconds + " seconds");
-            try
+            while (!messageReceiver.hasReceivedFinalMessage())
             {
-                Thread.sleep(1000*sleepSeconds);
-            }
-            catch (InterruptedException e)
-            {
+                try
+                {
+                    Thread.sleep(1000);
+                }
+                catch (InterruptedException e)
+                {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
 
             if (ackExplicit)
@@ -192,11 +214,8 @@ public class ConsumerTest
         queueName = args[2];
         NUM_THREADS = Integer.parseInt(args[3]);
         ackExplicit = Boolean.parseBoolean(args[4]);
-        sleepSeconds = Integer.parseInt(args[5]);
 
         ConnectionFactory.initialize(endpointName);
-
-        Session session = null;
 
         executor = Executors.newFixedThreadPool(NUM_THREADS*2);
         CountDownLatch startSignal = new CountDownLatch(1);
@@ -204,12 +223,14 @@ public class ConsumerTest
 
         for (int i = 0; i < NUM_THREADS; i++)
         {
-            TestConsumer consumer = new TestConsumer(startSignal, doneSignal, session, i);
+            TestConsumer consumer = new TestConsumer(startSignal, doneSignal, i);
             executor.submit(consumer);
         }
 
         startSignal.countDown();
         doneSignal.await();
+        System.out.println("Consumer received all messages");
+        Thread.sleep(10000);
         executor.shutdown();
 
         ConnectionFactory.shutdown();

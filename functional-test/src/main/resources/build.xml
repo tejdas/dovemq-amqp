@@ -409,7 +409,6 @@
 			<arg value="${queueName}" />
 			<arg value="${numThreads}" />
 			<arg value="${numIterations}" />
-			<arg value="${sleepSeconds}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -425,7 +424,6 @@
 			<arg value="${queueName}" />
 			<arg value="${numThreads}" />
 			<arg value="${ackExplicit}" />
-			<arg value="${sleepSeconds}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -547,7 +545,6 @@
 				<param name="queueName" value="first" />
 				<param name="numThreads" value="64" />
 				<param name="ackExplicit" value="false" />
-				<param name="sleepSeconds" value="120" />
 			</antcall>
 
 			<antcall target="RunProducer">
@@ -555,7 +552,6 @@
 				<param name="queueName" value="first" />
 				<param name="numThreads" value="64" />
 				<param name="numIterations" value="5" />
-				<param name="sleepSeconds" value="120" />
 			</antcall>
 		</parallel>
 	</target>
@@ -571,7 +567,6 @@
 				<param name="queueName" value="first" />
 				<param name="numThreads" value="64" />
 				<param name="ackExplicit" value="true" />
-				<param name="sleepSeconds" value="60" />
 			</antcall>
 
 			<antcall target="RunProducer">
@@ -579,7 +574,6 @@
 				<param name="queueName" value="first" />
 				<param name="numThreads" value="64" />
 				<param name="numIterations" value="1" />
-				<param name="sleepSeconds" value="60" />
 			</antcall>
 		</parallel>
 	</target>

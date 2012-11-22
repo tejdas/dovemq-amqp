@@ -50,14 +50,14 @@ public class DoveMQEndpointPolicy
 
     public void createEndpointOnNewConnection()
     {
-        this.createConnection = true;
+        this.createSessionOnNewConnection = true;
     }
 
     public boolean doCreateEndpointOnNewConnection()
     {
-        return this.createConnection;
+        return this.createSessionOnNewConnection;
     }
 
     private final MessageAcknowledgementPolicy ackPolicy;
-    private boolean createConnection = false;
+    private boolean createSessionOnNewConnection = false;
 }

@@ -17,10 +17,18 @@
 
 package net.dovemq.api;
 
+import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 
-public class Producer
+public class Producer implements CAMQPMessageDispositionObserver
 {
+    private volatile DoveMQMessageAckReceiver ackReceiver = null;
+
+    public void registerMessageAckReceiver(DoveMQMessageAckReceiver ackReceiver)
+    {
+        this.ackReceiver = ackReceiver;
+    }
+
     public void sendMessage(DoveMQMessage message)
     {
         sourceEndpoint.sendMessage(message);
@@ -37,7 +45,17 @@ public class Producer
     {
         super();
         this.sourceEndpoint = sourceEndpoint;
+        sourceEndpoint.registerDispositionObserver(this);
     }
 
     private final CAMQPSourceInterface sourceEndpoint;
+
+    @Override
+    public void messageAckedByConsumer(DoveMQMessage message)
+    {
+        if (ackReceiver != null)
+        {
+            ackReceiver.messageAcknowledged(message);
+        }
+    }
 }
