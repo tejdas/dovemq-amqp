@@ -26,6 +26,13 @@ public class Publisher
         sourceEndpoint.sendMessage(message);
     }
 
+    public void sendMessage(byte[] payload)
+    {
+        DoveMQMessage message = MessageFactory.createMessage();
+        message.addPayload(payload);
+        sourceEndpoint.sendMessage(message);
+    }
+
     Publisher(String sourceName, CAMQPSourceInterface sourceEndpoint)
     {
         super();

@@ -1,12 +1,12 @@
-package net.dovemq.samples.basic;
+package net.dovemq.samples.pubsub;
 
 import net.dovemq.api.ConnectionFactory;
-import net.dovemq.api.Consumer;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.api.Session;
+import net.dovemq.api.Subscriber;
 
-public class BasicConsumer
+public class TopicSubscriber
 {
     private static volatile boolean doShutdown = false;
     private static class SampleMessageReceiver implements DoveMQMessageReceiver
@@ -31,17 +31,17 @@ public class BasicConsumer
         });
 
         String brokerIp = System.getProperty("dovemq.broker", "localhost");
-        ConnectionFactory.initialize("consumer");
+        ConnectionFactory.initialize("subscriber");
 
         Session session = ConnectionFactory.createSession(brokerIp);
         System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
-        Consumer consumer = session.createConsumer("firstQueue");
+        Subscriber subscriber = session.createSubscriber("sampleTopic");
 
         SampleMessageReceiver messageReceiver = new SampleMessageReceiver();
-        consumer.registerMessageReceiver(messageReceiver);
+        subscriber.registerMessageReceiver(messageReceiver);
 
-        System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
+        System.out.println("waiting for messages. Press Ctl-C to shut down subscriber.");
         while (!doShutdown)
         {
             try

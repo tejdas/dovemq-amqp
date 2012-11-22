@@ -339,6 +339,7 @@ public class CAMQPDefinitionTarget
         formatCode = decoder.readFormatCode();
         if (formatCode != CAMQPFormatCodes.NULL)
         {
+            data.isSetAddress = true;
             if (formatCode == CAMQPFormatCodes.STR8_UTF8)
             {
                 data.address = decoder.readString(formatCode);

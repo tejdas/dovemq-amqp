@@ -478,6 +478,7 @@ public class CAMQPDefinitionProperties
         formatCode = decoder.readFormatCode();
         if (formatCode != CAMQPFormatCodes.NULL)
         {
+            data.isSetMessageId = true;
             if (formatCode == CAMQPFormatCodes.UUID)
             {
                 data.messageId = decoder.readUUID();
@@ -512,6 +513,7 @@ public class CAMQPDefinitionProperties
         formatCode = decoder.readFormatCode();
         if (formatCode != CAMQPFormatCodes.NULL)
         {
+            data.isSetTo = true;
             if (formatCode == CAMQPFormatCodes.STR8_UTF8)
             {
                 data.to = decoder.readString(formatCode);
@@ -528,6 +530,7 @@ public class CAMQPDefinitionProperties
         formatCode = decoder.readFormatCode();
         if (formatCode != CAMQPFormatCodes.NULL)
         {
+            data.isSetReplyTo = true;
             if (formatCode == CAMQPFormatCodes.STR8_UTF8)
             {
                 data.replyTo = decoder.readString(formatCode);
@@ -537,6 +540,7 @@ public class CAMQPDefinitionProperties
         formatCode = decoder.readFormatCode();
         if (formatCode != CAMQPFormatCodes.NULL)
         {
+            data.isSetCorrelationId = true;
             if (formatCode == CAMQPFormatCodes.UUID)
             {
                 data.correlationId = decoder.readUUID();
