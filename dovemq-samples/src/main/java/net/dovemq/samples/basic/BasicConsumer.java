@@ -6,9 +6,19 @@ import net.dovemq.api.DoveMQMessage;
 import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.api.Session;
 
+/**
+ * This sample shows how to create a DoveMQ consumer that creates
+ * a transient queue in the DoveMQ broker, and waits for incoming
+ * messages.
+ */
 public class BasicConsumer
 {
     private static volatile boolean doShutdown = false;
+
+    /**
+     * Implementation of a sample MessageReceiver callback,
+     * that is registered with the Consumer.
+     */
     private static class SampleMessageReceiver implements DoveMQMessageReceiver
     {
         @Override
@@ -30,14 +40,32 @@ public class BasicConsumer
             }
         });
 
+        /*
+         * Read the broker IP address passed in as -Dbroker.ip
+         * Defaults to localhost
+         */
         String brokerIp = System.getProperty("dovemq.broker", "localhost");
+
+        /*
+         * Initialize the DoveMQ runtime, specifying an endpoint name.
+         */
         ConnectionFactory.initialize("consumer");
 
+        /*
+         * Create an AMQP session.
+         */
         Session session = ConnectionFactory.createSession(brokerIp);
         System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
+        /*
+         * Create a consumer that binds to a transient queue on the broker.
+         */
         Consumer consumer = session.createConsumer("firstQueue");
 
+        /*
+         * Register a message receiver with the consumer to asynchronously
+         * receive messages.
+         */
         SampleMessageReceiver messageReceiver = new SampleMessageReceiver();
         consumer.registerMessageReceiver(messageReceiver);
 
@@ -54,7 +82,14 @@ public class BasicConsumer
             }
         }
 
+        /*
+         * Close the AMQP session
+         */
         session.close();
+
+        /*
+         * Shutdown DoveMQ runtime.
+         */
         ConnectionFactory.shutdown();
     }
 }

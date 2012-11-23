@@ -12,12 +12,33 @@ import net.dovemq.api.MessageFactory;
 import net.dovemq.api.Producer;
 import net.dovemq.api.Session;
 
+/**
+ * This sample demonstrates how to simulate RPC style communication
+ * by using a pair of queues, one for sending request and another
+ * for receiving response. The outgoing message is tagged with a
+ * messageId. The Responder sends a response message that is tagged
+ * with a correlationId that is the same as the messageId. The requester
+ * uses the correlationId to match the incoming response for the outgoing
+ * request.
+ */
 public class Requester
 {
+    /*
+     * Outgoing request messages are stored until a response message
+     * has been received.
+     */
     private static final ConcurrentMap<String, DoveMQMessage> outstandingRequests = new ConcurrentHashMap<String, DoveMQMessage>();
 
+    /**
+     * Implementation of a sample MessageReceiver callback,
+     * that is registered with the Consumer.
+     */
     private static class SampleMessageReceiver implements DoveMQMessageReceiver
     {
+        /**
+         * Receive the response message. Match its correlationId with the request message's
+         * messageId and remove the request message from outstandingRequests map.
+         */
         @Override
         public void messageReceived(DoveMQMessage message)
         {
@@ -35,26 +56,58 @@ public class Requester
         }
     }
 
+    /*
+     * The queue used to send the request message to.
+     */
+    private static final String TO_ADDRESS = "requestQueue";
+    /*
+     * The queue used to receive the response message from.
+     */
+    private static final String REPLY_TO_ADDRESS = "responseQueue";
+
     public static void main(String[] args) throws InterruptedException
     {
+        /*
+         * Read the broker IP address passed in as -Dbroker.ip
+         * Defaults to localhost
+         */
         String brokerIp = System.getProperty("dovemq.broker", "localhost");
-        ConnectionFactory.initialize("producer");
 
+        /*
+         * Initialize the DoveMQ runtime, specifying an endpoint name.
+         */
+        ConnectionFactory.initialize("rpcRequester");
+
+        /*
+         * Create an AMQP session.
+         */
         Session session = ConnectionFactory.createSession(brokerIp);
         System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
-        String toAddress = "requestQueue";
-        String replyToAddreess = "responseQueue";
+        /*
+         * Create a producer to send the request message to.
+         */
+        Producer producer = session.createProducer(TO_ADDRESS);
 
-        Producer producer = session.createProducer(toAddress);
-
-        Consumer consumer = session.createConsumer(replyToAddreess);
+        /*
+         * Create a consumer and register a message receiver to
+         * receive the response message from.
+         */
+        Consumer consumer = session.createConsumer(REPLY_TO_ADDRESS);
         consumer.registerMessageReceiver(new SampleMessageReceiver());
 
+        /*
+         * Create and send a request message.
+         */
         DoveMQMessage message = MessageFactory.createMessage();
         String messageId = UUID.randomUUID().toString();
         message.getMessageProperties().setMessageId(messageId);
-        message.getMessageProperties().setReplyToAddress(replyToAddreess);
+        message.getMessageProperties().setReplyToAddress(REPLY_TO_ADDRESS);
+
+        /*
+         * Put the message in the outstandingRequests map. It is removed
+         * when a response is received.
+         */
         outstandingRequests.put(messageId,  message);
 
         String msg = "Request from Producer";
@@ -65,7 +118,14 @@ public class Requester
         System.out.println("waiting for response");
         Thread.sleep(10000);
 
+        /*
+         * Close the AMQP session
+         */
         session.close();
+
+        /*
+         * Shutdown DoveMQ runtime.
+         */
         ConnectionFactory.shutdown();
     }
 }
