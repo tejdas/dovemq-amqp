@@ -92,6 +92,9 @@ b. Make sure java is in the path.
 
 c. Run a sample class:
 
-java -cp dovemq-samples-1.0-SNAPSHOT.jar:dovemq-1.0-SNAPSHOT.jar:log4j-1.2.15.jar:netty-3.2.4.Final.jar:commons-lang-2.5.jar -Ddovemq.log=sample.log -Ddovemq.broker=<BROKER_IP> <SAMPLE_MAIN_CLASS>
+java -cp dovemq-samples-1.0-SNAPSHOT.jar:dovemq-1.0-SNAPSHOT.jar:log4j-1.2.15.jar:netty-3.2.4.Final.jar:commons-lang-2.5.jar -Ddovemq.log=sample.log -Ddovemq.broker={BROKER_IP} {SAMPLE_MAIN_CLASS}
+
+Example:
+java -cp dovemq-samples-1.0-SNAPSHOT.jar:dovemq-1.0-SNAPSHOT.jar:log4j-1.2.15.jar:netty-3.2.4.Final.jar:commons-lang-2.5.jar -Ddovemq.log=sample.log -Ddovemq.broker=localhost net.dovemq.samples.basic.BasicConsumer
 
 See the README.txt in the samples for specific examples on how to run the samples.
