@@ -43,20 +43,20 @@ Build the source
 
 You need Maven 3.x to build the code.
 
-1. Run:
+Under dovemq directory, run:
 
-   mvn clean install -DskipTests
+   mvn clean assembly:assembly -DskipTests
 
-2. Under dovemq, run:
+This creates a tar/zip with all the required jars that's needed to run the broker:
 
-   mvn clean install assembly:assembly -DskipTests
+dovemq-1.0-SNAPSHOT-bin.tar.gz
 
-This packages the required jars that's needed to run the broker.
+dovemq-1.0-SNAPSHOT-bin.zip
 
 Run the broker
 --------------
 
-a. Unzip the tar/zip built in step 2 above.
+a. Unzip the tar or zip that was generated in the above step.
 
 b. Make sure java is in the path.
 
@@ -68,5 +68,30 @@ c. On Unix, run
   
   bin\runbroker.bat
 
+Build the samples
+-----------------
 
+You need Maven 3.x to build the code.
 
+Under dovemq-samples directory, run:
+
+   mvn clean assembly:assembly -DskipTests
+
+This creates a tar/zip with all the required jars that's needed to run the samples:
+
+dovemq-samples-1.0-SNAPSHOT-bin.tar.gz
+
+dovemq-samples-1.0-SNAPSHOT-bin.zip
+
+Run the samples
+---------------
+
+a. Unzip the tar or zip that was generated in the above step.
+
+b. Make sure java is in the path.
+
+c. Run a sample class:
+
+java -cp dovemq-samples-1.0-SNAPSHOT.jar:dovemq-1.0-SNAPSHOT.jar:log4j-1.2.15.jar:netty-3.2.4.Final.jar:commons-lang-2.5.jar -Ddovemq.log=sample.log -Ddovemq.broker=<BROKER_IP> <SAMPLE_MAIN_CLASS>
+
+See the README.txt in the samples for specific examples on how to run the samples.
