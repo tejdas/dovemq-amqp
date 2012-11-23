@@ -22,14 +22,35 @@ import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
-public class Consumer implements CAMQPMessageReceiver
+/**
+ * This class is used by consumers to receive and
+ * (optionally) acknowledge the receipt of an AMQP message.
+ * It encapsulates an AMQP Link Receiver.
+ *
+ * @author tejdas
+ */
+public final class Consumer implements CAMQPMessageReceiver
 {
+    private final DoveMQEndpointPolicy endpointPolicy;
+    private final CAMQPTargetInterface targetEndpoint;
+    private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;
+
+    /**
+     * Receives an AMQP message, and dispatches it to the registered
+     * DoveMQMessageReceiver.
+     */
     @Override
     public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
     {
         doveMQMessageReceiver.messageReceived(message);
     }
 
+    /**
+     * Register a DoveMQMessageReceiver with the Consumer, so that
+     * the receiver will asynchronously receive AMQP messages.
+     *
+     * @param messageReceiver
+     */
     public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver)
     {
         this.doveMQMessageReceiver = messageReceiver;
@@ -40,6 +61,13 @@ public class Consumer implements CAMQPMessageReceiver
     {
     }
 
+    /**
+     * Called by the message receiver to explicitly acknowledge the receipt
+     * of an AMQP message. This is relevant only when the acknowledgment policy
+     * is CONSUMER_ACKS.
+     *
+     * @param message
+     */
     public void acknowledge(DoveMQMessage message)
     {
         if (endpointPolicy.getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS)
@@ -62,8 +90,4 @@ public class Consumer implements CAMQPMessageReceiver
         this.endpointPolicy = endpointPolicy;
         this.targetEndpoint = targetEndpoint;
     }
-
-    private final DoveMQEndpointPolicy endpointPolicy;
-    private final CAMQPTargetInterface targetEndpoint;
-    private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;
 }

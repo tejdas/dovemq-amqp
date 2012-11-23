@@ -17,8 +17,21 @@
 
 package net.dovemq.api;
 
-public class DoveMQEndpointPolicy
+/**
+ * Class used to programatically configure a DoveMQ endpoint.
+ * @author tejdas
+ */
+public final class DoveMQEndpointPolicy
 {
+    /**
+     * AUTO: the message is automatically acknowledged by the runtime
+     * after it has been delivered to the consumer via
+     * {@link DoveMQMessageReceiver#messageReceived()}
+     *
+     * CONSUMER_ACKS: the message recipient needs to explicitly
+     * acknowledge the receipt of the message via
+     * {@link Consumer#acknowledge(DoveMQMessage)}
+     */
     public static enum MessageAcknowledgementPolicy
     {
         AUTO,
@@ -48,6 +61,11 @@ public class DoveMQEndpointPolicy
         return ackPolicy;
     }
 
+    /**
+     * Instructs the endpoint to create the Session over
+     * a new AMQP connection. By default, it reuses an
+     * existing AMQP connection.
+     */
     public void createEndpointOnNewConnection()
     {
         this.createSessionOnNewConnection = true;

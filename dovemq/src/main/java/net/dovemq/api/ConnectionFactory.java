@@ -22,6 +22,12 @@ import net.dovemq.transport.link.CAMQPLinkManager;
 import net.dovemq.transport.session.CAMQPSessionFactory;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
+/**
+ * This class is used to initialize and shutdown DoveMQ runtime.
+ * Also used as a factory to create AMQP sessions.
+ *
+ * @author tejdas
+ */
 public final class ConnectionFactory
 {
     private volatile static String endpointId = null;
@@ -59,6 +65,14 @@ public final class ConnectionFactory
         }
     }
 
+    /**
+     * Creates a new Session to the target DoveMQ broker.
+     * Internally, it creates an AMQP connection if needed.
+     * It then creates an AMQP session over it.
+     *
+     * @param targetDoveMQBrokerAddress
+     * @return newly created Session
+     */
     public static Session createSession(String targetDoveMQBrokerAddress)
     {
         String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
@@ -66,6 +80,15 @@ public final class ConnectionFactory
         return new Session(brokerContainerId, endpointId, camqpSession);
     }
 
+    /**
+     * Creates a new Session to the target DoveMQ broker, with the
+     * specified DoveMQEndpointPolicy.
+     * Internally, it creates an AMQP connection if needed.
+     * It then creates an AMQP session over it.
+     *
+     * @param targetDoveMQBrokerAddress
+     * @return newly created Session
+     */
     public static Session createSession(String targetDoveMQBrokerAddress, DoveMQEndpointPolicy endpointPolicy)
     {
         String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);

@@ -15,7 +15,7 @@ public class TopicPublisher
     public static void main(String[] args)
     {
         /*
-         * Read the broker IP address passed in as -Dbroker.ip
+         * Read the broker IP address passed in as -Ddovemq.broker
          * Defaults to localhost
          */
         String brokerIp = System.getProperty("dovemq.broker", "localhost");
@@ -43,14 +43,14 @@ public class TopicPublisher
         String msg = "Hello from Publisher";
         System.out.println("publishing message: " + msg);
         message.addPayload(msg.getBytes());
-        publisher.sendMessage(message);
+        publisher.publishMessage(message);
 
         /*
          * Publish another message.
          */
         String secondmsg = "Hello again from Publisher, second message";
         System.out.println("sending another message: " + secondmsg);
-        publisher.sendMessage(secondmsg.getBytes());
+        publisher.publishMessage(secondmsg.getBytes());
 
         /*
          * Close the AMQP session

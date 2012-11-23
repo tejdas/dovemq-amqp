@@ -108,6 +108,7 @@ public class Responder
         {
             shutdown = true;
         }
+
         private final Session session;
         private volatile boolean shutdown = false;
     }
@@ -135,7 +136,7 @@ public class Responder
         });
 
         /*
-         * Read the broker IP address passed in as -Dbroker.ip
+         * Read the broker IP address passed in as -Ddovemq.broker
          * Defaults to localhost
          */
         String brokerIp = System.getProperty("dovemq.broker", "localhost");

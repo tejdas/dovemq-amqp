@@ -20,20 +20,41 @@ package net.dovemq.api;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 
-public class Producer implements CAMQPMessageDispositionObserver
+/**
+ * This class is used by producers to send an AMQP message.
+ * It encapsulates an AMQP Link Sender.
+ *
+ * @author tejdas
+ */
+public final class Producer implements CAMQPMessageDispositionObserver
 {
     private volatile DoveMQMessageAckReceiver ackReceiver = null;
+    private final CAMQPSourceInterface sourceEndpoint;
 
+    /**
+     * Register a DoveMQMessageAckReceiver with the Producer, so that
+     * the sender will be asynchronously notified of a message acknowledgment.
+     *
+     * @param ackReceiver
+     */
     public void registerMessageAckReceiver(DoveMQMessageAckReceiver ackReceiver)
     {
         this.ackReceiver = ackReceiver;
     }
 
+    /**
+     * Send an AMQP message.
+     * @param message
+     */
     public void sendMessage(DoveMQMessage message)
     {
         sourceEndpoint.sendMessage(message);
     }
 
+    /**
+     * Send a binary payload as an AMQP message.
+     * @param payload
+     */
     public void sendMessage(byte[] payload)
     {
         DoveMQMessage message = MessageFactory.createMessage();
@@ -48,8 +69,10 @@ public class Producer implements CAMQPMessageDispositionObserver
         sourceEndpoint.registerDispositionObserver(this);
     }
 
-    private final CAMQPSourceInterface sourceEndpoint;
-
+    /**
+     * Receives the message acknowledgment and forwards
+     * it to the registered DoveMQMessageAckReceiver.
+     */
     @Override
     public void messageAckedByConsumer(DoveMQMessage message)
     {

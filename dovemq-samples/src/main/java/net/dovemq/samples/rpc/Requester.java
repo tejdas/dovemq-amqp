@@ -68,7 +68,7 @@ public class Requester
     public static void main(String[] args) throws InterruptedException
     {
         /*
-         * Read the broker IP address passed in as -Dbroker.ip
+         * Read the broker IP address passed in as -Ddovemq.broker
          * Defaults to localhost
          */
         String brokerIp = System.getProperty("dovemq.broker", "localhost");

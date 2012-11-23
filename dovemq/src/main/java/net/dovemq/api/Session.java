@@ -24,7 +24,14 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
-public class Session
+/**
+ * This class represents an AMQP session.
+ * It is also used as a factory to create
+ * Producer, Consumer, Publisher and Subscriber.
+ *
+ * @author tejdas
+ */
+public final class Session
 {
     private final String endpointId;
     private final CAMQPSessionInterface session;
@@ -41,6 +48,13 @@ public class Session
         session.close();
     }
 
+    /**
+     * Create a Producer and bind it to a transient queue
+     * on the DoveMQ broker.
+     *
+     * @param queueName
+     * @return
+     */
     public Producer createProducer(String queueName)
     {
         String source = String.format("%s.%s", endpointId, queueName);
@@ -48,6 +62,13 @@ public class Session
         return new Producer(source, sender);
     }
 
+    /**
+     * Create a Consumer and bind it to a transient queue
+     * on the DoveMQ broker.
+     *
+     * @param queueName
+     * @return
+     */
     public Consumer createConsumer(String queueName)
     {
         String target = String.format("%s.%s", endpointId, queueName);
@@ -55,6 +76,13 @@ public class Session
         return new Consumer(target, receiver);
     }
 
+    /**
+     * Create a Consumer and bind it to a transient queue
+     * on the DoveMQ broker.
+     *
+     * @param queueName
+     * @return
+     */
     public Consumer createConsumer(String queueName, DoveMQEndpointPolicy doveMQEndpointPolicy)
     {
         String target = String.format("%s.%s", endpointId, queueName);
@@ -64,6 +92,13 @@ public class Session
         return new Consumer(target, receiver, doveMQEndpointPolicy);
     }
 
+    /**
+     * Create a Publisher and bind it to a Topic
+     * on the DoveMQ broker.
+     *
+     * @param queueName
+     * @return
+     */
     public Publisher createPublisher(String topicName)
     {
         String source = String.format("%s.%s", endpointId, topicName);
@@ -73,6 +108,13 @@ public class Session
         return new Publisher(source, sender);
     }
 
+    /**
+     * Create a Subscriber and bind it to Topic
+     * on the DoveMQ broker.
+     *
+     * @param queueName
+     * @return
+     */
     public Subscriber createSubscriber(String topicName)
     {
         String target = String.format("%s.%s", endpointId, topicName);

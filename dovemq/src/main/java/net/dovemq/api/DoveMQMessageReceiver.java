@@ -17,6 +17,12 @@
 
 package net.dovemq.api;
 
+/**
+ * An AMQP message receiver must implement this interface
+ * to asynchronously receive incoming messages.
+ *
+ * @author tejdas
+ */
 public interface DoveMQMessageReceiver
 {
     public void messageReceived(DoveMQMessage message);

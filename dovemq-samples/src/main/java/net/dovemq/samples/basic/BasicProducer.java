@@ -15,7 +15,7 @@ public class BasicProducer
     public static void main(String[] args)
     {
         /*
-         * Read the broker IP address passed in as -Dbroker.ip
+         * Read the broker IP address passed in as -Ddovemq.broker
          * Defaults to localhost
          */
         String brokerIp = System.getProperty("dovemq.broker", "localhost");

@@ -2,7 +2,11 @@ package net.dovemq.api;
 
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
-public class MessageFactory
+/**
+ * A factory to create DoveMQMessage
+ * @author tejdas
+ */
+public final class MessageFactory
 {
     public static DoveMQMessage createMessage()
     {

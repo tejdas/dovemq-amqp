@@ -19,14 +19,29 @@ package net.dovemq.api;
 
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 
-public class Publisher
+/**
+ * This class is used by publishers to publish an AMQP message
+ * to a Topic.
+ * It encapsulates an AMQP Link Sender.
+ *
+ * @author tejdas
+ */
+public final class Publisher
 {
-    public void sendMessage(DoveMQMessage message)
+    /**
+     * Publish an AMQP message.
+     * @param message
+     */
+    public void publishMessage(DoveMQMessage message)
     {
         sourceEndpoint.sendMessage(message);
     }
 
-    public void sendMessage(byte[] payload)
+    /**
+     * Publish a binary payload as an AMQP message.
+     * @param payload
+     */
+    public void publishMessage(byte[] payload)
     {
         DoveMQMessage message = MessageFactory.createMessage();
         message.addPayload(payload);

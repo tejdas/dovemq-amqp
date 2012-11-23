@@ -61,7 +61,7 @@ public class PublisherTest
         {
             DoveMQMessage message = MessageFactory.createMessage();
             message.addPayload(sLine.getBytes());
-            publisher.sendMessage(message);
+            publisher.publishMessage(message);
         }
         freader.close();
     }
