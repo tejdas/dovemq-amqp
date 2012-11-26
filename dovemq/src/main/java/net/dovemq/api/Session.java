@@ -126,6 +126,16 @@ public final class Session
         return new Subscriber(target, receiver);
     }
 
+    /**
+     * Create a subscriber and bind it to Topic.
+     * Specify a messageFilterPattern, so that only
+     * messages with a matching routing tag are forwarded
+     * to this subscriber.
+     *
+     * @param topicName
+     * @param messageFilterPattern
+     * @return
+     */
     public Subscriber createSubscriber(String topicName, String messageFilterPattern)
     {
         Pattern.compile(messageFilterPattern);
