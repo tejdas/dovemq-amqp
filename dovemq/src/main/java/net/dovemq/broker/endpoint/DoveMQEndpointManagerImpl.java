@@ -20,6 +20,7 @@ package net.dovemq.broker.endpoint;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
@@ -32,7 +33,7 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     private final ConcurrentMap<String, TopicRouter> topicRouters = new ConcurrentHashMap<String, TopicRouter>();
 
     @Override
-    public void producerAttached(String queueName, CAMQPTargetInterface producer)
+    public void producerAttached(String queueName, CAMQPTargetInterface producer, CAMQPEndpointPolicy endpointPolicy)
     {
         QueueRouter queueRouter = new QueueRouter(queueName);
         QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
@@ -64,7 +65,7 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     }
 
     @Override
-    public void consumerAttached(String queueName, CAMQPSourceInterface consumer)
+    public void consumerAttached(String queueName, CAMQPSourceInterface consumer, CAMQPEndpointPolicy endpointPolicy)
     {
         QueueRouter queueRouter = new QueueRouter(queueName);
         QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
@@ -95,7 +96,7 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     }
 
     @Override
-    public void publisherAttached(String topicName, CAMQPTargetInterface publisher)
+    public void publisherAttached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy)
     {
         TopicRouter topicRouter = new TopicRouter();
         TopicRouter topicRouterInMap = topicRouters.putIfAbsent(topicName, topicRouter);
@@ -127,17 +128,17 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     }
 
     @Override
-    public void subscriberAttached(String topicName, CAMQPSourceInterface subscriber)
+    public void subscriberAttached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy)
     {
         TopicRouter topicRouter = new TopicRouter();
         TopicRouter topicRouterInMap = topicRouters.putIfAbsent(topicName, topicRouter);
         if (topicRouterInMap == null)
         {
-            topicRouter.subscriberAttached(subscriber);
+            topicRouter.subscriberAttached(subscriber, endpointPolicy);
         }
         else
         {
-            topicRouterInMap.subscriberAttached(subscriber);
+            topicRouterInMap.subscriberAttached(subscriber, endpointPolicy);
         }
     }
 

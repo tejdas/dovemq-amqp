@@ -141,6 +141,15 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         data.setSndSettleMode(endpointPolicy.getSenderSettleMode());
         data.setRcvSettleMode(endpointPolicy.getReceiverSettleMode());
 
+        /*
+         * Populate custom Endpoint properties
+         */
+        if (!endpointPolicy.getCustomProperties().isEmpty())
+        {
+            data.getProperties().putAll(endpointPolicy.getCustomProperties());
+            data.setRequiredProperties(true);
+        }
+
         linkStateActor.sendAttach(data);
         linkStateActor.waitForAttached();
     }
@@ -299,6 +308,11 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
 
         endpointPolicy = new CAMQPEndpointPolicy(maxMessageSize, sndSettleMode, rcvSettleMode, endpointPolicy);
 
+        if (data.isSetProperties())
+        {
+            endpointPolicy.getCustomProperties().putAll(data.getProperties());
+        }
+
         CAMQPControlAttach responseData = new CAMQPControlAttach();
         responseData.setHandle(linkHandle);
         responseData.setName(linkName);
@@ -315,7 +329,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
                 if (StringUtils.equalsIgnoreCase(distMode, CAMQPConstants.STD_DIST_MODE_COPY))
                 {
                     endpointPolicy.setEndpointType(EndpointType.TOPIC);
-                    endpointPolicy.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE);
+                    endpointPolicy.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
                 }
             }
         }

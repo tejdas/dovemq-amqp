@@ -20,6 +20,7 @@ package net.dovemq.api;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class PublisherTest
 {
@@ -37,24 +38,53 @@ public class PublisherTest
         System.out.println("created session");
 
         Publisher publisher = session.createPublisher(topicName);
+
+        final AtomicInteger messageAckCount = new AtomicInteger(0);
+        publisher.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
+
+            @Override
+            public void messageAcknowledged(DoveMQMessage message)
+            {
+                messageAckCount.incrementAndGet();
+            }
+        });
+
         System.out.println("created publisher");
 
         Thread.sleep(10000);
 
         String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/" + fileName;
+        int messagesSent = 0;
         for (int i = 0; i < numIterations; i++)
         {
-            sendFileContents(sourceName, publisher);
+            messagesSent += sendFileContents(sourceName, publisher);
         }
 
-        System.out.println("publisher sleeping for 60 secs");
-        Thread.sleep(60000);
+        /*
+         * Send final message
+         */
+        publisher.publishMessage("TOPIC_TEST_DONE".getBytes());
+        messagesSent++;
+
+        while (messageAckCount.get() < messagesSent)
+        {
+            try
+            {
+                Thread.sleep(5000);
+                System.out.println("publisher waiting: " + messagesSent + " " + messageAckCount.get());
+            }
+            catch (InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
+            }
+        }
 
         ConnectionFactory.shutdown();
     }
 
-    private static void sendFileContents(String fileName, Publisher publisher) throws IOException
+    private static int sendFileContents(String fileName, Publisher publisher) throws IOException
     {
+        int messageCount = 0;
         BufferedReader freader = new BufferedReader(new FileReader(fileName));
         String sLine = null;
         while ((sLine = freader.readLine()) != null)
@@ -62,7 +92,9 @@ public class PublisherTest
             DoveMQMessage message = MessageFactory.createMessage();
             message.addPayload(sLine.getBytes());
             publisher.publishMessage(message);
+            messageCount++;
         }
         freader.close();
+        return messageCount;
     }
 }

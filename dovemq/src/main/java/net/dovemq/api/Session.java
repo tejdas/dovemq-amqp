@@ -17,6 +17,8 @@
 
 package net.dovemq.api;
 
+import java.util.regex.Pattern;
+
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.EndpointType;
@@ -120,6 +122,17 @@ public final class Session
         String target = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
+        CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(session, topicName, target, endpointPolicy);
+        return new Subscriber(target, receiver);
+    }
+
+    public Subscriber createSubscriber(String topicName, String messageFilterPattern)
+    {
+        Pattern.compile(messageFilterPattern);
+        String target = String.format("%s.%s", endpointId, topicName);
+        CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
+        endpointPolicy.setEndpointType(EndpointType.TOPIC);
+        endpointPolicy.setMessageFilterPattern(messageFilterPattern);
         CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(session, topicName, target, endpointPolicy);
         return new Subscriber(target, receiver);
     }

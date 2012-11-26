@@ -443,19 +443,6 @@
 		</java>
 	</target>
 
-	<target name="RunSubscriber">
-		<echo>...Run DoveMQ Link client</echo>
-		<java fork="true" classname="net.dovemq.api.SubscriberTest" maxmemory="2048M" failonerror="true">
-			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
-			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
-			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
-			<arg value="${broker.ip}" />
-			<arg value="${endpointName}" />
-			<arg value="${topicName}" />
-			<classpath refid="dovemq-functest-classpath" />
-		</java>
-	</target>
-
 	<target name="RunMTSubscriber">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.SubscriberMTTest" maxmemory="2048M" failonerror="true">
@@ -477,44 +464,60 @@
 		</delete>
 
 		<parallel>
-			<antcall target="RunSubscriber">
+			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub1" />
 				<param name="topicName" value="first" />
+				<param name="numThreads" value="4" />
+				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunSubscriber">
+			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub2" />
 				<param name="topicName" value="first" />
+				<param name="numThreads" value="4" />
+				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunSubscriber">
+			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub3" />
 				<param name="topicName" value="second" />
+				<param name="numThreads" value="2" />
+				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunSubscriber">
+			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub4" />
 				<param name="topicName" value="second" />
+				<param name="numThreads" value="2" />
+				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunSubscriber">
+			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub5" />
 				<param name="topicName" value="first" />
+				<param name="numThreads" value="2" />
+				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunSubscriber">
+			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub6" />
 				<param name="topicName" value="first" />
+				<param name="numThreads" value="2" />
+				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunSubscriber">
+			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub7" />
 				<param name="topicName" value="second" />
+				<param name="numThreads" value="4" />
+				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunSubscriber">
+			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub8" />
 				<param name="topicName" value="second" />
+				<param name="numThreads" value="4" />
+				<param name="sharedSession" value="false" />
 			</antcall>
 
 			<antcall target="RunPublisher">
@@ -543,15 +546,15 @@
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
 				<param name="queueName" value="first" />
-				<param name="numThreads" value="64" />
+				<param name="numThreads" value="16" />
 				<param name="ackExplicit" value="false" />
 			</antcall>
 
 			<antcall target="RunProducer">
 				<param name="endpointName" value="producer" />
 				<param name="queueName" value="first" />
-				<param name="numThreads" value="64" />
-				<param name="numIterations" value="5" />
+				<param name="numThreads" value="16" />
+				<param name="numIterations" value="50" />
 			</antcall>
 		</parallel>
 	</target>
@@ -565,15 +568,15 @@
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
 				<param name="queueName" value="first" />
-				<param name="numThreads" value="64" />
+				<param name="numThreads" value="16" />
 				<param name="ackExplicit" value="true" />
 			</antcall>
 
 			<antcall target="RunProducer">
 				<param name="endpointName" value="producer" />
 				<param name="queueName" value="first" />
-				<param name="numThreads" value="64" />
-				<param name="numIterations" value="1" />
+				<param name="numThreads" value="16" />
+				<param name="numIterations" value="10" />
 			</antcall>
 		</parallel>
 	</target>
@@ -595,7 +598,7 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
-				<param name="numIterations" value="5" />
+				<param name="numIterations" value="16" />
 			</antcall>
 		</parallel>
 	</target>
@@ -609,7 +612,7 @@
 			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub1" />
 				<param name="topicName" value="first" />
-				<param name="numThreads" value="64" />
+				<param name="numThreads" value="32" />
 				<param name="sharedSession" value="true" />
 			</antcall>
 
@@ -617,7 +620,7 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
-				<param name="numIterations" value="5" />
+				<param name="numIterations" value="16" />
 			</antcall>
 		</parallel>
 	</target>

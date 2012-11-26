@@ -19,7 +19,6 @@ package net.dovemq.api;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -37,6 +36,7 @@ public class SubscriberMTTest
 
     private static class TestMessageReceiver implements DoveMQMessageReceiver
     {
+        volatile boolean shutdown = false;
         public TestMessageReceiver(PrintWriter fw)
         {
             super();
@@ -46,10 +46,15 @@ public class SubscriberMTTest
         @Override
         public void messageReceived(DoveMQMessage message)
         {
-            Collection<byte[]> body = message.getPayloads();
-            for (byte[] b : body)
+            byte[] body = message.getPayload();
+            String bString = new String(body);
+
+            if ("TOPIC_TEST_DONE".equalsIgnoreCase(bString))
             {
-                String bString = new String(b);
+                shutdown = true;
+            }
+            else
+            {
                 fw.println(bString);
             }
         }
@@ -93,15 +98,18 @@ public class SubscriberMTTest
             {
             }
 
-            subscriber.registerMessageReceiver(new TestMessageReceiver(fw));
+            TestMessageReceiver messageReceiver = new TestMessageReceiver(fw);
+            subscriber.registerMessageReceiver(messageReceiver);
 
-            System.out.println("subscriber sleeping for 60 secs");
-            try
+            while (!messageReceiver.shutdown)
             {
-                Thread.sleep(60000);
-            }
-            catch (InterruptedException e)
-            {
+                try
+                {
+                    Thread.sleep(5000);
+                }
+                catch (InterruptedException e)
+                {
+                }
             }
 
             fw.flush();

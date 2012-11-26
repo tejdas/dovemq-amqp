@@ -135,4 +135,6 @@ public interface DoveMQMessage
      * @return
      */
     public Collection<String> getFooterKeys();
+
+    public void setRoutingTag(String tag);
 }

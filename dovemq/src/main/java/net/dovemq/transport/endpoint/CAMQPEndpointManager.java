@@ -86,11 +86,11 @@ public final class CAMQPEndpointManager
         {
             if (endpointPolicy.getEndpointType() == EndpointType.QUEUE)
             {
-                doveMQEndpointManager.consumerAttached(source, dovemqSource);
+                doveMQEndpointManager.consumerAttached(source, dovemqSource, endpointPolicy);
             }
             else
             {
-                doveMQEndpointManager.subscriberAttached(source, dovemqSource);
+                doveMQEndpointManager.subscriberAttached(source, dovemqSource, endpointPolicy);
             }
         }
         return dovemqSource;
@@ -105,11 +105,11 @@ public final class CAMQPEndpointManager
         {
             if (endpointPolicy.getEndpointType() == EndpointType.QUEUE)
             {
-                doveMQEndpointManager.producerAttached(target, dovemqTarget);
+                doveMQEndpointManager.producerAttached(target, dovemqTarget, endpointPolicy);
             }
             else
             {
-                doveMQEndpointManager.publisherAttached(target, dovemqTarget);
+                doveMQEndpointManager.publisherAttached(target, dovemqTarget, endpointPolicy);
             }
         }
         return dovemqTarget;

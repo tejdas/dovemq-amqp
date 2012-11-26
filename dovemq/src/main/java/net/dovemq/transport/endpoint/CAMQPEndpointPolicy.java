@@ -17,6 +17,9 @@
 
 package net.dovemq.transport.endpoint;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.dovemq.api.DoveMQEndpointPolicy;
 import net.dovemq.transport.link.CAMQPLinkConstants;
 import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
@@ -24,6 +27,8 @@ import net.dovemq.transport.protocol.data.CAMQPConstants;
 
 public final class CAMQPEndpointPolicy
 {
+    private static final String MESSAGE_FILTER_PATTERN_KEY = "MessageFilterPatternKey";
+
     public static enum CAMQPMessageDeliveryPolicy
     {
         AtleastOnce,
@@ -44,7 +49,21 @@ public final class CAMQPEndpointPolicy
     private final CAMQPMessageDeliveryPolicy deliveryPolicy;
     private ReceiverLinkCreditPolicy linkCreditPolicy;
     private DoveMQEndpointPolicy doveMQEndpointPolicy = new DoveMQEndpointPolicy();
+    private final Map<String, String> customProperties = new HashMap<String, String>();
 
+    public Map<String, String> getCustomProperties()
+    {
+        return customProperties;
+    }
+
+    public String getMessageFilterPattern()
+    {
+        return customProperties.get(MESSAGE_FILTER_PATTERN_KEY);
+    }
+    public void setMessageFilterPattern(String messageFilterPattern)
+    {
+        customProperties.put(MESSAGE_FILTER_PATTERN_KEY,  messageFilterPattern);
+    }
     public DoveMQEndpointPolicy getDoveMQEndpointPolicy()
     {
         return doveMQEndpointPolicy;

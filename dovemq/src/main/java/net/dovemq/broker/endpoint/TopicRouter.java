@@ -22,14 +22,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import net.dovemq.api.DoveMQMessage;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
-class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver, Runnable
+import org.apache.commons.lang.StringUtils;
+
+final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver, Runnable
 {
     private static class MessageContext
     {
@@ -48,11 +54,50 @@ class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserv
         final long contextCreationTime;
         final CAMQPTargetInterface sourceSink;
     }
-    private final ConcurrentMap<Long, MessageContext> inFlightMessageQueue = new ConcurrentHashMap<Long, MessageContext>();
 
-    private final Set<CAMQPSourceInterface> subscriberProxies = new CopyOnWriteArraySet<CAMQPSourceInterface>();
+    private static class SubscriberContext
+    {
+        boolean canMessageBePublished(String messageTag)
+        {
+            if (StringUtils.isEmpty(messageTag))
+            {
+                return false;
+            }
+
+            Matcher matcher =  messageFilterPattern.matcher(messageTag);
+            return matcher.matches();
+        }
+
+        CAMQPSourceInterface getSubscriberProxy()
+        {
+            return subscriberProxy;
+        }
+
+        boolean hasFilter()
+        {
+            return (messageFilterPattern != null);
+        }
+
+        public SubscriberContext(Pattern messageFilterPattern,
+                CAMQPSourceInterface subscriberProxy)
+        {
+            super();
+            this.messageFilterPattern = messageFilterPattern;
+            this.subscriberProxy = subscriberProxy;
+        }
+
+        private final Pattern messageFilterPattern;
+        private final CAMQPSourceInterface subscriberProxy;
+    }
+    private final ConcurrentMap<Long, MessageContext> inFlightMessageQueue = new ConcurrentHashMap<Long, MessageContext>(512,  0.75f, 64);
+
+    private final Set<SubscriberContext> subscriberProxies = new CopyOnWriteArraySet<SubscriberContext>();
     private final Set<CAMQPTargetInterface> publisherSinks = new CopyOnWriteArraySet<CAMQPTargetInterface>();
 
+    /**
+     * Acknowledge the completion of a message processing to a Publisher
+     * only when all the subscribers have acked the message receipt.
+     */
     @Override
     public void messageAckedByConsumer(DoveMQMessage message)
     {
@@ -60,7 +105,8 @@ class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserv
         MessageContext msgContext = inFlightMessageQueue.get(deliveryId);
         if (msgContext != null)
         {
-            if (0 == msgContext.numSubscribers.decrementAndGet())
+            int numSubscribersLeftToAck = msgContext.numSubscribers.decrementAndGet();
+            if (0 == numSubscribersLeftToAck)
             {
                 if (null != inFlightMessageQueue.remove(deliveryId))
                 {
@@ -75,21 +121,52 @@ class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserv
     {
         long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
         inFlightMessageQueue.put(deliveryId, new MessageContext(subscriberProxies.size(), target));
-        for (CAMQPSourceInterface subscriber : subscriberProxies)
+        String messageTag = message.getApplicationProperty(DoveMQMessageImpl.ROUTING_TAG_KEY);
+
+        for (SubscriberContext subscriberProxy : subscriberProxies)
         {
-            subscriber.sendMessage(message);
+            if (subscriberProxy.hasFilter())
+            {
+                if (subscriberProxy.canMessageBePublished(messageTag))
+                {
+                    subscriberProxy.getSubscriberProxy().sendMessage(message);
+                }
+            }
+            else
+            {
+                subscriberProxy.getSubscriberProxy().sendMessage(message);
+            }
         }
     }
 
-    void subscriberAttached(CAMQPSourceInterface destination)
+    void subscriberAttached(CAMQPSourceInterface destination, CAMQPEndpointPolicy endpointPolicy)
     {
-        subscriberProxies.add(destination);
+        Pattern messageFilterPattern = null;
+        String messageFilterPatternString = endpointPolicy.getMessageFilterPattern();
+        if (!StringUtils.isEmpty(messageFilterPatternString))
+        {
+            try
+            {
+                messageFilterPattern = Pattern.compile(messageFilterPatternString);
+            }
+            catch (PatternSyntaxException ex)
+            {
+                messageFilterPattern = null;
+            }
+        }
+        subscriberProxies.add(new SubscriberContext(messageFilterPattern, destination));
         destination.registerDispositionObserver(this);
     }
 
     void subscriberDetached(CAMQPSourceInterface targetProxy)
     {
-        subscriberProxies.remove(targetProxy);
+        for (SubscriberContext subscriberContext: subscriberProxies)
+        {
+            if (subscriberContext.subscriberProxy == targetProxy)
+            {
+                subscriberProxies.remove(subscriberContext);
+            }
+        }
     }
 
     void publisherAttached(CAMQPTargetInterface sourceSink)
