@@ -75,26 +75,22 @@ You need Maven 3.x to build the code.
 
 Under dovemq-samples directory, run:
 
-   mvn clean assembly:assembly -DskipTests
+   mvn clean install
 
-This creates a tar/zip with all the required jars that's needed to run the samples:
+This creates the following uber jar containing all the dependent jars, under the target directory:
 
-dovemq-samples-1.0-SNAPSHOT-bin.tar.gz
-
-dovemq-samples-1.0-SNAPSHOT-bin.zip
+dovemq-samples-1.0-SNAPSHOT.jar
 
 Run the samples
 ---------------
 
-a. Unzip the tar or zip that was generated in the above step.
+a. Make sure java is in the path.
 
-b. Make sure java is in the path.
+b. Run a sample class:
 
-c. Run a sample class:
-
-java -cp dovemq-samples-1.0-SNAPSHOT.jar:dovemq-1.0-SNAPSHOT.jar:log4j-1.2.15.jar:netty-3.2.4.Final.jar:commons-lang-2.5.jar -Ddovemq.log=sample.log -Ddovemq.broker={BROKER_IP} {SAMPLE_MAIN_CLASS}
+java -cp dovemq-samples-1.0-SNAPSHOT.jar -Ddovemq.log=sample.log -Ddovemq.broker={BROKER_IP} {SAMPLE_MAIN_CLASS}
 
 Example:
-java -cp dovemq-samples-1.0-SNAPSHOT.jar:dovemq-1.0-SNAPSHOT.jar:log4j-1.2.15.jar:netty-3.2.4.Final.jar:commons-lang-2.5.jar -Ddovemq.log=sample.log -Ddovemq.broker=localhost net.dovemq.samples.basic.BasicConsumer
+java -cp dovemq-samples-1.0-SNAPSHOT.jar -Ddovemq.log=consumer.log -Ddovemq.broker=localhost net.dovemq.samples.basic.BasicConsumer
 
 See the README.txt in the samples for specific examples on how to run the samples.

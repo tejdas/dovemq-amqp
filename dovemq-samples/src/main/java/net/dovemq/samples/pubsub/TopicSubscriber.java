@@ -7,17 +7,16 @@ import net.dovemq.api.Session;
 import net.dovemq.api.Subscriber;
 
 /**
- * This sample shows how to create a DoveMQ subscriber that creates
- * or binds to a topic on the DoveMQ broker, and waits for incoming
- * messages.
+ * This sample shows how to create a DoveMQ subscriber that creates or binds to
+ * a topic on the DoveMQ broker, and waits for incoming messages.
  */
 public class TopicSubscriber
 {
     private static volatile boolean doShutdown = false;
 
     /**
-     * Implementation of a sample MessageReceiver callback,
-     * that is registered with the Consumer.
+     * Implementation of a sample MessageReceiver callback, that is registered
+     * with the Consumer.
      */
     private static class SampleMessageReceiver implements DoveMQMessageReceiver
     {
@@ -41,8 +40,8 @@ public class TopicSubscriber
         });
 
         /*
-         * Read the broker IP address passed in as -Ddovemq.broker
-         * Defaults to localhost
+         * Read the broker IP address passed in as -Ddovemq.broker Defaults to
+         * localhost
          */
         String brokerIp = System.getProperty("dovemq.broker", "localhost");
 
@@ -51,45 +50,50 @@ public class TopicSubscriber
          */
         ConnectionFactory.initialize("subscriber");
 
-        /*
-         * Create an AMQP session.
-         */
-        Session session = ConnectionFactory.createSession(brokerIp);
-        System.out.println("created session to DoveMQ broker running at: " + brokerIp);
-
-        /*
-         * Create a subscriber that creates/binds to a topic on the broker.
-         */
-        Subscriber subscriber = session.createSubscriber("sampleTopic");
-
-        /*
-         * Register a message receiver with the consumer to asynchronously
-         * receive messages.
-         */
-        SampleMessageReceiver messageReceiver = new SampleMessageReceiver();
-        subscriber.registerMessageReceiver(messageReceiver);
-
-        System.out.println("waiting for messages. Press Ctl-C to shut down subscriber.");
-        while (!doShutdown)
+        try
         {
-            try
+            /*
+             * Create an AMQP session.
+             */
+            Session session = ConnectionFactory.createSession(brokerIp);
+            System.out.println("created session to DoveMQ broker running at: " + brokerIp);
+
+            /*
+             * Create a subscriber that creates/binds to a topic on the broker.
+             */
+            Subscriber subscriber = session.createSubscriber("sampleTopic");
+
+            /*
+             * Register a message receiver with the consumer to asynchronously
+             * receive messages.
+             */
+            SampleMessageReceiver messageReceiver = new SampleMessageReceiver();
+            subscriber.registerMessageReceiver(messageReceiver);
+
+            System.out.println("waiting for messages. Press Ctl-C to shut down subscriber.");
+            while (!doShutdown)
             {
-                Thread.sleep(1000);
+                try
+                {
+                    Thread.sleep(1000);
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                }
             }
-            catch (InterruptedException e)
-            {
-                Thread.currentThread().interrupt();
-            }
+
+            /*
+             * Close the AMQP session
+             */
+            session.close();
         }
-
-        /*
-         * Close the AMQP session
-         */
-        session.close();
-
-        /*
-         * Shutdown DoveMQ runtime.
-         */
-        ConnectionFactory.shutdown();
+        finally
+        {
+            /*
+             * Shutdown DoveMQ runtime.
+             */
+            ConnectionFactory.shutdown();
+        }
     }
 }

@@ -15,17 +15,17 @@ import net.dovemq.api.Producer;
 import net.dovemq.api.Session;
 
 /**
- * This sample demonstrates how to simulate RPC style communication
- * by using a pair of queues, one for sending request and another
- * for receiving response. The incoming request message is tagged with a
- * messageId. The Responder sends a response message that is tagged
- * with a correlationId that is the same as the messageId. The requester
- * uses the correlationId to match the incoming response for the outgoing
- * request.
+ * This sample demonstrates how to simulate RPC style communication by using a
+ * pair of queues, one for sending request and another for receiving response.
+ * The incoming request message is tagged with a messageId. The Responder sends
+ * a response message that is tagged with a correlationId that is the same as
+ * the messageId. The requester uses the correlationId to match the incoming
+ * response for the outgoing request.
  */
 public class Responder
 {
     private static final String LISTEN_TO_ADDRESS = "requestQueue";
+
     private static volatile boolean doShutdown = false;
 
     /*
@@ -34,16 +34,17 @@ public class Responder
     private static final Map<String, Producer> messageProducers = new HashMap<String, Producer>();
 
     /*
-     * Incoming message queue used by the MessageReceiver to hand-off to a RequestProcessor
+     * Incoming message queue used by the MessageReceiver to hand-off to a
+     * RequestProcessor
      */
     private static final BlockingQueue<DoveMQMessage> incomingRequests = new LinkedBlockingQueue<DoveMQMessage>();
 
     /**
      * This class processes the incoming requests. Gets the replyTo property and
-     * gets a corresponding Producer from the messageProducers map (creates one if
-     * necessary). It then creates a response with a correlationId that is same as
-     * the messageId of the incoming message, and sends the response back on the Producer.
-     *
+     * gets a corresponding Producer from the messageProducers map (creates one
+     * if necessary). It then creates a response with a correlationId that is
+     * same as the messageId of the incoming message, and sends the response
+     * back on the Producer.
      */
     private static final class RequestProcessor implements Runnable
     {
@@ -72,16 +73,18 @@ public class Responder
                 {
                     byte[] body = request.getPayload();
                     String payload = new String(body);
-                    String replyToAddress = request.getMessageProperties().getReplyToAddress();
-                    String messageId = request.getMessageProperties().getMessageId();
+                    String replyToAddress = request.getMessageProperties()
+                            .getReplyToAddress();
+                    String messageId = request.getMessageProperties()
+                            .getMessageId();
                     System.out.println("Received request: " + payload);
 
                     Producer producer = null;
                     synchronized (messageProducers)
                     {
                         /*
-                         * Get the corresponding Producer, create one if
-                         * not already in the map.
+                         * Get the corresponding Producer, create one if not
+                         * already in the map.
                          */
                         producer = messageProducers.get(replyToAddress);
                         if (producer == null)
@@ -97,7 +100,8 @@ public class Responder
                      * Set the response message's correlationId to be the same
                      * as the request message's messageId.
                      */
-                    response.getMessageProperties().setCorrlelationId(messageId);
+                    response.getMessageProperties()
+                            .setCorrlelationId(messageId);
                     response.addPayload("Reply from consumer".getBytes());
                     producer.sendMessage(response);
                 }
@@ -110,6 +114,7 @@ public class Responder
         }
 
         private final Session session;
+
         private volatile boolean shutdown = false;
     }
 
@@ -136,8 +141,8 @@ public class Responder
         });
 
         /*
-         * Read the broker IP address passed in as -Ddovemq.broker
-         * Defaults to localhost
+         * Read the broker IP address passed in as -Ddovemq.broker Defaults to
+         * localhost
          */
         String brokerIp = System.getProperty("dovemq.broker", "localhost");
 
@@ -146,48 +151,53 @@ public class Responder
          */
         ConnectionFactory.initialize("rpcResponder");
 
-        /*
-         * Create an AMQP session.
-         */
-        Session session = ConnectionFactory.createSession(brokerIp);
-        System.out.println("created session to DoveMQ broker running at: " + brokerIp);
-
-        /*
-         * Create a consumer and register a message receiver to
-         * receive the request message from.
-         */
-        Consumer consumer = session.createConsumer(LISTEN_TO_ADDRESS);
-        consumer.registerMessageReceiver(new SampleMessageReceiver());
-
-        /*
-         * Create a RequestProcessor to process incoming messages.
-         */
-        RequestProcessor requestProcessor = new RequestProcessor(session);
-        new Thread(requestProcessor).start();
-
-        System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
-        while (!doShutdown)
+        try
         {
-            try
+            /*
+             * Create an AMQP session.
+             */
+            Session session = ConnectionFactory.createSession(brokerIp);
+            System.out.println("created session to DoveMQ broker running at: " + brokerIp);
+
+            /*
+             * Create a consumer and register a message receiver to receive the
+             * request message from.
+             */
+            Consumer consumer = session.createConsumer(LISTEN_TO_ADDRESS);
+            consumer.registerMessageReceiver(new SampleMessageReceiver());
+
+            /*
+             * Create a RequestProcessor to process incoming messages.
+             */
+            RequestProcessor requestProcessor = new RequestProcessor(session);
+            new Thread(requestProcessor).start();
+
+            System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
+            while (!doShutdown)
             {
-                Thread.sleep(1000);
+                try
+                {
+                    Thread.sleep(1000);
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                }
             }
-            catch (InterruptedException e)
-            {
-                Thread.currentThread().interrupt();
-            }
+
+            requestProcessor.doShutdown();
+
+            /*
+             * Close the AMQP session
+             */
+            session.close();
         }
-
-        requestProcessor.doShutdown();
-
-        /*
-         * Close the AMQP session
-         */
-        session.close();
-
-        /*
-         * Shutdown DoveMQ runtime.
-         */
-        ConnectionFactory.shutdown();
+        finally
+        {
+            /*
+             * Shutdown DoveMQ runtime.
+             */
+            ConnectionFactory.shutdown();
+        }
     }
 }
