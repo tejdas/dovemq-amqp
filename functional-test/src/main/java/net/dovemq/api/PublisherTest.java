@@ -20,23 +20,128 @@ package net.dovemq.api;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import net.dovemq.transport.common.CAMQPTestTask;
 
 public class PublisherTest
 {
+    private static String brokerIP;
+    private static String endpointName;
+    private static String topicName;
+    private static String fileName;
+    private static int numIterations;
+    private static int NUM_THREADS = 1;
+
+    private static class TestPublisher extends CAMQPTestTask implements Runnable
+    {
+        public TestPublisher(CountDownLatch startSignal, CountDownLatch doneSignal, Session session)
+        {
+            super(startSignal, doneSignal);
+            this.session = session;
+        }
+
+        @Override
+        public void run()
+        {
+            waitForReady();
+            try
+            {
+                Thread.sleep(new Random().nextInt(200) + 100);
+            }
+            catch (InterruptedException e)
+            {
+            }
+
+            Publisher publisher = session.createPublisher(topicName);
+
+            final AtomicInteger messageAckCount = new AtomicInteger(0);
+            publisher.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
+
+                @Override
+                public void messageAcknowledged(DoveMQMessage message)
+                {
+                    messageAckCount.incrementAndGet();
+                }
+            });
+
+            System.out.println("created publisher");
+
+            try
+            {
+                Thread.sleep(10000);
+            }
+            catch (InterruptedException e1)
+            {
+                Thread.currentThread().interrupt();
+            }
+
+            String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/" + fileName;
+            int messagesSent = 0;
+            for (int i = 0; i < numIterations; i++)
+            {
+                try
+                {
+                    messagesSent += sendFileContents(sourceName, publisher);
+                }
+                catch (IOException e)
+                {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            while (messageAckCount.get() < messagesSent)
+            {
+                try
+                {
+                    Thread.sleep(5000);
+                    System.out.println("publisher waiting: " + messagesSent + " " + messageAckCount.get());
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            done();
+        }
+        private final Session session;
+    }
+
     public static void main(String[] args) throws InterruptedException, IOException
     {
-        String brokerIP = args[0];
-        String endpointName = args[1];
-        String topicName = args[2];
-        String fileName = args[3];
-        int numIterations = Integer.parseInt(args[4]);
+        brokerIP = args[0];
+        endpointName = args[1];
+        topicName = args[2];
+        fileName = args[3];
+        numIterations = Integer.parseInt(args[4]);
+        NUM_THREADS = Integer.parseInt(args[5]);
 
         ConnectionFactory.initialize(endpointName);
 
         Session session = ConnectionFactory.createSession(brokerIP);
         System.out.println("created session");
 
+        ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
+        CountDownLatch startSignal = new CountDownLatch(1);
+        CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
+
+        for (int i = 0; i < NUM_THREADS; i++)
+        {
+            TestPublisher publisher = new TestPublisher(startSignal, doneSignal, session);
+            executor.submit(publisher);
+        }
+
+        startSignal.countDown();
+        doneSignal.await();
+
+        /*
+         * Send final message
+         */
         Publisher publisher = session.createPublisher(topicName);
 
         final AtomicInteger messageAckCount = new AtomicInteger(0);
@@ -51,18 +156,7 @@ public class PublisherTest
 
         System.out.println("created publisher");
 
-        Thread.sleep(10000);
-
-        String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/" + fileName;
         int messagesSent = 0;
-        for (int i = 0; i < numIterations; i++)
-        {
-            messagesSent += sendFileContents(sourceName, publisher);
-        }
-
-        /*
-         * Send final message
-         */
         publisher.publishMessage("TOPIC_TEST_DONE".getBytes());
         messagesSent++;
 
@@ -78,6 +172,10 @@ public class PublisherTest
                 Thread.currentThread().interrupt();
             }
         }
+
+        Thread.sleep(2000);
+        session.close();
+        executor.shutdown();
 
         ConnectionFactory.shutdown();
     }

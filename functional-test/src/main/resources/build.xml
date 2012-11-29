@@ -439,6 +439,7 @@
 			<arg value="${topicName}" />
 			<arg value="${fileName}" />
 			<arg value="${numIterations}" />
+			<arg value="${numPublishers}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -525,6 +526,7 @@
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
 				<param name="numIterations" value="1" />
+				<param name="numPublishers" value="1" />
 			</antcall>
 
 			<antcall target="RunPublisher">
@@ -532,6 +534,7 @@
 				<param name="topicName" value="second" />
 				<param name="fileName" value="err.txt" />
 				<param name="numIterations" value="1" />
+				<param name="numPublishers" value="1" />
 			</antcall>
 
 		</parallel>
@@ -598,7 +601,8 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
-				<param name="numIterations" value="16" />
+				<param name="numIterations" value="4" />
+				<param name="numPublishers" value="4" />
 			</antcall>
 		</parallel>
 	</target>
@@ -620,7 +624,8 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
-				<param name="numIterations" value="16" />
+				<param name="numIterations" value="4" />
+				<param name="numPublishers" value="4" />
 			</antcall>
 		</parallel>
 	</target>
