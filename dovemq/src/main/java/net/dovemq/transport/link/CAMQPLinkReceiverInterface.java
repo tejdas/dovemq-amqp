@@ -103,4 +103,6 @@ public interface CAMQPLinkReceiverInterface
      * and send a flow-frame to the peer with the updated link-credit, if needed.
      */
     public void provideLinkCredit();
+
+    public long getHandle();
 }

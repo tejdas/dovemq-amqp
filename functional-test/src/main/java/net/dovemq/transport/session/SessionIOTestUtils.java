@@ -91,6 +91,13 @@ class MockLinkSender implements CAMQPLinkSenderInterface
     {
         // TODO Auto-generated method stub
     }
+
+    @Override
+    public long getHandle()
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 }
 
 class SessionCreator extends CAMQPTestTask implements Runnable

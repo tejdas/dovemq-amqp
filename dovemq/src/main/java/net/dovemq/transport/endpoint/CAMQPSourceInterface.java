@@ -83,4 +83,6 @@ public interface CAMQPSourceInterface
      *      A Collection of deliveryIds for messages that are not sent from this end-point.
      */
     public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
+
+    public long getId();
 }

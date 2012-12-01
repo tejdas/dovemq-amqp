@@ -176,4 +176,10 @@ class CAMQPTarget implements CAMQPTargetInterface
     {
         return ((messageReceiver != null) && (endpointPolicy.getDoveMQEndpointPolicy().getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS));
     }
+
+    @Override
+    public long getId()
+    {
+        return linkReceiver.getHandle();
+    }
 }

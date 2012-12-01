@@ -122,6 +122,13 @@ public class CAMQPLinkAsyncSenderTest
         {
             // TODO Auto-generated method stub
         }
+
+        @Override
+        public long getId()
+        {
+            // TODO Auto-generated method stub
+            return 0;
+        }
     }
 
     private static class MockLinkReceiverFactory implements CAMQPLinkMessageHandlerFactory

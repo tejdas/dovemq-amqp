@@ -42,7 +42,7 @@ public class PublisherTest
         public TestPublisher(CountDownLatch startSignal, CountDownLatch doneSignal, Session session)
         {
             super(startSignal, doneSignal);
-            this.session = session;
+            //this.session = session;
         }
 
         @Override
@@ -56,6 +56,12 @@ public class PublisherTest
             catch (InterruptedException e)
             {
             }
+
+            DoveMQEndpointPolicy policy = new DoveMQEndpointPolicy();
+            policy.createEndpointOnNewConnection();
+
+            session = ConnectionFactory.createSession(brokerIP, policy);
+            System.out.println("created session");
 
             Publisher publisher = session.createPublisher(topicName);
 
@@ -109,7 +115,7 @@ public class PublisherTest
 
             done();
         }
-        private final Session session;
+        private Session session;
     }
 
     public static void main(String[] args) throws InterruptedException, IOException

@@ -21,8 +21,9 @@ public class CAMQPLinkConstants
 {
     static final boolean ROLE_SENDER  = false;
     static final boolean ROLE_RECEIVER = true;
-    
+
     public static final long DEFAULT_MAX_MESSAGE_SIZE = 32768;
     public static final long DEFAULT_MAX_AVAILABLE_MESSAGES_AT_SENDER = 1024*1024;
     static final long LINK_CREDIT_VIOLATION_LIMIT = 10L;
+    static final int MAX_LINK_CREDIT_ISSUANCE_INTERVAL = 1000; // milliseconds
 }

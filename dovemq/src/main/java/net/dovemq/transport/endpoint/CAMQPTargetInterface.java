@@ -71,4 +71,6 @@ public interface CAMQPTargetInterface
      * @param deliveryId
      */
     public void acknowledgeMessageProcessingComplete(long deliveryId);
+
+    public long getId();
 }

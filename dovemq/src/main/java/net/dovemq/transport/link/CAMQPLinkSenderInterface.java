@@ -52,4 +52,6 @@ public interface CAMQPLinkSenderInterface
      * @param transferFrame
      */
     public void messageSent(CAMQPControlTransfer transferFrame);
+
+    public long getHandle();
 }

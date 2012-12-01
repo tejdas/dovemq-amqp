@@ -226,6 +226,13 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         public void acknowledgeMessageProcessingComplete(long deliveryId)
         {
         }
+
+        @Override
+        public long getId()
+        {
+            // TODO Auto-generated method stub
+            return 0;
+        }
     }
 
     /**

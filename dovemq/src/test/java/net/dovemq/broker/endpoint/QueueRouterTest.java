@@ -185,6 +185,13 @@ public class QueueRouterTest  extends TestCase
                 System.out.println("wanted to ack " + count + " messages, but found only " + ackedCount + " messages");
             }
         }
+
+        @Override
+        public long getId()
+        {
+            // TODO Auto-generated method stub
+            return 0;
+        }
     }
 
     private static class MockProducerSink implements CAMQPTargetInterface
@@ -216,7 +223,6 @@ public class QueueRouterTest  extends TestCase
                     break;
                 }
             }
-            //ackedMessageCount.set(0);
         }
 
         @Override
@@ -243,6 +249,13 @@ public class QueueRouterTest  extends TestCase
         public void acknowledgeMessageProcessingComplete(long deliveryId)
         {
             ackedMessageCount.incrementAndGet();
+        }
+
+        @Override
+        public long getId()
+        {
+            // TODO Auto-generated method stub
+            return 0;
         }
     }
 

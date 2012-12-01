@@ -396,6 +396,16 @@ public class DoveMQMessageImpl implements DoveMQMessage
         this.deliveryId = deliveryId;
     }
 
+    public long getSourceId()
+    {
+        return sourceId;
+    }
+
+    public void setSourceId(long sourceHashCode)
+    {
+        this.sourceId = sourceHashCode;
+    }
+
     private final HeaderPropertiesImpl headerProperties;
     private Map<String, String> deliveryAnnotations = null;
     private Map<String, String> messageAnnotations = null;
@@ -405,4 +415,5 @@ public class DoveMQMessageImpl implements DoveMQMessage
     private List<DoveMQPayload> payloads = null;
     private Map<String, String> footers = null;
     private long deliveryId = -1;
+    private long sourceId = -1;
 }

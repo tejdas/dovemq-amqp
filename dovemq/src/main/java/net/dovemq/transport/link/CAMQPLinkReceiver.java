@@ -406,10 +406,9 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
         {
             if (linkCreditPolicy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING)
             {
-                long timeout = linkCreditBoost * 20;
                 messagesProcessedSinceLastSendFlow++;
 
-                if (((System.currentTimeMillis() - timeLastFlowFrameSent) >= timeout) ||
+                if (((System.currentTimeMillis() - timeLastFlowFrameSent) >= CAMQPLinkConstants.MAX_LINK_CREDIT_ISSUANCE_INTERVAL) ||
                     (messagesProcessedSinceLastSendFlow >= (linkCreditBoost - minLinkCreditThreshold)))
                 {
                     flow = boostLinkCreditAndCreateFlowFrame();
@@ -488,5 +487,11 @@ class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkReceiverIn
     Object getEndpoint()
     {
         return target;
+    }
+
+    @Override
+    public long getHandle()
+    {
+        return linkHandle;
     }
 }

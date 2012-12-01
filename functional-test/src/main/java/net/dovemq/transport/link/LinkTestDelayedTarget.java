@@ -140,4 +140,11 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
     {
         // TODO Auto-generated method stub
     }
+
+    @Override
+    public long getId()
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 }

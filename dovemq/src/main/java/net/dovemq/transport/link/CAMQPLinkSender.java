@@ -385,4 +385,10 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     {
         return source;
     }
+
+    @Override
+    public long getHandle()
+    {
+        return linkHandle;
+    }
 }

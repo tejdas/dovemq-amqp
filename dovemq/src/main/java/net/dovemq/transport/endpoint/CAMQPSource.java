@@ -160,4 +160,10 @@ class CAMQPSource implements CAMQPSourceInterface
         String deliveryTag = UUID.randomUUID().toString();
         linkSender.sendMessage(new CAMQPMessage(deliveryTag, encodedMessagePayload, message));
     }
+
+    @Override
+    public long getId()
+    {
+        return linkSender.getHandle();
+    }
 }
