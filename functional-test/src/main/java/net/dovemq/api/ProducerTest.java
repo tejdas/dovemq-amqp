@@ -32,8 +32,9 @@ public class ProducerTest
 {
     private static String brokerIP;
     private static String endpointName;
-    private static String queueName;
-    private static int NUM_THREADS;
+    private static String queueNamePrefix;
+    private static int numProducers;
+    private static int numConsumersPerQueue = 1;
     private static int numIterations;
 
     private static class TestProducer extends CAMQPTestTask implements Runnable
@@ -61,7 +62,7 @@ public class ProducerTest
             session = ConnectionFactory.createSession(brokerIP, policy);
 
             final AtomicInteger messageAckCount = new AtomicInteger(0);
-            Producer producer = session.createProducer(String.format("%s.%d", queueName, id));
+            Producer producer = session.createProducer(String.format("%s.%d", queueNamePrefix, id));
             producer.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
 
                 @Override
@@ -89,8 +90,11 @@ public class ProducerTest
             /*
              * Send final message
              */
-            producer.sendMessage("QUEUE_TEST_DONE".getBytes());
-            messagesSent++;
+            for (int i = 0; i < numConsumersPerQueue; i++)
+            {
+                producer.sendMessage("QUEUE_TEST_DONE".getBytes());
+                messagesSent++;
+            }
 
             while (messageAckCount.get() < messagesSent)
             {
@@ -105,6 +109,7 @@ public class ProducerTest
                 }
             }
 
+            session.close();
             done();
         }
         private Session session;
@@ -116,17 +121,18 @@ public class ProducerTest
     {
         brokerIP = args[0];
         endpointName = args[1];
-        queueName = args[2];
-        NUM_THREADS = Integer.parseInt(args[3]);
-        numIterations = Integer.parseInt(args[4]);
+        queueNamePrefix = args[2];
+        numProducers = Integer.parseInt(args[3]);
+        numConsumersPerQueue = Integer.parseInt(args[4]);
+        numIterations = Integer.parseInt(args[5]);
 
         ConnectionFactory.initialize(endpointName);
 
-        ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
+        ExecutorService executor = Executors.newFixedThreadPool(numProducers);
         CountDownLatch startSignal = new CountDownLatch(1);
-        CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
+        CountDownLatch doneSignal = new CountDownLatch(numProducers);
 
-        for (int i = 0; i < NUM_THREADS; i++)
+        for (int i = 0; i < numProducers; i++)
         {
             TestProducer producer = new TestProducer(startSignal, doneSignal, i);
             executor.submit(producer);

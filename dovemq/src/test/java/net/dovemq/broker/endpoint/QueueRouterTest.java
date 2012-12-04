@@ -84,7 +84,7 @@ public class QueueRouterTest  extends TestCase
 
         private final AtomicInteger messageCount = new AtomicInteger(0);
         private final AtomicInteger registrationCount = new AtomicInteger(0);
-        private CAMQPMessageDispositionObserver observer = null;
+        private volatile CAMQPMessageDispositionObserver observer = null;
         private final BlockingQueue<DoveMQMessage> receivedMessages = new LinkedBlockingQueue<DoveMQMessage>();
 
         private final boolean delayedAck;
@@ -100,7 +100,7 @@ public class QueueRouterTest  extends TestCase
             {
                 try
                 {
-                    Thread.sleep(200);
+                    Thread.sleep(1000);
                 }
                 catch (InterruptedException e)
                 {
@@ -108,7 +108,6 @@ public class QueueRouterTest  extends TestCase
                     break;
                 }
             }
-            //messageCount.set(0);
         }
 
         public int getRegistrationCount()
@@ -215,7 +214,7 @@ public class QueueRouterTest  extends TestCase
             {
                 try
                 {
-                    Thread.sleep(200);
+                    Thread.sleep(1000);
                 }
                 catch (InterruptedException e)
                 {
@@ -356,6 +355,11 @@ public class QueueRouterTest  extends TestCase
                 producerSink.waitForAcks(task.count);
                 break;
             }
+        }
+
+        void waitForAcks(int count)
+        {
+            producerSink.waitForAcks(count);
         }
     }
 
@@ -569,10 +573,9 @@ public class QueueRouterTest  extends TestCase
 
         producer.submitTask(TaskAction.SEND_MESSAGE, 2000);
         consumer.submitTask(TaskAction.ACK_MESSAGE, 1000);
-        producer.submitTask(TaskAction.CHECK_RECEIVED_ACK_COUNT, 2000);
         consumer2.submitTask(TaskAction.ACK_MESSAGE, 1000);
 
-        Thread.sleep(5000);
+        producer.waitForAcks(2000);
 
         producer.submitTask(TaskAction.DETACH);
         consumer.submitTask(TaskAction.DETACH);

@@ -406,8 +406,9 @@
 			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
-			<arg value="${queueName}" />
-			<arg value="${numThreads}" />
+			<arg value="${queueNamePrefix}" />
+			<arg value="${numProducers}" />
+			<arg value="${numConsumersPerQueue}" />			
 			<arg value="${numIterations}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
@@ -421,8 +422,9 @@
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
-			<arg value="${queueName}" />
-			<arg value="${numThreads}" />
+			<arg value="${queueNamePrefix}" />
+			<arg value="${numProducers}" />
+			<arg value="${numConsumersPerQueue}" />
 			<arg value="${ackExplicit}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
@@ -548,21 +550,23 @@
 		<parallel>
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
-				<param name="queueName" value="first" />
-				<param name="numThreads" value="16" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="16" />				
+				<param name="numConsumersPerQueue" value="1" />				
 				<param name="ackExplicit" value="false" />
 			</antcall>
 
 			<antcall target="RunProducer">
 				<param name="endpointName" value="producer" />
-				<param name="queueName" value="first" />
-				<param name="numThreads" value="16" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="16" />
+				<param name="numConsumersPerQueue" value="1" />
 				<param name="numIterations" value="50" />
 			</antcall>
 		</parallel>
 	</target>
 	
-	<target name="QueueMTTestAckExplicit" description="run MT queue test">
+	<target name="QueueMTRoundRobinTest" description="run MT queue test">
 		<delete>
 			<fileset dir="." includes="**/consumer*.txt" />
 		</delete>
@@ -570,15 +574,41 @@
 		<parallel>
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
-				<param name="queueName" value="first" />
-				<param name="numThreads" value="16" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="16" />		
+				<param name="numConsumersPerQueue" value="4" />					
+				<param name="ackExplicit" value="false" />
+			</antcall>
+
+			<antcall target="RunProducer">
+				<param name="endpointName" value="producer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="4" />
+				<param name="numConsumersPerQueue" value="4" />	
+				<param name="numIterations" value="50" />
+			</antcall>
+		</parallel>
+	</target>	
+	
+	<target name="QueueMTAckExplicitTest" description="run MT queue test">
+		<delete>
+			<fileset dir="." includes="**/consumer*.txt" />
+		</delete>
+
+		<parallel>
+			<antcall target="RunConsumer">
+				<param name="endpointName" value="consumer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="16" />		
+				<param name="numConsumersPerQueue" value="1" />					
 				<param name="ackExplicit" value="true" />
 			</antcall>
 
 			<antcall target="RunProducer">
 				<param name="endpointName" value="producer" />
-				<param name="queueName" value="first" />
-				<param name="numThreads" value="16" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="16" />
+				<param name="numConsumersPerQueue" value="1" />	
 				<param name="numIterations" value="10" />
 			</antcall>
 		</parallel>

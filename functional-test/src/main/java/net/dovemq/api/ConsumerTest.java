@@ -35,8 +35,10 @@ public class ConsumerTest
 {
     private static String brokerIP;
     private static String endpointName;
-    private static String queueName;
-    private static int NUM_THREADS;
+    private static String queueNamePrefix;
+    private static int numConsumers;
+    private static int numProducers;
+    private static int numConsumersPerQueue;
     private static boolean ackExplicit = false;
     private static ExecutorService executor;
 
@@ -136,10 +138,11 @@ public class ConsumerTest
 
     private static class TestConsumer extends CAMQPTestTask implements Runnable
     {
-        public TestConsumer(CountDownLatch startSignal, CountDownLatch doneSignal, int id)
+        public TestConsumer(CountDownLatch startSignal, CountDownLatch doneSignal, int id, int consumerId)
         {
             super(startSignal, doneSignal);
             this.id = id;
+            this.consumerId = consumerId;
         }
 
         @Override
@@ -158,7 +161,7 @@ public class ConsumerTest
             policy.createEndpointOnNewConnection();
             session = ConnectionFactory.createSession(brokerIP, policy);
 
-            String suffixedQueueName = String.format("%s.%d", queueName, id);
+            String suffixedQueueName = String.format("%s.%d", queueNamePrefix, id);
             Consumer consumer = null;
 
             if (ackExplicit)
@@ -166,7 +169,7 @@ public class ConsumerTest
             else
                 consumer = session.createConsumer(suffixedQueueName);
 
-            String fileName = String.format("%s-%d.txt", endpointName, id);
+            String fileName = String.format("%s-%d.txt", endpointName, consumerId);
             PrintWriter fw = null;
             try
             {
@@ -201,30 +204,49 @@ public class ConsumerTest
 
             fw.flush();
             fw.close();
+
+            try
+            {
+                Thread.sleep(5000);
+            }
+            catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            session.close();
             done();
         }
         private Session session;
         private final int id;
+        private final int consumerId;
     }
 
     public static void main(String[] args) throws InterruptedException, IOException
     {
         brokerIP = args[0];
         endpointName = args[1];
-        queueName = args[2];
-        NUM_THREADS = Integer.parseInt(args[3]);
-        ackExplicit = Boolean.parseBoolean(args[4]);
+        queueNamePrefix = args[2];
+        numProducers = Integer.parseInt(args[3]);
+        numConsumersPerQueue = Integer.parseInt(args[4]);
+        ackExplicit = Boolean.parseBoolean(args[5]);
+
+        numConsumers = numProducers * numConsumersPerQueue;
 
         ConnectionFactory.initialize(endpointName);
 
-        executor = Executors.newFixedThreadPool(NUM_THREADS*2);
+        executor = Executors.newFixedThreadPool(numConsumers*2);
         CountDownLatch startSignal = new CountDownLatch(1);
-        CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
+        CountDownLatch doneSignal = new CountDownLatch(numConsumers);
 
-        for (int i = 0; i < NUM_THREADS; i++)
+        int consumerId = 0;
+        for (int producerIndex = 0; producerIndex < numProducers; producerIndex++)
         {
-            TestConsumer consumer = new TestConsumer(startSignal, doneSignal, i);
-            executor.submit(consumer);
+            for (int j = 0; j < numConsumersPerQueue; j++)
+            {
+                TestConsumer consumer = new TestConsumer(startSignal, doneSignal, producerIndex, consumerId++);
+                executor.submit(consumer);
+            }
         }
 
         startSignal.countDown();
