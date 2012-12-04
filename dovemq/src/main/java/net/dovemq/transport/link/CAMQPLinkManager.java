@@ -84,6 +84,12 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         return linkManager;
     }
 
+    private final CAMQPLinkSendFlowScheduler flowScheduler = new CAMQPLinkSendFlowScheduler();
+    CAMQPLinkSendFlowScheduler getFlowScheduler()
+    {
+        return flowScheduler;
+    }
+
     private static LinkSenderType linkSenderType = LinkSenderType.PUSH;
 
     public static void setLinkSenderType(LinkSenderType linkSenderType)
@@ -120,10 +126,12 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
             listener.start();
         }
         CAMQPSessionManager.registerLinkReceiverFactory(linkManager);
+        linkManager.flowScheduler.start();
     }
 
     public static void shutdown()
     {
+        linkManager.flowScheduler.stop();
         linkManager.shutdownLinks();
         CAMQPSessionManager.shutdown();
         CAMQPConnectionManager.shutdown();

@@ -36,7 +36,6 @@ import org.apache.log4j.Logger;
  * @author tejdas
  *
  */
-
 @ThreadSafe
 class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
 {
@@ -70,6 +69,17 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     private long unsentMessagesAtSession = 0;
 
     private boolean sendInProgress = false;
+
+    /**
+     * Remembers when the next flow frame needs to be explicitly sent,
+     * asking for more link credit.
+     */
+    private long nextCreditRequestTime = -1;
+    /**
+     * Helps sending subsequent flow-frames with exponential back-off
+     * period.
+     */
+    private int incrementedCount = 0;
 
     /**
      * Set to true if drain is requested by the peer and until it is processed.
@@ -128,6 +138,16 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
                 }
             }
 
+            /*
+             * Reset nextCreditRequestTime to -1, so that flow-frames
+             * asking for link-credit are not scheduled any more.
+             */
+            if (linkCredit > 0)
+            {
+                nextCreditRequestTime = -1;
+                incrementedCount = 0;
+            }
+
             if (flow.isSetDrain())
             {
                 drainRequested = flow.getDrain();
@@ -161,6 +181,77 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
         {
             CAMQPSessionManager.getExecutor().execute(this);
         }
+    }
+
+    /**
+     * Called by {@link CAMQPLinkSendFlowScheduler} to send
+     * a flow frame to the link receiver asking for link credit
+     * if the link credit < 0 and it has outstanding messages to
+     * send.
+     *
+     * @param currentTime
+     */
+    void requestCreditIfUnderFlowControl(long currentTime)
+    {
+        CAMQPControlFlow outgoingFlow = null;
+        synchronized (this)
+        {
+            if ((linkCredit > 0) || (unsentMessages.isEmpty()))
+            {
+                /*
+                 * Is not under flow-control anymore, or doesn't
+                 * need link-credit. Reset nextCreditRequestTime.
+                 */
+                nextCreditRequestTime = -1;
+                incrementedCount = 0;
+                return;
+            }
+
+            /*
+             * A flow-control condition was detected.
+             * Schedule the sending of flow-frame to until
+             * after 2 seconds.
+             */
+            if (nextCreditRequestTime == -1)
+            {
+                incrementedCount = 1;
+                nextCreditRequestTime = currentTime + 2000*incrementedCount;
+                return;
+            }
+
+            /*
+             * Next credit request time is still in the future,
+             * so just return.
+             */
+            if (currentTime < nextCreditRequestTime)
+            {
+                return;
+            }
+
+            /*
+             * Create a flow-frame with current state.
+             */
+            outgoingFlow = populateFlowFrame();
+
+            /*
+             * The subsequent flow-frame sending is scheduled
+             * with an exponential back-off (in seconds) :
+             * 2, 4, 8, 16, 32
+             *
+             * After that it is scheduled every 60 seconds.
+             */
+            if (incrementedCount < 16)
+            {
+                incrementedCount *= 2;
+                nextCreditRequestTime += 2000*incrementedCount;
+            }
+            else
+            {
+                nextCreditRequestTime += 60000;
+            }
+        }
+
+        session.sendFlow(outgoingFlow);
     }
 
     /**
@@ -390,5 +481,29 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     public long getHandle()
     {
         return linkHandle;
+    }
+
+    @Override
+    public void attached(boolean isInitiator)
+    {
+        super.attached(isInitiator);
+        registerWithFlowScheduler();
+    }
+
+    @Override
+    public void detached(boolean isInitiator)
+    {
+        unregisterWithFlowScheduler();
+        super.detached(isInitiator);
+    }
+
+    void registerWithFlowScheduler()
+    {
+        CAMQPLinkManager.getLinkmanager().getFlowScheduler().registerLinkSender(linkHandle, this);
+    }
+
+    void unregisterWithFlowScheduler()
+    {
+        CAMQPLinkManager.getLinkmanager().getFlowScheduler().unregisterLinkSender(linkHandle);
     }
 }

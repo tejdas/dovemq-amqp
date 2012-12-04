@@ -181,7 +181,7 @@ public class CAMQPLinkSenderTest
                 {
                 }
             }
-            if (count == 2)
+            else if (count == 2)
             {
                 synchronized (this)
                 {
@@ -222,7 +222,7 @@ public class CAMQPLinkSenderTest
     private CAMQPSessionInterface session = null;
     private CAMQPIncomingChannelHandler frameHandler = null;
 
-    private final BlockingQueue<ChannelBuffer> framesQueue = new LinkedBlockingQueue<ChannelBuffer>();;
+    private final BlockingQueue<ChannelBuffer> framesQueue = new LinkedBlockingQueue<ChannelBuffer>();
     private final BlockingQueue<CAMQPControlTransfer> transferFramesQueue = new LinkedBlockingQueue<CAMQPControlTransfer>();
     private final BlockingQueue<Object> controlFramesQueue = new LinkedBlockingQueue<Object>();
 
@@ -255,7 +255,7 @@ public class CAMQPLinkSenderTest
         task = executor.submit(framesProcessor);
         numLinkFlowFrameCount.set(0);
 
-        mockConnection =  createMockConnection();
+        mockConnection =  createMockConnection(framesQueue);
         session = CAMQPSessionSenderTest.createMockSessionAndSetExpectations(mockContext, mockConnection);
         frameHandler = (CAMQPIncomingChannelHandler) session;
 
@@ -698,7 +698,7 @@ public class CAMQPLinkSenderTest
         assertEquals(expectedMessageCount, messageCount);
     }
 
-    private CAMQPConnection createMockConnection()
+    static CAMQPConnection createMockConnection(final BlockingQueue<ChannelBuffer> framesQueue)
     {
         return new CAMQPConnection() {
             @Override
@@ -784,7 +784,7 @@ public class CAMQPLinkSenderTest
         assertTrue(control instanceof CAMQPControlDetach);
     }
 
-    private static CAMQPMessagePayload createMessage(Random r)
+    static CAMQPMessagePayload createMessage(Random r)
     {
         int sectionSize = 256 * (r.nextInt(10) + 1);
         return new CAMQPMessagePayload(new byte[sectionSize]);
