@@ -101,7 +101,7 @@ final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
      * only when all the subscribers have acked the message receipt.
      */
     @Override
-    public void messageAckedByConsumer(DoveMQMessage message)
+    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source)
     {
         long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
         long sourceId = ((DoveMQMessageImpl) message).getSourceId();

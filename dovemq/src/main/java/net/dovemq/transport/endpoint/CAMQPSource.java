@@ -124,7 +124,7 @@ class CAMQPSource implements CAMQPSourceInterface
                 settledDeliveryIds.add(deliveryId);
                 if (observer != null)
                 {
-                    observer.messageAckedByConsumer(message.getMessage());
+                    observer.messageAckedByConsumer(message.getMessage(), this);
                 }
             }
         }

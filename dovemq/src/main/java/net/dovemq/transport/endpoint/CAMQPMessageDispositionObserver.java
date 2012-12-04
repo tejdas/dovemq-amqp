@@ -28,5 +28,5 @@ import net.dovemq.api.DoveMQMessage;
  */
 public interface CAMQPMessageDispositionObserver
 {
-    public void messageAckedByConsumer(DoveMQMessage message);
+    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source);
 }

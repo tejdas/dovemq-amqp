@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import junit.framework.TestCase;
 import net.dovemq.api.DoveMQMessage;
@@ -38,6 +39,9 @@ import org.junit.Test;
 
 public class QueueRouterTest  extends TestCase
 {
+    private static final AtomicLong linkIds = new AtomicLong(0L);
+    private static final AtomicLong deliveryIds = new AtomicLong(0L);
+
     enum TaskAction
     {
         ATTACH,
@@ -70,6 +74,7 @@ public class QueueRouterTest  extends TestCase
 
     private static class MockConsumerProxy implements CAMQPSourceInterface
     {
+        private final long id = linkIds.getAndIncrement();
         public MockConsumerProxy(boolean delayedAck)
         {
             super();
@@ -132,7 +137,7 @@ public class QueueRouterTest  extends TestCase
             }
             else
             {
-                observer.messageAckedByConsumer(message);
+                observer.messageAckedByConsumer(message, this);
             }
         }
 
@@ -172,7 +177,7 @@ public class QueueRouterTest  extends TestCase
                 DoveMQMessage message = receivedMessages.poll();
                 if (message != null)
                 {
-                    observer.messageAckedByConsumer(message);
+                    observer.messageAckedByConsumer(message, this);
                     ackedCount++;
                 }
                 else
@@ -188,13 +193,13 @@ public class QueueRouterTest  extends TestCase
         @Override
         public long getId()
         {
-            // TODO Auto-generated method stub
-            return 0;
+            return id;
         }
     }
 
     private static class MockProducerSink implements CAMQPTargetInterface
     {
+        private final long id = linkIds.getAndIncrement();
         private final AtomicInteger registrationCount = new AtomicInteger(0);
         private final AtomicInteger ackedMessageCount = new AtomicInteger(0);
 
@@ -253,8 +258,7 @@ public class QueueRouterTest  extends TestCase
         @Override
         public long getId()
         {
-            // TODO Auto-generated method stub
-            return 0;
+            return id;
         }
     }
 
@@ -525,14 +529,14 @@ public class QueueRouterTest  extends TestCase
 
         producer.submitTask(TaskAction.ATTACH);
 
-        producer.submitTask(TaskAction.SEND_MESSAGE, 100);
+        producer.submitTask(TaskAction.SEND_MESSAGE, 1000);
         consumer.submitTask(TaskAction.CHECK_RECEIVED_MESSAGE_COUNT, 0);
         consumer.submitTask(TaskAction.ATTACH);
-        consumer.submitTask(TaskAction.CHECK_RECEIVED_MESSAGE_COUNT, 200);
-        producer.submitTask(TaskAction.SEND_MESSAGE, 100);
-        consumer.submitTask(TaskAction.ACK_MESSAGE, 100);
-        producer.submitTask(TaskAction.CHECK_RECEIVED_ACK_COUNT, 200);
-        consumer.submitTask(TaskAction.ACK_MESSAGE, 100);
+        consumer.submitTask(TaskAction.CHECK_RECEIVED_MESSAGE_COUNT, 2000);
+        producer.submitTask(TaskAction.SEND_MESSAGE, 1000);
+        consumer.submitTask(TaskAction.ACK_MESSAGE, 1000);
+        producer.submitTask(TaskAction.CHECK_RECEIVED_ACK_COUNT, 2000);
+        consumer.submitTask(TaskAction.ACK_MESSAGE, 1000);
 
         producer.submitTask(TaskAction.DETACH);
         consumer.submitTask(TaskAction.DETACH);
@@ -600,7 +604,7 @@ public class QueueRouterTest  extends TestCase
         {
             DoveMQMessage message = MessageFactory.createMessage();
             DoveMQMessageImpl messageImpl = ((DoveMQMessageImpl) message);
-            messageImpl.setDeliveryId(i);
+            messageImpl.setDeliveryId(deliveryIds.getAndIncrement());
             queueRouter.messageReceived(message, producer);
         }
     }

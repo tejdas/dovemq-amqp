@@ -74,7 +74,7 @@ public final class Producer implements CAMQPMessageDispositionObserver
      * it to the registered DoveMQMessageAckReceiver.
      */
     @Override
-    public void messageAckedByConsumer(DoveMQMessage message)
+    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source)
     {
         if (ackReceiver != null)
         {

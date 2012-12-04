@@ -71,7 +71,7 @@ public final class Publisher implements CAMQPMessageDispositionObserver
     }
 
     @Override
-    public void messageAckedByConsumer(DoveMQMessage message)
+    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source)
     {
         if (ackReceiver != null)
         {
