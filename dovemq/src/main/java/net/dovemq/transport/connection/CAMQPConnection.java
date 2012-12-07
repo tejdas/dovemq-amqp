@@ -44,7 +44,7 @@ import org.jboss.netty.channel.Channel;
  *
  */
 @ThreadSafe
-class CAMQPConnection implements CAMQPConnectionInterface
+final class CAMQPConnection implements CAMQPConnectionInterface
 {
     private final CAMQPConnectionStateActor stateActor;
 

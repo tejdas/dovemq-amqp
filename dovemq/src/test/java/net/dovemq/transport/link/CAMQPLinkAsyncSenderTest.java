@@ -195,7 +195,7 @@ public class CAMQPLinkAsyncSenderTest
         task = executor.submit(framesProcessor);
         numLinkFlowFrameCount.set(0);
 
-        mockConnection =  ConnectionTestUtils.createMockConnection(framesQueue);
+        mockConnection =  ConnectionTestUtils.createStubConnection(framesQueue);
         session = CAMQPSessionSenderTest.createMockSessionAndSetExpectations(mockContext, mockConnection);
         frameHandler = (CAMQPIncomingChannelHandler) session;
 

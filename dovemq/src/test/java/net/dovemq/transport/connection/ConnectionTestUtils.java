@@ -19,17 +19,71 @@ package net.dovemq.transport.connection;
 
 import java.util.concurrent.BlockingQueue;
 
+import net.dovemq.transport.session.CAMQPSessionInterface;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 
 public class ConnectionTestUtils
 {
-    public static CAMQPConnectionInterface createMockConnection(final BlockingQueue<ChannelBuffer> framesQueue)
+    public static CAMQPConnectionInterface createStubConnection(final BlockingQueue<ChannelBuffer> framesQueue)
     {
-        return new CAMQPConnection() {
+        return new CAMQPConnectionInterface() {
             @Override
             public void sendFrame(ChannelBuffer buffer, int channelId)
             {
                 framesQueue.add(buffer);
+            }
+
+            @Override
+            public int reserveOutgoingChannel()
+            {
+                // TODO Auto-generated method stub
+                return 0;
+            }
+
+            @Override
+            public void register(int receiveChannelNumber,
+                    CAMQPIncomingChannelHandler channelHandler)
+            {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void registerSessionHandshakeInProgress(int sendChannelNumber,
+                    CAMQPSessionInterface session)
+            {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void detach(int outgoingChannelNumber,
+                    int incomingChannelNumber)
+            {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public CAMQPConnectionKey getKey()
+            {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public void close()
+            {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void closeAsync()
+            {
+                // TODO Auto-generated method stub
+
             }
         };
     }

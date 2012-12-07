@@ -71,7 +71,7 @@ public class CAMQPLinkSenderRequestCreditTest
             }
         };
 
-        mockConnection =  ConnectionTestUtils.createMockConnection(framesQueue);
+        mockConnection =  ConnectionTestUtils.createStubConnection(framesQueue);
         session = CAMQPSessionSenderTest.createMockSessionAndSetExpectations(mockContext, mockConnection);
         flowScheduler.start();
 

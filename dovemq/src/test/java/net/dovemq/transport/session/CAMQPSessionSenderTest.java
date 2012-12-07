@@ -111,7 +111,7 @@ public class CAMQPSessionSenderTest
         numLinkFlowFrameCount.set(0);
 
         final CAMQPSessionStateActor mockStateActor = mockContext.mock(CAMQPSessionStateActor.class);
-        mockConnection = ConnectionTestUtils.createMockConnection(outgoingFrames);
+        mockConnection = ConnectionTestUtils.createStubConnection(outgoingFrames);
         session = new CAMQPSession(mockConnection, mockStateActor);
         session.retrieveAndSetRemoteFlowControlAttributes(CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE, 0, CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE);
 
