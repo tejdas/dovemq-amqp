@@ -237,6 +237,7 @@ public class CAMQPLinkSenderTest
     @BeforeClass
     public static void setupBeforeClass()
     {
+        CAMQPSessionManager.initialize();
         CAMQPSessionManager.registerLinkReceiverFactory(factory);
     }
 

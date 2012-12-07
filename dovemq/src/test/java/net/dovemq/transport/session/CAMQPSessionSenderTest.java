@@ -95,6 +95,7 @@ public class CAMQPSessionSenderTest
     @BeforeClass
     public static void setupBeforeClass()
     {
+        CAMQPSessionManager.initialize();
     }
 
     @Before
@@ -186,8 +187,8 @@ public class CAMQPSessionSenderTest
             }
             catch (RuntimeException ex)
             {
-                System.out.println(ex.toString());
                 ex.printStackTrace();
+                assertTrue(false);
             }
         }
     }
@@ -267,6 +268,7 @@ public class CAMQPSessionSenderTest
                 Date now = new Date();
                 if ((now.getTime() - lastFrameReceivedTime.getTime()) > 8000)
                 {
+                    // wait for long enough to get all link flow-frames
                     break; // allow test to fail instead of hang
                 }
                 else
@@ -290,16 +292,13 @@ public class CAMQPSessionSenderTest
                     simulateFlowFrameFromSessionReceiver(session, nextExpectedIncomingTransferId, false);
                 }
                 else
+                {
                     numLinkFlowFrames++;
-            }
-
-            if (nextExpectedIncomingTransferId == expectedTransferFrames)
-            {
-                break;
+                }
             }
         }
         assertEquals(expectedTransferFrames, nextExpectedIncomingTransferId);
-        assertEquals(numLinkFlowFrameCount.get(), numLinkFlowFrames);
+        assertEquals(numLinkFlowFrames, numLinkFlowFrameCount.get());
     }
 
     private void getAndAssertFlowFrames(long initialTransferId, int expectedTransferFrames) throws InterruptedException
@@ -317,6 +316,7 @@ public class CAMQPSessionSenderTest
                 Date now = new Date();
                 if ((now.getTime() - lastFrameReceivedTime.getTime()) > 8000)
                 {
+                    // wait for long enough to get all link flow-frames
                     break; // allow test to fail instead of hang
                 }
                 else
@@ -346,13 +346,9 @@ public class CAMQPSessionSenderTest
                     }
                 }
                 else
+                {
                     numLinkFlowFrames++;
-            }
-
-            if (nextExpectedIncomingTransferId == expectedTransferFrames)
-            {
-                if (numEchoFlowFramesSent == numEchoFlowFramesRecvd)
-                    break;
+                }
             }
         }
         assertEquals(expectedTransferFrames, nextExpectedIncomingTransferId);

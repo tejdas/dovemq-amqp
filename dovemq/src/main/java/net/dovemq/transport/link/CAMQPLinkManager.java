@@ -123,10 +123,15 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
             CAMQPConnectionManager.registerConnectionObserver(new CAMQPConnectionReaper());
             CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties.createConnectionProperties();
             listener = CAMQPListener.createCAMQPListener(defaultConnectionProps);
-            listener.start();
         }
+        CAMQPSessionManager.initialize();
         CAMQPSessionManager.registerLinkReceiverFactory(linkManager);
         linkManager.flowScheduler.start();
+
+        if (isBroker)
+        {
+            listener.start();
+        }
     }
 
     public static void shutdown()
@@ -147,7 +152,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
         CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
         if (linkEndpoint == null)
         {
-            log.warn("could not find linkEndpoint");
+            log.warn("could not find link endpoint for: " + linkSource + "." + linkTarget);
             return null;
         }
         if (linkEndpoint.getRole() == LinkRole.LinkReceiver)

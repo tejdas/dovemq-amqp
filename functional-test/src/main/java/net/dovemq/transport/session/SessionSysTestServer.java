@@ -35,6 +35,7 @@ public class SessionSysTestServer
 
         CAMQPListener listener =
                 CAMQPListener.createCAMQPListener(defaultConnectionProps);
+        CAMQPSessionManager.initialize();
         listener.start();
 
         SessionSysTestCmdDriver.processConsoleInput(true);

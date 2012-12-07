@@ -357,6 +357,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     @BeforeClass
     public static void setupBeforeClass()
     {
+        CAMQPSessionManager.initialize();
         CAMQPSessionManager.registerLinkReceiverFactory(factory);
     }
 

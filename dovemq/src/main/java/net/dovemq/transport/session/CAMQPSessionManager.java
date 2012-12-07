@@ -42,11 +42,18 @@ public class CAMQPSessionManager
 {
     private static final Logger log = Logger.getLogger(CAMQPSessionManager.class);
 
-    private static final CAMQPSessionManager _sessionManager = new CAMQPSessionManager();;
+    private static volatile CAMQPSessionManager _sessionManager;
+    private static volatile CAMQPSessionSendFlowScheduler sessionSendFlowScheduler;
 
-    private static ExecutorService executor = null;
+    public static CAMQPSessionSendFlowScheduler getSessionSendFlowScheduler()
+    {
+        return sessionSendFlowScheduler;
+    }
+
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     private static volatile long maxOutgoingWindowSize = CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE;
+    private static volatile long maxIncomingWindowSize = CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE;
 
     public static long getMaxOutgoingWindowSize()
     {
@@ -58,8 +65,6 @@ public class CAMQPSessionManager
         return maxIncomingWindowSize;
     }
 
-    private static volatile long maxIncomingWindowSize = CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE;
-
     public static void setMaxSessionWindowSize(long maxOutgoingWindowSize,
             long maxIncomingWindowSize)
     {
@@ -67,30 +72,36 @@ public class CAMQPSessionManager
         CAMQPSessionManager.maxIncomingWindowSize = maxIncomingWindowSize;
     }
 
-    public static synchronized ExecutorService getExecutor()
+    public static ExecutorService getExecutor()
     {
-        if (executor == null)
-        {
-            executor = Executors.newFixedThreadPool(32);
-        }
-        return executor;
+        return _sessionManager.executor;
     }
 
-    public static synchronized void shutdown()
+    public static void initialize()
     {
-        _sessionManager.closeSessions();
-        if (executor != null)
+        _sessionManager = new CAMQPSessionManager();
+        sessionSendFlowScheduler = new CAMQPSessionSendFlowScheduler();
+        sessionSendFlowScheduler.start();
+    }
+
+    public static void shutdown()
+    {
+        sessionSendFlowScheduler.stop();
+        _sessionManager.shutdownManager();
+        sessionSendFlowScheduler = null;
+    }
+
+    private void shutdownManager()
+    {
+        closeSessions();
+        executor.shutdown();
+        try
         {
-            executor.shutdown();
-            try
-            {
-                executor.awaitTermination(300, TimeUnit.SECONDS);
-            }
-            catch (InterruptedException e)
-            {
-                Thread.currentThread().interrupt();
-            }
-            executor = null;
+            executor.awaitTermination(300, TimeUnit.SECONDS);
+        }
+        catch (InterruptedException e)
+        {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -123,11 +134,16 @@ public class CAMQPSessionManager
         return CAMQPConnectionFactory.createCAMQPConnection(targetContainerId, connectionProps);
     }
 
-    private final ConcurrentMap<CAMQPConnectionKey, List<CAMQPSession>> mappedSessions = new ConcurrentHashMap<CAMQPConnectionKey, List<CAMQPSession>>();
+    private final ConcurrentMap<CAMQPConnectionKey, List<CAMQPSession>> mappedSessions =
+            new ConcurrentHashMap<CAMQPConnectionKey, List<CAMQPSession>>();
 
     public static void connectionClosed(CAMQPConnectionKey remoteContainerId)
     {
-        _sessionManager.mappedSessions.remove(remoteContainerId);
+        CAMQPSessionManager sessionManager = _sessionManager;
+        if (sessionManager != null)
+        {
+            sessionManager.mappedSessions.remove(remoteContainerId);
+        }
     }
 
     protected static void sessionCreated(CAMQPConnectionKey amqpRemoteConnectionKey, int sessionChannelId, CAMQPSession session)

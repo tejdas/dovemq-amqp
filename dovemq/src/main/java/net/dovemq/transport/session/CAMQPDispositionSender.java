@@ -20,6 +20,8 @@ package net.dovemq.transport.session;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.protocol.CAMQPEncoder;
@@ -153,6 +155,27 @@ class CAMQPDispositionSender implements Runnable
     private List<DispositionRange> receiverDispositionRanges = null;
     private final CAMQPSession session;
 
+    private final ScheduledExecutorService dispositionScheduler = Executors.newScheduledThreadPool(1);
+
+    void start()
+    {
+        dispositionScheduler.scheduleWithFixedDelay(this, CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL,
+                CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL, TimeUnit.MILLISECONDS);
+    }
+
+    void stop()
+    {
+        dispositionScheduler.shutdown();
+        try
+        {
+            dispositionScheduler.awaitTermination(5000, TimeUnit.MILLISECONDS);
+        }
+        catch (InterruptedException e)
+        {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     CAMQPDispositionSender(CAMQPSession session)
     {
         super();
@@ -209,15 +232,8 @@ class CAMQPDispositionSender implements Runnable
             return;
         }
 
-        try
-        {
-            sendDispositions(localSenderDispositionRanges, true, channel);
-            sendDispositions(localReceiverDispositionRanges, false, channel);
-        }
-        finally
-        {
-            session.flowSendScheduler.schedule(this, CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL, TimeUnit.MILLISECONDS);
-        }
+        sendDispositions(localSenderDispositionRanges, true, channel);
+        sendDispositions(localReceiverDispositionRanges, false, channel);
     }
 
     private static void sendDispositions(List<DispositionRange> dispositionRanges, boolean role, CAMQPChannel channel)

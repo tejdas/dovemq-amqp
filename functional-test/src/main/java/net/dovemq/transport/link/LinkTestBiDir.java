@@ -68,9 +68,8 @@ public class LinkTestBiDir
         Random randomGenerator = new Random();
         for (int i = 0; i < messagesToSend; i++)
         {
-            DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator);
+            DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator, true);
             sender.sendMessage(message);
-            //Thread.sleep(randomGenerator.nextInt(10) + 10);
         }
         System.out.println("Done sending messages");
 

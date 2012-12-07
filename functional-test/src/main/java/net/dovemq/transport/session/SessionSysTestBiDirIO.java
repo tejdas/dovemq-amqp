@@ -47,6 +47,8 @@ public class SessionSysTestBiDirIO
 
         CAMQPConnectionManager.initialize(publisherName);
         System.out.println("container ID: " + CAMQPConnectionManager.getContainerId());
+        CAMQPSessionManager.initialize();
+        CAMQPSessionManager.setMaxSessionWindowSize(512, 512);
 
         ConnectionCommand localConnectionCommand = new ConnectionCommand();
         SessionCommand localSessionCommand = new SessionCommand();
@@ -56,7 +58,7 @@ public class SessionSysTestBiDirIO
         Thread.sleep(2000);
 
         final SessionCommandMBean mbeanProxy = jmxWrapper.getSessionBean();
-        mbeanProxy.setSessionWindowSize(256, 256);
+        mbeanProxy.setSessionWindowSize(512, 512);
 
         mbeanProxy.registerFactory(linkReceiverFactory);
 

@@ -40,6 +40,7 @@ import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CAMQPLinkSenderRequestCreditTest
@@ -53,6 +54,12 @@ public class CAMQPLinkSenderRequestCreditTest
 
     private final BlockingQueue<ChannelBuffer> framesQueue = new LinkedBlockingQueue<ChannelBuffer>();
     private final CAMQPLinkSendFlowScheduler flowScheduler = new CAMQPLinkSendFlowScheduler();
+
+    @BeforeClass
+    public static void setupBeforeClass()
+    {
+        CAMQPSessionManager.initialize();
+    }
 
     @Before
     public void setup()

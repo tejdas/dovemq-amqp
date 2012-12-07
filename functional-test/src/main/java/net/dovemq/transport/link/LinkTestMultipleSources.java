@@ -72,9 +72,19 @@ public class LinkTestMultipleSources
             mbeanProxy.attachSharedTarget(localSource,  localTarget);
 
             Random randomGenerator = new Random();
+
+            /*
+             * Since the functional test uses NUM_THREADS=5 and
+             * numMessagesToSend=50000, the test fails on Windows
+             * because of repeated calls to
+             * RandomStringUtils.randomAlphanumeric()
+             *
+             * The following boolean is to suppress call to RandomStringUtils.
+             */
+            boolean generateRandomString = false;
             for (int i = 0; i < numMessagesToSend; i++)
             {
-                DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator);
+                DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator, generateRandomString);
                 sender.sendMessage(message);
             }
             doneSignal.countDown();

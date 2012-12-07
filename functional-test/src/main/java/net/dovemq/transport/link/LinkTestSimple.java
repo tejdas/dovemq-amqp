@@ -73,7 +73,7 @@ public class LinkTestSimple
         Random randomGenerator = new Random();
         for (int i = 0; i < messagesToSend; i++)
         {
-            DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator);
+            DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator, true);
             sender.sendMessage(message);
         }
         System.out.println("Done sending messages");

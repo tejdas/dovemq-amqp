@@ -186,7 +186,7 @@ public class QueueRouterTest  extends TestCase
 
             if (ackedCount < count)
             {
-                System.out.println("wanted to ack " + count + " messages, but found only " + ackedCount + " messages");
+                assertFalse("wanted to ack " + count + " messages, but found only " + ackedCount + " messages", true);
             }
         }
 
