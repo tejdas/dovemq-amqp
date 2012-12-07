@@ -26,8 +26,8 @@ import java.util.Map;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameConstants;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
-import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 import net.dovemq.transport.session.CAMQPSessionFrameHandler;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
@@ -44,7 +44,7 @@ import org.jboss.netty.channel.Channel;
  *
  */
 @ThreadSafe
-public class CAMQPConnection
+class CAMQPConnection implements CAMQPConnectionInterface
 {
     private final CAMQPConnectionStateActor stateActor;
 
@@ -81,14 +81,10 @@ public class CAMQPConnection
         stateActor = null;
     }
 
+    @Override
     public CAMQPConnectionKey getKey()
     {
         return stateActor.key;
-    }
-
-    public boolean isInitiator()
-    {
-        return stateActor.isInitiator;
     }
 
     /**
@@ -96,6 +92,7 @@ public class CAMQPConnection
      * @param data
      * @param channelId
      */
+    @Override
     public void sendFrame(ChannelBuffer data, int channelId)
     {
         ChannelBuffer header = CAMQPFrameHeader.createEncodedFrameHeader(channelId, data.readableBytes());
@@ -127,14 +124,10 @@ public class CAMQPConnection
         CAMQPConnectionManager.connectionCreated(stateActor.key, this);
     }
 
-    public void explicitOpen(CAMQPControlOpen openControlData)
-    {
-        stateActor.sendOpenControl(openControlData);
-    }
-
     /**
      * Synchronously close the connection
      */
+    @Override
     public void close()
     {
         stateActor.sendCloseControl();
@@ -144,12 +137,13 @@ public class CAMQPConnection
     /**
      * Asynchronously close the connection
      */
+    @Override
     public void closeAsync()
     {
         stateActor.sendCloseControl();
     }
 
-    public boolean isClosed()
+    boolean isClosed()
     {
         return sender.isClosed();
     }
@@ -160,6 +154,7 @@ public class CAMQPConnection
      * subsequently attach to.
      * @return
      */
+    @Override
     public int reserveOutgoingChannel()
     {
         synchronized (stateActor)
@@ -191,6 +186,7 @@ public class CAMQPConnection
      * @param receiveChannelNumber
      * @param channelHandler
      */
+    @Override
     public void register(int receiveChannelNumber, CAMQPIncomingChannelHandler channelHandler)
     {
         synchronized (stateActor)
@@ -209,6 +205,7 @@ public class CAMQPConnection
      * @param outgoingChannelNumber
      * @param incomingChannelNumber
      */
+    @Override
     public void detach(int outgoingChannelNumber, int incomingChannelNumber)
     {
         synchronized (stateActor)
@@ -263,5 +260,11 @@ public class CAMQPConnection
             channelHandler.channelAbruptlyDetached();
         }
         sender.close();
+    }
+
+    @Override
+    public void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSessionInterface session)
+    {
+        sessionFrameHandler.registerSessionHandshakeInProgress(sendChannelNumber, session);
     }
 }

@@ -15,23 +15,22 @@
  *
  */
 
-package net.dovemq.transport.link;
+package net.dovemq.transport.connection;
 
-import net.dovemq.transport.connection.CAMQPConnectionInterface;
-import net.dovemq.transport.connection.CAMQPConnectionObserver;
+import java.util.concurrent.BlockingQueue;
 
-final class CAMQPConnectionReaper implements CAMQPConnectionObserver
+import org.jboss.netty.buffer.ChannelBuffer;
+
+public class ConnectionTestUtils
 {
-    @Override
-    public void connectionAccepted(CAMQPConnectionInterface connection)
+    public static CAMQPConnectionInterface createMockConnection(final BlockingQueue<ChannelBuffer> framesQueue)
     {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void connectionCloseInitiatedByRemotePeer(CAMQPConnectionInterface connection)
-    {
-        connection.closeAsync();
+        return new CAMQPConnection() {
+            @Override
+            public void sendFrame(ChannelBuffer buffer, int channelId)
+            {
+                framesQueue.add(buffer);
+            }
+        };
     }
 }

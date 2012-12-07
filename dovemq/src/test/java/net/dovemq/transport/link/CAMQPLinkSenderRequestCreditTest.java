@@ -26,7 +26,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
+import net.dovemq.transport.connection.ConnectionTestUtils;
 import net.dovemq.transport.protocol.CAMQPSyncDecoder;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
@@ -47,7 +48,7 @@ public class CAMQPLinkSenderRequestCreditTest
 {
     private Mockery mockContext = null;
     private CAMQPSessionInterface session = null;
-    private CAMQPConnection mockConnection = null;
+    private CAMQPConnectionInterface mockConnection = null;
 
     public CAMQPLinkSender linkSender = null;
     private long linkHandle = 1;
@@ -70,7 +71,7 @@ public class CAMQPLinkSenderRequestCreditTest
             }
         };
 
-        mockConnection =  CAMQPLinkSenderTest.createMockConnection(framesQueue);
+        mockConnection =  ConnectionTestUtils.createMockConnection(framesQueue);
         session = CAMQPSessionSenderTest.createMockSessionAndSetExpectations(mockContext, mockConnection);
         flowScheduler.start();
 

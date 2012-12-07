@@ -20,7 +20,7 @@ package net.dovemq.transport.session;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.data.CAMQPControlBegin;
 import net.dovemq.transport.protocol.data.CAMQPControlEnd;
@@ -99,7 +99,7 @@ class CAMQPSessionStateActor
         this.session = session;
     }
 
-    CAMQPSessionStateActor(CAMQPConnection attachedConnection)
+    CAMQPSessionStateActor(CAMQPConnectionInterface attachedConnection)
     {
         this.session = new CAMQPSession(attachedConnection, this);
     }
@@ -197,7 +197,7 @@ class CAMQPSessionStateActor
         }
     }
 
-    private QueuedContext processSendBegin(QueuedContext contextToProcess, CAMQPConnection attachedConnection)
+    private QueuedContext processSendBegin(QueuedContext contextToProcess, CAMQPConnectionInterface attachedConnection)
     {
         CAMQPSessionControlWrapper beginContext = (CAMQPSessionControlWrapper) contextToProcess.getContext();
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
@@ -277,7 +277,7 @@ class CAMQPSessionStateActor
         }
     }
 
-    private QueuedContext processSendEnd(QueuedContext contextToProcess, CAMQPConnection attachedConnection)
+    private QueuedContext processSendEnd(QueuedContext contextToProcess, CAMQPConnectionInterface attachedConnection)
     {
         CAMQPSessionControlWrapper data = (CAMQPSessionControlWrapper) contextToProcess.getContext();
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
@@ -322,7 +322,7 @@ class CAMQPSessionStateActor
     {
         boolean firstPass = true;
         QueuedContext contextToProcess = null;
-        CAMQPConnection attachedConnection = null;
+        CAMQPConnectionInterface attachedConnection = null;
         while (true)
         {
             if (firstPass)
@@ -354,7 +354,7 @@ class CAMQPSessionStateActor
     /*
      * Process current event and return next event off the queue
      */
-    private QueuedContext processEvent(QueuedContext contextToProcess, CAMQPConnection attachedConnection)
+    private QueuedContext processEvent(QueuedContext contextToProcess, CAMQPConnectionInterface attachedConnection)
     {
         if (contextToProcess == null)
         {
@@ -369,7 +369,7 @@ class CAMQPSessionStateActor
             }
             else
             {
-                log.fatal("Could not process Event.SEND_ATTACH as underlying CAMQPConnection is null");
+                log.fatal("Could not process Event.SEND_ATTACH as underlying CAMQPConnectionInterface is null");
                 // TODO
                 return null;
             }
@@ -386,7 +386,7 @@ class CAMQPSessionStateActor
             }
             else
             {
-                log.fatal("Could not process Event.SEND_DETACH as underlying CAMQPConnection is null");
+                log.fatal("Could not process Event.SEND_DETACH as underlying CAMQPConnectionInterface is null");
                 // TODO
                 return null;
             }

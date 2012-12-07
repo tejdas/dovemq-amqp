@@ -54,7 +54,7 @@ public class ConnectionSysTestMTClient
             }
 
             CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
-            CAMQPConnection connection = CAMQPConnectionFactory.createCAMQPConnection(brokerContainerId, connectionProps);
+            CAMQPConnectionInterface connection = CAMQPConnectionFactory.createCAMQPConnection(brokerContainerId, connectionProps);
             if (connection == null)
                 System.out.println("AMQP connection could not be created");
 

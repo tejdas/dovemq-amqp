@@ -34,8 +34,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import net.dovemq.api.DoveMQMessage;
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
+import net.dovemq.transport.connection.ConnectionTestUtils;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPFrame;
@@ -163,7 +164,7 @@ public class CAMQPLinkAsyncSenderTest
     private final BlockingQueue<CAMQPControlTransfer> transferFramesQueue = new LinkedBlockingQueue<CAMQPControlTransfer>();
     private final BlockingQueue<Object> controlFramesQueue = new LinkedBlockingQueue<Object>();
 
-    private CAMQPConnection mockConnection = null;
+    private CAMQPConnectionInterface mockConnection = null;
 
     public CAMQPLinkAsyncSender linkSender = null;
     private long linkHandle = 1;
@@ -194,7 +195,7 @@ public class CAMQPLinkAsyncSenderTest
         task = executor.submit(framesProcessor);
         numLinkFlowFrameCount.set(0);
 
-        mockConnection =  createMockConnection();
+        mockConnection =  ConnectionTestUtils.createMockConnection(framesQueue);
         session = CAMQPSessionSenderTest.createMockSessionAndSetExpectations(mockContext, mockConnection);
         frameHandler = (CAMQPIncomingChannelHandler) session;
 
@@ -324,17 +325,6 @@ public class CAMQPLinkAsyncSenderTest
             nextExpectedIncomingTransferId.incrementAndGet();
         }
         assertEquals(expectedMessageCount, messageCount);
-    }
-
-    private CAMQPConnection createMockConnection()
-    {
-        return new CAMQPConnection() {
-            @Override
-            public void sendFrame(ChannelBuffer buffer, int channelId)
-            {
-                framesQueue.add(buffer);
-            }
-        };
     }
 
     private void simulateLinkFlowFrameReceipt(boolean drain, boolean echo, long linkCredit, long sessionCredit)

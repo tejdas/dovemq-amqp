@@ -34,8 +34,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
+import net.dovemq.transport.connection.ConnectionTestUtils;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
@@ -175,7 +176,7 @@ public class CAMQPLinkReceiverTest
     private final BlockingQueue<CAMQPControlTransfer> transferFramesQueue = new LinkedBlockingQueue<CAMQPControlTransfer>();
     private final BlockingQueue<Object> controlFramesQueue = new LinkedBlockingQueue<Object>();
 
-    private CAMQPConnection mockConnection = null;
+    private CAMQPConnectionInterface mockConnection = null;
 
     public static CAMQPLinkReceiver linkReceiver = null;
     private TestTarget target = null;
@@ -206,7 +207,7 @@ public class CAMQPLinkReceiverTest
         task = executor.submit(framesProcessor);
         numLinkFlowFrameCount.set(0);
 
-        mockConnection =  createMockConnection();
+        mockConnection =  ConnectionTestUtils.createMockConnection(framesQueue);
         session = CAMQPSessionSenderTest.createMockSessionAndSetExpectations(mockContext, mockConnection);
         frameHandler = (CAMQPIncomingChannelHandler) session;
 
@@ -394,17 +395,6 @@ public class CAMQPLinkReceiverTest
         linkReceiver.flowReceived(flow);
 
         getAndAssertLinkCredit(configuredCreditBoost);
-    }
-
-    private CAMQPConnection createMockConnection()
-    {
-        return new CAMQPConnection() {
-            @Override
-            public void sendFrame(ChannelBuffer buffer, int channelId)
-            {
-                framesQueue.add(buffer);
-            }
-        };
     }
 
     private void attachHandshakeAndVerify(long linkHandle)

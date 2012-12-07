@@ -34,8 +34,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
+import net.dovemq.transport.connection.ConnectionTestUtils;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -226,7 +227,7 @@ public class CAMQPLinkSenderTest
     private final BlockingQueue<CAMQPControlTransfer> transferFramesQueue = new LinkedBlockingQueue<CAMQPControlTransfer>();
     private final BlockingQueue<Object> controlFramesQueue = new LinkedBlockingQueue<Object>();
 
-    private CAMQPConnection mockConnection = null;
+    private CAMQPConnectionInterface mockConnection = null;
 
     public CAMQPLinkSender linkSender = null;
     private long linkHandle = 1;
@@ -256,7 +257,7 @@ public class CAMQPLinkSenderTest
         task = executor.submit(framesProcessor);
         numLinkFlowFrameCount.set(0);
 
-        mockConnection =  createMockConnection(framesQueue);
+        mockConnection = ConnectionTestUtils.createMockConnection(framesQueue);
         session = CAMQPSessionSenderTest.createMockSessionAndSetExpectations(mockContext, mockConnection);
         frameHandler = (CAMQPIncomingChannelHandler) session;
 
@@ -697,17 +698,6 @@ public class CAMQPLinkSenderTest
         }
 
         assertEquals(expectedMessageCount, messageCount);
-    }
-
-    static CAMQPConnection createMockConnection(final BlockingQueue<ChannelBuffer> framesQueue)
-    {
-        return new CAMQPConnection() {
-            @Override
-            public void sendFrame(ChannelBuffer buffer, int channelId)
-            {
-                framesQueue.add(buffer);
-            }
-        };
     }
 
     private void simulateLinkFlowFrameReceipt(boolean drain, boolean echo, long linkCredit, long sessionCredit)

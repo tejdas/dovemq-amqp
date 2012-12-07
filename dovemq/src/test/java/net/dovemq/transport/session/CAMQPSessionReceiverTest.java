@@ -31,7 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
+import net.dovemq.transport.connection.ConnectionTestUtils;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
@@ -59,7 +60,7 @@ public class CAMQPSessionReceiverTest
     private static final AtomicInteger numLinkFlowFrameCount = new AtomicInteger(0);
     private CAMQPSession session = null;
     private final BlockingQueue<ChannelBuffer> incomingFrames = new LinkedBlockingQueue<ChannelBuffer>();
-    private CAMQPConnection mockConnection = null;
+    private CAMQPConnectionInterface mockConnection = null;
     private long linkHandle = 5;
 
     private AtomicLong remoteWindow = new AtomicLong(256);
@@ -85,7 +86,7 @@ public class CAMQPSessionReceiverTest
         numLinkFlowFrameCount.set(0);
 
         final CAMQPSessionStateActor mockStateActor = mockContext.mock(CAMQPSessionStateActor.class);
-        mockConnection =  createMockConnection();
+        mockConnection = ConnectionTestUtils.createMockConnection(incomingFrames);
         session = new CAMQPSession(mockConnection, mockStateActor);
         session.retrieveAndSetRemoteFlowControlAttributes(CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE, 0, CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE);
 
@@ -300,17 +301,6 @@ public class CAMQPSessionReceiverTest
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlFlow.encode(encoder, flow);
         sendFrame(encoder, channelId);
-    }
-
-    private CAMQPConnection createMockConnection()
-    {
-        return new CAMQPConnection() {
-            @Override
-            public void sendFrame(ChannelBuffer buffer, int channelId)
-            {
-                incomingFrames.add(buffer);
-            }
-        };
     }
 
     private void sendAttachedFrame()

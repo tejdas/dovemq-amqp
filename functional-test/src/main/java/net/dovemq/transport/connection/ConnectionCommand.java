@@ -42,7 +42,7 @@ public class ConnectionCommand implements ConnectionCommandMBean
     public void create(String targetContainerId)
     {
         CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
-        CAMQPConnection connection = CAMQPConnectionFactory.createCAMQPConnection(targetContainerId, connectionProps);
+        CAMQPConnectionInterface connection = CAMQPConnectionFactory.createCAMQPConnection(targetContainerId, connectionProps);
         if (connection == null)
             System.out.println("AMQP connection could not be created");
     }

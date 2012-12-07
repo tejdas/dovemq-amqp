@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.connection.CAMQPIncomingChannelHandler;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameConstants;
@@ -79,7 +79,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     @Immutable
     static class CAMQPChannel
     {
-        final CAMQPConnection getAmqpConnection()
+        final CAMQPConnectionInterface getAmqpConnection()
         {
             return amqpConnection;
         }
@@ -87,13 +87,13 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         {
             return channelId;
         }
-        CAMQPChannel(CAMQPConnection amqpConnection, int channelId)
+        CAMQPChannel(CAMQPConnectionInterface amqpConnection, int channelId)
         {
             super();
             this.amqpConnection = amqpConnection;
             this.channelId = channelId;
         }
-        private final CAMQPConnection amqpConnection;
+        private final CAMQPConnectionInterface amqpConnection;
         private final int channelId;
     }
 
@@ -129,11 +129,11 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     @GuardedBy("stateActor")
     private int incomingChannelNumber = 0;
 
-    private volatile CAMQPConnection connection = null;
+    private volatile CAMQPConnectionInterface connection = null;
 
     private volatile CAMQPDispositionSender dispositionSender = null;
 
-    CAMQPConnection getConnection()
+    CAMQPConnectionInterface getConnection()
     {
         return connection;
     }
@@ -177,7 +177,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     /*
      * Called during passive session attach
      */
-    CAMQPSession(CAMQPConnection connection, CAMQPSessionStateActor stateActor)
+    CAMQPSession(CAMQPConnectionInterface connection, CAMQPSessionStateActor stateActor)
     {
         super();
         this.connection = connection;
@@ -225,14 +225,14 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
         }
         /*
          * In the case of session initiator, a. reserve a txChannel from
-         * underlying CAMQPConnection b. register with CAMQPSessionFrameHandler
+         * underlying CAMQPConnectionInterface b. register with CAMQPSessionFrameHandler
          * that will then dispatch the incoming BEGIN control. The BEGIN
          * control cannot be directly dispatched to the session because the
          * session's rxChannel is not known yet, and hence not registered with
-         * the CAMQPConnection.
+         * the CAMQPConnectionInterface.
          */
         outgoingChannelNumber = connection.reserveOutgoingChannel();
-        connection.getSessionFrameHandler().registerSessionHandshakeInProgress(outgoingChannelNumber, this);
+        connection.registerSessionHandshakeInProgress(outgoingChannelNumber, this);
 
         CAMQPControlBegin beginControl = new CAMQPControlBegin();
 
@@ -260,8 +260,8 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     {
         /*
          * In the case of session initiator's peer:
-         * a. Get the rxChannel from FrameHeader and register with underlying CAMQPConnection
-         * b. reserve a txChannel from underlying CAMQPConnection
+         * a. Get the rxChannel from FrameHeader and register with underlying CAMQPConnectionInterface
+         * b. reserve a txChannel from underlying CAMQPConnectionInterface
          */
         incomingChannelNumber = receivedData.getChannelNumber();
         outgoingChannelNumber = connection.reserveOutgoingChannel();
@@ -299,7 +299,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     {
         /*
          * In the case of session initiator: Get the rxChannel from FrameHeader
-         * and register with underlying CAMQPConnection
+         * and register with underlying CAMQPConnectionInterface
          */
         incomingChannelNumber = frameHeader.getChannelNumber();
         retrieveRemoteFlowControlAttributes(peerBeginControl);

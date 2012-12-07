@@ -31,7 +31,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
+import net.dovemq.transport.connection.ConnectionTestUtils;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
@@ -90,7 +91,7 @@ public class CAMQPSessionSenderTest
     private static final AtomicInteger numLinkFlowFrameCount = new AtomicInteger(0);
     private CAMQPSession session = null;
     private final BlockingQueue<ChannelBuffer> outgoingFrames = new LinkedBlockingQueue<ChannelBuffer>();
-    private CAMQPConnection mockConnection = null;
+    private CAMQPConnectionInterface mockConnection = null;
 
     @BeforeClass
     public static void setupBeforeClass()
@@ -110,7 +111,7 @@ public class CAMQPSessionSenderTest
         numLinkFlowFrameCount.set(0);
 
         final CAMQPSessionStateActor mockStateActor = mockContext.mock(CAMQPSessionStateActor.class);
-        mockConnection =  createMockConnection();
+        mockConnection = ConnectionTestUtils.createMockConnection(outgoingFrames);
         session = new CAMQPSession(mockConnection, mockStateActor);
         session.retrieveAndSetRemoteFlowControlAttributes(CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE, 0, CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE);
 
@@ -399,18 +400,7 @@ public class CAMQPSessionSenderTest
         return flow;
     }
 
-    private CAMQPConnection createMockConnection()
-    {
-        return new CAMQPConnection() {
-            @Override
-            public void sendFrame(ChannelBuffer buffer, int channelId)
-            {
-                outgoingFrames.add(buffer);
-            }
-        };
-    }
-
-    public static CAMQPSessionInterface createMockSessionAndSetExpectations(Mockery mockContext, CAMQPConnection mockConnection)
+    public static CAMQPSessionInterface createMockSessionAndSetExpectations(Mockery mockContext, CAMQPConnectionInterface mockConnection)
     {
         final CAMQPSessionStateActor mockStateActor = mockContext.mock(CAMQPSessionStateActor.class);
         CAMQPSession session = new CAMQPSession(mockConnection, mockStateActor);

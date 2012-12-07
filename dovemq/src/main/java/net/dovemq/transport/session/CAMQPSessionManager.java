@@ -28,8 +28,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import net.dovemq.transport.connection.CAMQPConnection;
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.connection.CAMQPConnectionKey;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.CAMQPConnectionProperties;
@@ -117,9 +117,9 @@ public class CAMQPSessionManager
         return _sessionManager.linkReceiverFactory;
     }
 
-    protected static CAMQPConnection getCAMQPConnection(String targetContainerId)
+    protected static CAMQPConnectionInterface getCAMQPConnection(String targetContainerId)
     {
-        CAMQPConnection connection = CAMQPConnectionManager.getAnyCAMQPConnection(targetContainerId);
+        CAMQPConnectionInterface connection = CAMQPConnectionManager.getAnyCAMQPConnection(targetContainerId);
         if (connection == null)
         {
             CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
@@ -128,7 +128,7 @@ public class CAMQPSessionManager
         return connection;
     }
 
-    protected static CAMQPConnection createCAMQPConnection(String targetContainerId)
+    protected static CAMQPConnectionInterface createCAMQPConnection(String targetContainerId)
     {
         CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
         return CAMQPConnectionFactory.createCAMQPConnection(targetContainerId, connectionProps);

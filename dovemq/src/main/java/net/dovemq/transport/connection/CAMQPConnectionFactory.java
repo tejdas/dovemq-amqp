@@ -39,7 +39,7 @@ public final class CAMQPConnectionFactory
 
     private final ClientBootstrap bootstrap;
 
-    public static CAMQPConnection createCAMQPConnection(String targetHostName, CAMQPConnectionProperties connectionProps)
+    public static CAMQPConnectionInterface createCAMQPConnection(String targetHostName, CAMQPConnectionProperties connectionProps)
     {
         return connectionFactory.createConnection(targetHostName, connectionProps);
     }

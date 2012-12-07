@@ -20,7 +20,7 @@ package net.dovemq.transport.session;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import net.dovemq.transport.connection.CAMQPConnection;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.protocol.CAMQPSyncDecoder;
 import net.dovemq.transport.protocol.data.CAMQPControlBegin;
@@ -28,7 +28,7 @@ import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 
 import org.apache.log4j.Logger;
 
-public class CAMQPSessionFrameHandler
+public final class CAMQPSessionFrameHandler
 {
     private static final Logger log = Logger.getLogger(CAMQPSessionFrameHandler.class);
     private final ConcurrentMap<Integer, CAMQPSession> sessionsHandshakeInProgress = new ConcurrentHashMap<Integer, CAMQPSession>();
@@ -38,12 +38,12 @@ public class CAMQPSessionFrameHandler
         return new CAMQPSessionFrameHandler();
     }
 
-    void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSession session)
+    public void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSessionInterface session)
     {
-        sessionsHandshakeInProgress.put(sendChannelNumber, session);
+        sessionsHandshakeInProgress.put(sendChannelNumber, (CAMQPSession) session);
     }
 
-    public void frameReceived(int channelNumber, CAMQPFrame frame, CAMQPConnection connection)
+    public void frameReceived(int channelNumber, CAMQPFrame frame, CAMQPConnectionInterface connection)
     {
         CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
         decoder.take(frame.getBody());
