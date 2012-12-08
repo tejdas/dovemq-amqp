@@ -110,7 +110,7 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
 
     private final Map<Long, CAMQPLinkMessageHandler> linkReceivers = new ConcurrentHashMap<Long, CAMQPLinkMessageHandler>();
 
-    private CAMQPSessionStateActor stateActor = null;
+    private final CAMQPSessionStateActor stateActor;
     @GuardedBy("stateActor")
     private boolean closePending = false;
 
@@ -190,9 +190,10 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     /*
      * Called during active session attach
      */
-    CAMQPSession()
+    CAMQPSession(CAMQPConnectionInterface connection)
     {
         super();
+        this.connection = connection;
         stateActor = new CAMQPSessionStateActor(this);
         outgoingWindow = CAMQPSessionManager.getMaxOutgoingWindowSize();
         incomingWindow = CAMQPSessionManager.getMaxIncomingWindowSize();
@@ -211,18 +212,9 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
      * and wait for the BEGIN frame from the AMQP peer, after
      * which it transitions to MAPPED state.
      *
-     * @param targetContainerId
      */
-    public void open(String targetContainerId, boolean exclusiveConnection)
+    void open()
     {
-        if (exclusiveConnection)
-        {
-            connection = CAMQPSessionManager.createCAMQPConnection(targetContainerId);
-        }
-        else
-        {
-            connection = CAMQPSessionManager.getCAMQPConnection(targetContainerId);
-        }
         /*
          * In the case of session initiator, a. reserve a txChannel from
          * underlying CAMQPConnectionInterface b. register with CAMQPSessionFrameHandler

@@ -57,9 +57,7 @@ public class ProducerTest
             {
             }
 
-            DoveMQEndpointPolicy policy = new DoveMQEndpointPolicy();
-            policy.createEndpointOnNewConnection();
-            session = ConnectionFactory.createSession(brokerIP, policy);
+            session = ConnectionFactory.createSession(brokerIP);
 
             final AtomicInteger messageAckCount = new AtomicInteger(0);
             Producer producer = session.createProducer(String.format("%s.%d", queueNamePrefix, id));

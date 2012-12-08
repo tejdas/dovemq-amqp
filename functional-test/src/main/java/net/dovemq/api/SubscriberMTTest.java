@@ -85,9 +85,7 @@ public class SubscriberMTTest
 
             if (session == null)
             {
-                DoveMQEndpointPolicy policy = new DoveMQEndpointPolicy();
-                policy.createEndpointOnNewConnection();
-                session = ConnectionFactory.createSession(brokerIP, policy);
+                session = ConnectionFactory.createSession(brokerIP);
             }
 
             Subscriber subscriber = session.createSubscriber(topicName);

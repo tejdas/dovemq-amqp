@@ -61,21 +61,5 @@ public final class DoveMQEndpointPolicy
         return ackPolicy;
     }
 
-    /**
-     * Instructs the endpoint to create the Session over
-     * a new AMQP connection. By default, it reuses an
-     * existing AMQP connection.
-     */
-    public void createEndpointOnNewConnection()
-    {
-        this.createSessionOnNewConnection = true;
-    }
-
-    public boolean doCreateEndpointOnNewConnection()
-    {
-        return this.createSessionOnNewConnection;
-    }
-
     private final MessageAcknowledgementPolicy ackPolicy;
-    private boolean createSessionOnNewConnection = false;
 }

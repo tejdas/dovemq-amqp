@@ -57,10 +57,7 @@ public class PublisherTest
             {
             }
 
-            DoveMQEndpointPolicy policy = new DoveMQEndpointPolicy();
-            policy.createEndpointOnNewConnection();
-
-            session = ConnectionFactory.createSession(brokerIP, policy);
+            session = ConnectionFactory.createSession(brokerIP);
             System.out.println("created session");
 
             Publisher publisher = session.createPublisher(topicName);

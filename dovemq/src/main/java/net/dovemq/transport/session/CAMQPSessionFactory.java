@@ -19,6 +19,8 @@ package net.dovemq.transport.session;
 
 import java.util.List;
 
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
+
 /**
  * Factory to create AMQP sessions
  * @author tejdas
@@ -50,6 +52,11 @@ public final class CAMQPSessionFactory
         return sessionList.get(0); // TODO get the session with minimal linkReceivers attached
     }
 
+    public static CAMQPSessionInterface createCAMQPSession(CAMQPConnectionInterface connection)
+    {
+         return sessionFactory.createSession(connection);
+    }
+
     public static CAMQPSessionInterface createCAMQPSession(String targetContainerId)
     {
          return sessionFactory.createSession(targetContainerId, false);
@@ -62,8 +69,22 @@ public final class CAMQPSessionFactory
 
     private CAMQPSession createSession(String targetContainerId, boolean exclusiveConnection)
     {
-        CAMQPSession session = new CAMQPSession();
-        session.open(targetContainerId, exclusiveConnection);
+        CAMQPConnectionInterface connection;
+        if (exclusiveConnection)
+        {
+            connection = CAMQPSessionManager.createCAMQPConnection(targetContainerId);
+        }
+        else
+        {
+            connection = CAMQPSessionManager.getCAMQPConnection(targetContainerId);
+        }
+        return createSession(connection);
+    }
+
+    private CAMQPSession createSession(CAMQPConnectionInterface connection)
+    {
+        CAMQPSession session = new CAMQPSession(connection);
+        session.open();
         return session;
     }
 }

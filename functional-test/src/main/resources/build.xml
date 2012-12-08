@@ -575,8 +575,8 @@
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
 				<param name="queueNamePrefix" value="first" />
-				<param name="numProducers" value="16" />		
-				<param name="numConsumersPerQueue" value="4" />					
+				<param name="numProducers" value="4" />		
+				<param name="numConsumersPerQueue" value="8" />					
 				<param name="ackExplicit" value="false" />
 			</antcall>
 
@@ -584,7 +584,7 @@
 				<param name="endpointName" value="producer" />
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="4" />
-				<param name="numConsumersPerQueue" value="4" />	
+				<param name="numConsumersPerQueue" value="8" />	
 				<param name="numIterations" value="50" />
 			</antcall>
 		</parallel>

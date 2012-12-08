@@ -17,7 +17,10 @@
 
 package net.dovemq.api;
 
+import net.dovemq.transport.connection.CAMQPConnectionFactory;
+import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
+import net.dovemq.transport.connection.CAMQPConnectionProperties;
 import net.dovemq.transport.link.CAMQPLinkManager;
 import net.dovemq.transport.session.CAMQPSessionFactory;
 import net.dovemq.transport.session.CAMQPSessionInterface;
@@ -65,9 +68,31 @@ public final class ConnectionFactory
         }
     }
 
+    public static Connection createConnection(String targetDoveMQBrokerAddress)
+    {
+        String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
+        CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
+
+        CAMQPConnectionInterface connection =
+                CAMQPConnectionFactory.createCAMQPConnection(brokerContainerId, connectionProps);
+        return new Connection(connection);
+    }
+
+    /**
+     * Creates a new Session to the target DoveMQ broker
+     * over the specified AMQP connection
+     * @param connection: AMQP connection
+     * @return
+     */
+    public static Session createSession(Connection connection)
+    {
+        CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(connection.getAmqpConnection());
+        return new Session(endpointId, camqpSession);
+    }
+
     /**
      * Creates a new Session to the target DoveMQ broker.
-     * Internally, it creates an AMQP connection if needed.
+     * Internally, it creates an AMQP connection..
      * It then creates an AMQP session over it.
      *
      * @param targetDoveMQBrokerAddress
@@ -76,31 +101,7 @@ public final class ConnectionFactory
     public static Session createSession(String targetDoveMQBrokerAddress)
     {
         String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
-        CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId);
-        return new Session(brokerContainerId, endpointId, camqpSession);
-    }
-
-    /**
-     * Creates a new Session to the target DoveMQ broker, with the
-     * specified DoveMQEndpointPolicy.
-     * Internally, it creates an AMQP connection if needed.
-     * It then creates an AMQP session over it.
-     *
-     * @param targetDoveMQBrokerAddress
-     * @return newly created Session
-     */
-    public static Session createSession(String targetDoveMQBrokerAddress, DoveMQEndpointPolicy endpointPolicy)
-    {
-        String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
-        CAMQPSessionInterface camqpSession;
-        if (endpointPolicy.doCreateEndpointOnNewConnection())
-        {
-            camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId, true);
-        }
-        else
-        {
-            camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId);
-        }
-        return new Session(brokerContainerId, endpointId, camqpSession);
+        CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId, true);
+        return new Session(endpointId, camqpSession);
     }
 }

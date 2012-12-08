@@ -154,11 +154,6 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         linkStateActor.waitForAttached();
     }
 
-    void resumeLink()
-    {
-
-    }
-
     /**
      * Closes an AMQP link
      */

@@ -157,9 +157,7 @@ public class ConsumerTest
             {
             }
 
-            DoveMQEndpointPolicy policy = new DoveMQEndpointPolicy();
-            policy.createEndpointOnNewConnection();
-            session = ConnectionFactory.createSession(brokerIP, policy);
+            session = ConnectionFactory.createSession(brokerIP);
 
             String suffixedQueueName = String.format("%s.%d", queueNamePrefix, id);
             Consumer consumer = null;

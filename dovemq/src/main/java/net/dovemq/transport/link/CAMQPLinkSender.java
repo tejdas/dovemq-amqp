@@ -20,6 +20,7 @@ package net.dovemq.transport.link;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
@@ -505,5 +506,25 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     void unregisterWithFlowScheduler()
     {
         CAMQPLinkManager.getLinkmanager().getFlowScheduler().unregisterLinkSender(linkHandle);
+    }
+
+    /**
+     * UGLY HACK to wait for link credit
+     * Establishes an AMQP link to a remote AMQP end-point.
+     * @param sourceName
+     * @param targetName
+     */
+    @Override
+    void createLink(String sourceName, String targetName, CAMQPEndpointPolicy endpointPolicy)
+    {
+        super.createLink(sourceName, targetName, endpointPolicy);
+        try
+        {
+            Thread.sleep(2000);
+        }
+        catch (InterruptedException e)
+        {
+            Thread.currentThread().interrupt();
+        }
     }
 }

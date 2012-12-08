@@ -38,7 +38,7 @@ public final class Session
     private final String endpointId;
     private final CAMQPSessionInterface session;
 
-    Session(String brokerContainerId, String endpointId, CAMQPSessionInterface session)
+    Session(String endpointId, CAMQPSessionInterface session)
     {
         super();
         this.endpointId = endpointId;
