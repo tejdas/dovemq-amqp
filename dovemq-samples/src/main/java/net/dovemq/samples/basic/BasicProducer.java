@@ -12,6 +12,7 @@ import net.dovemq.api.Session;
  */
 public class BasicProducer
 {
+    private static final String QUEUE_NAME = "SampleQueue";
     public static void main(String[] args)
     {
         /*
@@ -36,21 +37,24 @@ public class BasicProducer
             /*
              * Create a producer that binds to a transient queue on the broker.
              */
-            Producer producer = session.createProducer("firstQueue");
+            Producer producer = session.createProducer(QUEUE_NAME);
 
             /*
-             * Create and send a message.
+             * Create and send some messages.
              */
-            DoveMQMessage message = MessageFactory.createMessage();
-            String msg = "Hello from Producer";
-            System.out.println("sending message: " + msg);
-            message.addPayload(msg.getBytes());
-            producer.sendMessage(message);
+            for (int i = 0; i < 20; i++)
+            {
+                DoveMQMessage message = MessageFactory.createMessage();
+                String msg = "Hello from Producer: msg: " + i;
+                System.out.println("sending message: " + msg);
+                message.addPayload(msg.getBytes());
+                producer.sendMessage(message);
+            }
 
             /*
-             * Send another message.
+             * Another way of sending message.
              */
-            String secondmsg = "Hello again from Producer, second message";
+            String secondmsg = "Hello from Producer, last message";
             System.out.println("sending another message: " + secondmsg);
             producer.sendMessage(secondmsg.getBytes());
 

@@ -132,14 +132,6 @@ public class Responder
 
     public static void main(String[] args)
     {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run()
-            {
-                doShutdown = true;
-            }
-        });
-
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -156,7 +148,7 @@ public class Responder
             /*
              * Create an AMQP session.
              */
-            Session session = ConnectionFactory.createSession(brokerIp);
+            final Session session = ConnectionFactory.createSession(brokerIp);
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
             /*
@@ -169,8 +161,29 @@ public class Responder
             /*
              * Create a RequestProcessor to process incoming messages.
              */
-            RequestProcessor requestProcessor = new RequestProcessor(session);
+            final RequestProcessor requestProcessor = new RequestProcessor(session);
             new Thread(requestProcessor).start();
+
+            /*
+             * Register a shutdown hook to perform graceful shutdown.
+             */
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run()
+                {
+                    requestProcessor.doShutdown();
+                    /*
+                     * Close the AMQP session
+                     */
+                    session.close();
+
+                    /*
+                     * Shutdown DoveMQ runtime.
+                     */
+                    ConnectionFactory.shutdown();
+                    doShutdown = true;
+                }
+            });
 
             System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
             while (!doShutdown)
@@ -184,16 +197,10 @@ public class Responder
                     Thread.currentThread().interrupt();
                 }
             }
-
-            requestProcessor.doShutdown();
-
-            /*
-             * Close the AMQP session
-             */
-            session.close();
         }
-        finally
+        catch (Exception ex)
         {
+            System.out.println("Caught Exception: " + ex.toString());
             /*
              * Shutdown DoveMQ runtime.
              */

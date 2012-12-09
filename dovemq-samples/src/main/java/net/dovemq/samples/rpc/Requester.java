@@ -44,7 +44,6 @@ public class Requester
         {
             String correlationId = message.getMessageProperties()
                     .getCorrlelationId();
-            System.out.println(correlationId);
             DoveMQMessage requestMessage = outstandingRequests.remove(correlationId);
             if (requestMessage != null)
             {

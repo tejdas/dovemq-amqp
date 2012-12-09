@@ -116,11 +116,11 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory
     public static void initialize(boolean isBroker, String containerId)
     {
         CAMQPConnectionManager.initialize(containerId);
+        CAMQPConnectionManager.registerConnectionObserver(new CAMQPConnectionReaper());
         log.info("container ID: " + CAMQPConnectionManager.getContainerId());
 
         if (isBroker)
         {
-            CAMQPConnectionManager.registerConnectionObserver(new CAMQPConnectionReaper());
             CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties.createConnectionProperties();
             listener = CAMQPListener.createCAMQPListener(defaultConnectionProps);
         }

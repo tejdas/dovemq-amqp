@@ -16,6 +16,7 @@ import net.dovemq.api.Session;
  */
 public class BasicAckConsumer
 {
+    private static final String QUEUE_NAME = "SampleQueue";
     private static volatile boolean doShutdown = false;
 
     /**
@@ -48,14 +49,6 @@ public class BasicAckConsumer
 
     public static void main(String[] args)
     {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run()
-            {
-                doShutdown = true;
-            }
-        });
-
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -72,7 +65,7 @@ public class BasicAckConsumer
             /*
              * Create an AMQP session.
              */
-            Session session = ConnectionFactory.createSession(brokerIp);
+            final Session session = ConnectionFactory.createSession(brokerIp);
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
             /*
@@ -80,7 +73,7 @@ public class BasicAckConsumer
              * Also set the MessageAcknowledgementPolicy to CONSUMER_ACKS.
              */
             DoveMQEndpointPolicy endpointPolicy = new DoveMQEndpointPolicy(MessageAcknowledgementPolicy.CONSUMER_ACKS);
-            Consumer consumer = session.createConsumer("firstQueue", endpointPolicy);
+            Consumer consumer = session.createConsumer(QUEUE_NAME, endpointPolicy);
 
             /*
              * Register a message receiver with the consumer to asynchronously
@@ -88,6 +81,26 @@ public class BasicAckConsumer
              */
             SampleMessageReceiver messageReceiver = new SampleMessageReceiver(consumer);
             consumer.registerMessageReceiver(messageReceiver);
+
+            /*
+             * Register a shutdown hook to perform graceful shutdown.
+             */
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run()
+                {
+                    /*
+                     * Close the AMQP session
+                     */
+                    session.close();
+
+                    /*
+                     * Shutdown DoveMQ runtime.
+                     */
+                    ConnectionFactory.shutdown();
+                    doShutdown = true;
+                }
+            });
 
             System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
             while (!doShutdown)
@@ -101,14 +114,10 @@ public class BasicAckConsumer
                     Thread.currentThread().interrupt();
                 }
             }
-
-            /*
-             * Close the AMQP session
-             */
-            session.close();
         }
-        finally
+        catch (Exception ex)
         {
+            System.out.println("Caught Exception: " + ex.toString());
             /*
              * Shutdown DoveMQ runtime.
              */

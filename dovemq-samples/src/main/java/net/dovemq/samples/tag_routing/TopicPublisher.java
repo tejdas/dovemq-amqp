@@ -13,6 +13,7 @@ import net.dovemq.api.Session;
  */
 public class TopicPublisher
 {
+    private static final String TOPIC_NAME = "TagRoutingTopic";
     public static void main(String[] args)
     {
         /*
@@ -37,7 +38,7 @@ public class TopicPublisher
             /*
              * Create a publisher that creates/binds to a topic on the broker.
              */
-            Publisher publisher = session.createPublisher("sampleTopic");
+            Publisher publisher = session.createPublisher(TOPIC_NAME);
 
             /*
              * Create and publish a message, with a matching routing tag, so

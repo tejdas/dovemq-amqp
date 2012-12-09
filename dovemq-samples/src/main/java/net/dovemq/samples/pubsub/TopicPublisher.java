@@ -12,6 +12,7 @@ import net.dovemq.api.Session;
  */
 public class TopicPublisher
 {
+    private static final String TOPIC_NAME = "SampleTopic";
     public static void main(String[] args)
     {
         /*
@@ -36,21 +37,24 @@ public class TopicPublisher
             /*
              * Create a publisher that creates/binds to a topic on the broker.
              */
-            Publisher publisher = session.createPublisher("sampleTopic");
+            Publisher publisher = session.createPublisher(TOPIC_NAME);
 
             /*
-             * Create and publish a message.
+             * Create and publish some messages.
              */
-            DoveMQMessage message = MessageFactory.createMessage();
-            String msg = "Hello from Publisher";
-            System.out.println("publishing message: " + msg);
-            message.addPayload(msg.getBytes());
-            publisher.publishMessage(message);
+            for (int i = 0; i < 5; i++)
+            {
+                DoveMQMessage message = MessageFactory.createMessage();
+                String msg = "Hello from Publisher: message: " + i;
+                System.out.println("publishing message: " + msg);
+                message.addPayload(msg.getBytes());
+                publisher.publishMessage(message);
+            }
 
             /*
-             * Publish another message.
+             * Another way of publishing message.
              */
-            String secondmsg = "Hello again from Publisher, second message";
+            String secondmsg = "Hello from Publisher, last message";
             System.out.println("sending another message: " + secondmsg);
             publisher.publishMessage(secondmsg.getBytes());
 

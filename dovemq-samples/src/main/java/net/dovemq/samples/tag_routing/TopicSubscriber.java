@@ -15,6 +15,7 @@ import net.dovemq.api.Subscriber;
  */
 public class TopicSubscriber
 {
+    private static final String TOPIC_NAME = "TagRoutingTopic";
     private static volatile boolean doShutdown = false;
 
     /**
@@ -67,7 +68,7 @@ public class TopicSubscriber
              * only those messages that have a tag matching with this pattern.
              */
             String messageFilterPattern = "ab....yz";
-            Subscriber subscriber = session.createSubscriber("sampleTopic", messageFilterPattern);
+            Subscriber subscriber = session.createSubscriber(TOPIC_NAME, messageFilterPattern);
 
             /*
              * Register a message receiver with the consumer to asynchronously

@@ -36,12 +36,15 @@ Consists of three maven projects:
         Consumer
 
 2. functional-test : Functional tests for the framework.
+  You need ant to run the functional tests.
+  (see src/main/resources/build.xml)
+
 3. dovemq-samples : Samples that illustrate how to use the framework.
 
 Build the source
 ----------------
 
-You need Maven 3.x to build the code.
+You need JDK 1.6+ and Maven 3.x to build the code.
 
 Under dovemq directory, run:
 
@@ -49,18 +52,16 @@ Under dovemq directory, run:
 
 This creates a tar/zip with all the required jars that's needed to run the broker:
 
-dovemq-1.0-SNAPSHOT-bin.tar.gz
+    dovemq-1.0-SNAPSHOT-bin.tar.gz
 
-dovemq-1.0-SNAPSHOT-bin.zip
+    dovemq-1.0-SNAPSHOT-bin.zip
 
 Run the broker
 --------------
 
 a. Unzip the tar or zip that was generated in the above step.
 
-b. Make sure java is in the path.
-
-c. On Unix, run
+b. On Unix, run
 
   bin/runbroker.sh
 

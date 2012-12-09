@@ -12,6 +12,7 @@ import net.dovemq.api.Subscriber;
  */
 public class TopicSubscriber
 {
+    private static final String TOPIC_NAME = "SampleTopic";
     private static volatile boolean doShutdown = false;
 
     /**
@@ -31,14 +32,6 @@ public class TopicSubscriber
 
     public static void main(String[] args)
     {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run()
-            {
-                doShutdown = true;
-            }
-        });
-
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -55,13 +48,13 @@ public class TopicSubscriber
             /*
              * Create an AMQP session.
              */
-            Session session = ConnectionFactory.createSession(brokerIp);
+            final Session session = ConnectionFactory.createSession(brokerIp);
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
             /*
              * Create a subscriber that creates/binds to a topic on the broker.
              */
-            Subscriber subscriber = session.createSubscriber("sampleTopic");
+            Subscriber subscriber = session.createSubscriber(TOPIC_NAME);
 
             /*
              * Register a message receiver with the consumer to asynchronously
@@ -69,6 +62,26 @@ public class TopicSubscriber
              */
             SampleMessageReceiver messageReceiver = new SampleMessageReceiver();
             subscriber.registerMessageReceiver(messageReceiver);
+
+            /*
+             * Register a shutdown hook to perform graceful shutdown.
+             */
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run()
+                {
+                    /*
+                     * Close the AMQP session
+                     */
+                    session.close();
+
+                    /*
+                     * Shutdown DoveMQ runtime.
+                     */
+                    ConnectionFactory.shutdown();
+                    doShutdown = true;
+                }
+            });
 
             System.out.println("waiting for messages. Press Ctl-C to shut down subscriber.");
             while (!doShutdown)
@@ -82,14 +95,10 @@ public class TopicSubscriber
                     Thread.currentThread().interrupt();
                 }
             }
-
-            /*
-             * Close the AMQP session
-             */
-            session.close();
         }
-        finally
+        catch (Exception ex)
         {
+            System.out.println("Caught Exception: " + ex.toString());
             /*
              * Shutdown DoveMQ runtime.
              */
