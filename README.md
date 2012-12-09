@@ -1,10 +1,7 @@
 DoveMQ
 ======
 
-A messaging framework built on AMQP 1.0 protocol.
-
-Written in Java.
-Uses Netty as the underlying transport framework.
+AMQP 1.0 protocol based messaging framework.
 
 Organization of the code
 ------------------------
