@@ -97,4 +97,4 @@ Example:
 
     java -cp dovemq-samples-1.0-SNAPSHOT.jar -Ddovemq.log=consumer.log -Ddovemq.broker=localhost net.dovemq.samples.basic.BasicConsumer
 
-See the README_SAMPLES.txt for specific examples on how to run the samples.
+See the README_SAMPLES.md for specific examples on how to run the samples.
