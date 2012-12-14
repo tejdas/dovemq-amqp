@@ -8,7 +8,10 @@ Organization of the code
 
 Consists of three maven projects:
 
-1. **dovemq** : Source for the framework.
+**dovemq**
+----------
+
+Source for the framework.
 
   a. The package *net.dovemq.transport* contains the AMQP protocol implementation:
 
@@ -37,12 +40,18 @@ Consists of three maven projects:
         DoveMQMessageReceiver
         DoveMQMessageAckReceiver
 
-2. **functional-test** : Functional tests for the framework.
+**functional-test**
+-------------------
+
+Functional tests for the framework.
 
   You need ant to run the functional tests.
   (see *src/main/resources/build.xml*)
 
-3. **dovemq-samples** : Samples that illustrate how to use the framework.
+**dovemq-samples**
+------------------
+
+Samples that illustrate how to use the framework.
 
 Build the source
 ----------------
@@ -71,30 +80,7 @@ b. On Unix, run
   
     bin\runbroker.bat
 
-Build the samples
------------------
+DoveMQ samples
+--------------
 
-You need Maven 3.x to build the code.
-
-Under dovemq-samples directory, run:
-
-    mvn clean install
-
-This creates the following uber jar containing all the dependent jars, under the target directory:
-
-    dovemq-samples-1.0-SNAPSHOT.jar
-
-Run the samples
----------------
-
-a. Make sure java is in the path.
-
-b. Run a sample class:
-
-    java -cp dovemq-samples-1.0-SNAPSHOT.jar -Ddovemq.log=sample.log -Ddovemq.broker={BROKER_IP} {SAMPLE_MAIN_CLASS}
-
-Example:
-
-    java -cp dovemq-samples-1.0-SNAPSHOT.jar -Ddovemq.log=consumer.log -Ddovemq.broker=localhost net.dovemq.samples.basic.BasicConsumer
-
-See the README_SAMPLES.md for specific examples on how to run the samples.
+See the README_SAMPLES.md for specific examples on how to build and run the samples.
