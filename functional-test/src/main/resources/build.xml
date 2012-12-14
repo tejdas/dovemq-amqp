@@ -461,7 +461,7 @@
 		</java>
 	</target>
 
-	<target name="TopicTest" description="running topic test">
+	<target name="TopicSimpleTest" description="running topic test">
 		<delete>
 			<fileset dir="." includes="**/sub*.txt" />
 		</delete>
@@ -561,7 +561,7 @@
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="16" />
 				<param name="numConsumersPerQueue" value="1" />
-				<param name="numIterations" value="50" />
+				<param name="numIterations" value="20" />
 			</antcall>
 		</parallel>
 	</target>
@@ -585,7 +585,7 @@
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="4" />
 				<param name="numConsumersPerQueue" value="8" />	
-				<param name="numIterations" value="50" />
+				<param name="numIterations" value="20" />
 			</antcall>
 		</parallel>
 	</target>	
@@ -623,7 +623,7 @@
 			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub1" />
 				<param name="topicName" value="first" />
-				<param name="numThreads" value="64" />
+				<param name="numThreads" value="16" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
@@ -646,7 +646,7 @@
 			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub1" />
 				<param name="topicName" value="first" />
-				<param name="numThreads" value="32" />
+				<param name="numThreads" value="16" />
 				<param name="sharedSession" value="true" />
 			</antcall>
 
@@ -658,5 +658,21 @@
 				<param name="numPublishers" value="4" />
 			</antcall>
 		</parallel>
+	</target>
+	
+	<target name="TopicTest" description="running topic tests">
+		<sequential>
+			<antcall target="TopicSimpleTest"/>
+			<antcall target="TopicMTTest"/>
+			<antcall target="TopicMTSharedSessionTest"/>
+		</sequential>
+	</target>
+	
+	<target name="QueueTest" description="running queue tests">
+		<sequential>
+			<antcall target="QueueMTTest"/>
+			<antcall target="QueueMTRoundRobinTest"/>
+			<antcall target="QueueMTAckExplicitTest"/>
+		</sequential>
 	</target>
 </project>
