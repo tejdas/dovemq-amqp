@@ -8,9 +8,9 @@ Organization of the code
 
 Consists of three maven projects:
 
-1. dovemq : Source for the framework.
+1. **dovemq** : Source for the framework.
 
-  a. The package net.dovemq.transport contains the AMQP protocol implementation:
+  a. The package *net.dovemq.transport* contains the AMQP protocol implementation:
 
         protocol
         framing
@@ -19,25 +19,30 @@ Consists of three maven projects:
         link
         endpoint
 
-  b. The package net.dovemq.broker contains the broker elements:
+  b. The package *net.dovemq.broker* contains the broker elements:
 
         Broker driver
         TopicRouter
         QueueRouter
 
-  c. The package net.dovemq.api contains API classes:
+  c. The package *net.dovemq.api* contains API classes:
 
+        Connection
+        Session
         Publisher
         Subscriber
         Producer
         Consumer
+        DoveMQMessage
+        DoveMQMessageReceiver
+        DoveMQMessageAckReceiver
 
-2. functional-test : Functional tests for the framework.
+2. **functional-test** : Functional tests for the framework.
 
   You need ant to run the functional tests.
-  (see src/main/resources/build.xml)
+  (see *src/main/resources/build.xml*)
 
-3. dovemq-samples : Samples that illustrate how to use the framework.
+3. **dovemq-samples** : Samples that illustrate how to use the framework.
 
 Build the source
 ----------------
