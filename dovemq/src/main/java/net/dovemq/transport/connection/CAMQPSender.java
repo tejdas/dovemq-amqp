@@ -17,16 +17,12 @@
 
 package net.dovemq.transport.connection;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import net.jcip.annotations.ThreadSafe;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
-
-import net.dovemq.transport.frame.CAMQPFrameConstants;
-import net.jcip.annotations.ThreadSafe;
 
 /**
  * Sender of AMQP frames. Owned by CAMQPConnection
@@ -48,13 +44,7 @@ class CAMQPSender implements ChannelFutureListener
         return channel;
     }
 
-    private final Queue<ChannelBuffer> queuedSends = new ConcurrentLinkedQueue<ChannelBuffer>();
-
-    private final Queue<ChannelBuffer> queuedSendsConnectionControl = new ConcurrentLinkedQueue<ChannelBuffer>();
-
     private SenderState state = SenderState.ACTIVE;
-
-    private boolean sendInProgress = false;
 
     private int outstandingWrites = 0;
 
@@ -105,10 +95,10 @@ class CAMQPSender implements ChannelFutureListener
      * When this method is called concurrently, one thread
      * assumes the role of sender and the other threads
      * just enqueue the outgoing frame.
-     * 
+     *
      * Gives connection frames higher priority that session/link
      * frames.
-     * 
+     *
      * @param data
      * @param frameType
      */
@@ -120,51 +110,11 @@ class CAMQPSender implements ChannelFutureListener
             {
                 return;
             }
-            if (sendInProgress)
-            {
-                if (frameType == CAMQPFrameConstants.FRAME_TYPE_CONNECTION)
-                {
-                    queuedSendsConnectionControl.offer(data);
-                }
-                else
-                {
-                    queuedSends.offer(data);
-                }
-                return;
-            }
-            sendInProgress = true;
             outstandingWrites++;
         }
 
-        ChannelBuffer nextBuffer = data;
-        while (true)
-        {
-            try
-            {
-                ChannelFuture future = channel.write(nextBuffer);
-                future.addListener(this);
-            }
-            finally
-            {
-                synchronized (this)
-                {
-                    nextBuffer = queuedSendsConnectionControl.poll();
-                    if (nextBuffer == null)
-                    {
-                        nextBuffer = queuedSends.poll();
-                    }
-                    if (nextBuffer == null)
-                    {
-                        sendInProgress = false;
-                        return;
-                    }
-                    else
-                    {
-                        outstandingWrites++;
-                    }
-                }
-            }
-        }
+        ChannelFuture future = channel.write(data);
+        future.addListener(this);
     }
 
     @Override
@@ -192,8 +142,6 @@ class CAMQPSender implements ChannelFutureListener
         {
             synchronized (this)
             {
-                queuedSendsConnectionControl.clear();
-                queuedSends.clear();
                 state = SenderState.CLOSED;
                 notify();
             }
