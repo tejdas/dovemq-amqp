@@ -1,5 +1,5 @@
-How to build the samples
-========================
+How to build DoveMQ samples
+===========================
 
 You need JDK 1.6+ and Maven 3.x to build the code.
 
@@ -15,6 +15,14 @@ How to run DoveMQ samples
 =========================
 
 a. Run DoveMQ broker.
+
+On Unix, run
+
+    bin/runbroker.sh
+
+On Windows, run
+  
+    bin\runbroker.bat
 
 b. Run a sample class as following:
 
