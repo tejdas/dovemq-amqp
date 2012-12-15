@@ -19,7 +19,8 @@ package net.dovemq.transport.connection.mockjetty;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -72,13 +73,13 @@ public class MockJettyChannel implements org.jboss.netty.channel.Channel
                 try
                 {
                     MockChannelFuture future = (MockChannelFuture) channelFutureQueue.take();
-                    Thread.sleep(10);                    
+                    Thread.sleep(10);
                     ChannelFutureListener listener = future.getListener();
                     if (future.isLastFuture())
                     {
                         return;
-                    }                    
-                    listener.operationComplete(future);                    
+                    }
+                    listener.operationComplete(future);
                 }
                 catch (InterruptedException e)
                 {
@@ -91,7 +92,7 @@ public class MockJettyChannel implements org.jboss.netty.channel.Channel
                     e.printStackTrace();
                 }
             }
-        }        
+        }
     }
 
     public MockJettyChannel(boolean senderTest)
@@ -101,7 +102,7 @@ public class MockJettyChannel implements org.jboss.netty.channel.Channel
             new Thread(new MockWriteCompletionHandler(channelFutureQueue)).start();
         }
     }
-    
+
     @Override
     public ChannelFuture bind(SocketAddress arg0)
     {
@@ -281,7 +282,7 @@ public class MockJettyChannel implements org.jboss.netty.channel.Channel
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return null;        
+        return null;
     }
 
     @Override
@@ -296,6 +297,20 @@ public class MockJettyChannel implements org.jboss.netty.channel.Channel
     {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    @Override
+    public Object getAttachment()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setAttachment(Object arg0)
+    {
+        // TODO Auto-generated method stub
+
     }
 
 }

@@ -45,7 +45,7 @@ public class MockChannelFuture implements org.jboss.netty.channel.ChannelFuture
             listener = arg0;
         }
     }
-    
+
     public synchronized ChannelFutureListener
     getListener()
     {
@@ -140,7 +140,7 @@ public class MockChannelFuture implements org.jboss.netty.channel.ChannelFuture
     public void removeListener(ChannelFutureListener arg0)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -162,5 +162,26 @@ public class MockChannelFuture implements org.jboss.netty.channel.ChannelFuture
     {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    @Override
+    public ChannelFuture rethrowIfFailed() throws Exception
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ChannelFuture sync() throws InterruptedException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ChannelFuture syncUninterruptibly()
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
