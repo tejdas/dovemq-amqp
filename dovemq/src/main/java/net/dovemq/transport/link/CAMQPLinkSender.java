@@ -94,6 +94,8 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
         this.maxAvailableLimit = maxAvailableLimit;
     }
 
+    private volatile boolean receivedFirstFlowCredit = false;
+
     public CAMQPLinkSender(CAMQPSessionInterface session)
     {
         super(session);
@@ -137,6 +139,17 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
                 {
                     linkCredit = flow.getLinkCredit() - deliveryCount;
                 }
+            }
+
+            if (!receivedFirstFlowCredit && (linkCredit > 0))
+            {
+                /*
+                 * Received the first flow-frame with non-zero
+                 * link credit. Notify the thread waiting for
+                 * link credit after the link establishment.
+                 */
+                receivedFirstFlowCredit = true;
+                this.notifyAll();
             }
 
             /*
@@ -509,8 +522,8 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     }
 
     /**
-     * UGLY HACK to wait for link credit
      * Establishes an AMQP link to a remote AMQP end-point.
+     * Then waits for the first non-zero link-credit.
      * @param sourceName
      * @param targetName
      */
@@ -518,13 +531,19 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     void createLink(String sourceName, String targetName, CAMQPEndpointPolicy endpointPolicy)
     {
         super.createLink(sourceName, targetName, endpointPolicy);
-        try
+        synchronized (this)
         {
-            Thread.sleep(2000);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
+            while (!receivedFirstFlowCredit || (linkCredit <= 0))
+            {
+                try
+                {
+                    wait();
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 }
