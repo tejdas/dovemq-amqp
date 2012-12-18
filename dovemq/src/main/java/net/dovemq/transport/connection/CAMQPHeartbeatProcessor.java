@@ -18,17 +18,22 @@
 package net.dovemq.transport.connection;
 
 import java.util.Date;
-import net.jcip.annotations.GuardedBy;
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.frame.CAMQPFrameConstants;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
 import net.dovemq.transport.frame.CAMQPFrameHeaderCodec;
+import net.dovemq.transport.utils.CAMQPThreadFactory;
+import net.jcip.annotations.GuardedBy;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 /**
  * Sends heart-beats to AMQP peer. Also detects if there are any
  * delays in incoming heart-beats.
- * 
+ *
  * @author tejdas
  *
  */
@@ -39,6 +44,31 @@ class CAMQPHeartbeatProcessor implements Runnable
 
     private CAMQPConnectionStateActor stateActor = null;
     private CAMQPSender sender = null;
+
+    private final ScheduledExecutorService scheduledExecutor =
+            Executors.newSingleThreadScheduledExecutor(new CAMQPThreadFactory("DoveMQConnectionHeartbeatProcessor"));
+
+    void start()
+    {
+        scheduledExecutor.scheduleWithFixedDelay(this,
+                CAMQPConnectionConstants.HEARTBEAT_PERIOD,
+                CAMQPConnectionConstants.HEARTBEAT_PERIOD,
+                TimeUnit.MILLISECONDS);
+    }
+
+    void stop()
+    {
+        done();
+        scheduledExecutor.shutdown();
+        try
+        {
+            scheduledExecutor.awaitTermination(5000, TimeUnit.MILLISECONDS);
+        }
+        catch (InterruptedException e)
+        {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     CAMQPHeartbeatProcessor(CAMQPConnectionStateActor stateActor, CAMQPSender sender)
     {
@@ -51,7 +81,7 @@ class CAMQPHeartbeatProcessor implements Runnable
     {
         lastReceivedHeartBeatTime = new Date();
     }
-    
+
     /**
      * Even after the scheduled timer encapsulating CAMQPHeartbeatProcessor is cancelled,
      * a reference to it is still held by CAMQPConnectionManager._scheduledExecutor. As
@@ -59,7 +89,7 @@ class CAMQPHeartbeatProcessor implements Runnable
      * closed. The following hack is to at least ensure that the references to CAMQPConnectionStateActor
      * and CAMQPSender is released, so they are not around after the connection closure.
      */
-    synchronized void done()
+    private synchronized void done()
     {
         stateActor = null;
         sender = null;
@@ -70,9 +100,9 @@ class CAMQPHeartbeatProcessor implements Runnable
     {
         boolean heartBeatDelayed = false;
         Date now = new Date();
-        
+
         CAMQPConnectionStateActor localStateActor = null;
-        CAMQPSender localSender = null;        
+        CAMQPSender localSender = null;
         synchronized (this)
         {
             if (lastReceivedHeartBeatTime != null)
@@ -82,7 +112,7 @@ class CAMQPHeartbeatProcessor implements Runnable
             localStateActor = this.stateActor;
             localSender = this.sender;
         }
-        
+
         if ((localStateActor == null) || (sender == null))
         {
             /*
@@ -93,7 +123,7 @@ class CAMQPHeartbeatProcessor implements Runnable
 
         if (heartBeatDelayed)
         {
-            localStateActor.notifyHeartbeatDelay();                
+            localStateActor.notifyHeartbeatDelay();
         }
         else
         {

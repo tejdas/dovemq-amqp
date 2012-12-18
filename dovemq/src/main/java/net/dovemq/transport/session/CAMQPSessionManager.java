@@ -34,6 +34,7 @@ import net.dovemq.transport.connection.CAMQPConnectionKey;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.CAMQPConnectionProperties;
 import net.dovemq.transport.link.CAMQPLinkMessageHandlerFactory;
+import net.dovemq.transport.utils.CAMQPThreadFactory;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -50,7 +51,7 @@ public class CAMQPSessionManager
         return sessionSendFlowScheduler;
     }
 
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor = Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQTransferFrameSenderThread"));
 
     private static volatile long maxOutgoingWindowSize = CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE;
     private static volatile long maxIncomingWindowSize = CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE;

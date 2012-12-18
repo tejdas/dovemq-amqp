@@ -20,8 +20,6 @@ package net.dovemq.transport.connection;
 import java.net.InetSocketAddress;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.frame.CAMQPFrameConstants;
 import net.dovemq.transport.frame.CAMQPFrameHeader;
@@ -95,8 +93,6 @@ class QueuedContext
 class CAMQPConnectionStateActor
 {
     private static final Logger log = Logger.getLogger(CAMQPConnectionStateActor.class);
-
-    private ScheduledFuture<?> scheduledFuture = null;
 
     private volatile CAMQPHeartbeatProcessor heartbeatProcessor = null;
 
@@ -500,9 +496,7 @@ class CAMQPConnectionStateActor
             CAMQPConnectionManager.connectionAccepted(this, key);
         }
 
-        scheduledFuture = CAMQPConnectionManager.getScheduledExecutor().scheduleWithFixedDelay(heartbeatProcessor,
-                CAMQPConnectionConstants.HEARTBEAT_PERIOD, CAMQPConnectionConstants.HEARTBEAT_PERIOD, TimeUnit.MILLISECONDS);
-
+        heartbeatProcessor.start();
         synchronized (this)
         {
             openExchangeComplete = true;
@@ -796,12 +790,7 @@ class CAMQPConnectionStateActor
 
     private void cancelHeartbeat()
     {
-        if ((scheduledFuture != null) && !scheduledFuture.isCancelled())
-        {
-            scheduledFuture.cancel(false);
-            heartbeatProcessor.done();
-        }
-        scheduledFuture = null;
+        heartbeatProcessor.stop();
         heartbeatProcessor = null;
     }
 

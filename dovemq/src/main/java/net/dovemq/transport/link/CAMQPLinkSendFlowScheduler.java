@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import net.dovemq.transport.utils.CAMQPThreadFactory;
+
 /**
  * Copyright 2012 Tejeswar Das
  *
@@ -41,7 +43,8 @@ import java.util.concurrent.TimeUnit;
 class CAMQPLinkSendFlowScheduler implements Runnable
 {
     private static final int LINK_SENDER_REQUEST_CREDIT_TIMER_INTERVAL = 2000;
-    private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService scheduledExecutor =
+            Executors.newSingleThreadScheduledExecutor(new CAMQPThreadFactory("DoveMQLinkSendFlowScheduler"));
 
     void start()
     {

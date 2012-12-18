@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import net.dovemq.transport.session.CAMQPSessionManager;
 
@@ -39,13 +37,6 @@ import org.apache.log4j.Logger;
 public final class CAMQPConnectionManager
 {
     private static final Logger log = Logger.getLogger(CAMQPConnectionManager.class);
-
-    private static final ScheduledExecutorService _scheduledExecutor = Executors.newScheduledThreadPool(8);
-
-    static ScheduledExecutorService getScheduledExecutor()
-    {
-        return _scheduledExecutor;
-    }
 
     private static volatile CAMQPConnectionObserver connectionObserver = null;
 
@@ -222,8 +213,6 @@ public final class CAMQPConnectionManager
         {
             Thread.currentThread().interrupt();
         }
-
-        _scheduledExecutor.shutdown();
 
         log.info("Shutdown DoveMQ endpoint ID: " + containerId);
         System.out.println("Shutdown DoveMQ endpoint ID: " + containerId);

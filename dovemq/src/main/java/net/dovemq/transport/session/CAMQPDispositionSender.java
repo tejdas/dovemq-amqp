@@ -31,6 +31,7 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionDeliveryState;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionModified;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionRejected;
 import net.dovemq.transport.session.CAMQPSession.CAMQPChannel;
+import net.dovemq.transport.utils.CAMQPThreadFactory;
 import net.jcip.annotations.GuardedBy;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -155,7 +156,8 @@ class CAMQPDispositionSender implements Runnable
     private List<DispositionRange> receiverDispositionRanges = null;
     private final CAMQPSession session;
 
-    private final ScheduledExecutorService dispositionScheduler = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService dispositionScheduler =
+            Executors.newSingleThreadScheduledExecutor(new CAMQPThreadFactory("DoveMQSessionCumulativeDispositionSender"));
 
     void start()
     {

@@ -25,9 +25,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import net.dovemq.transport.utils.CAMQPThreadFactory;
+
 class CAMQPSessionSendFlowScheduler implements Runnable
 {
-    private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService scheduledExecutor =
+            Executors.newSingleThreadScheduledExecutor(new CAMQPThreadFactory("DoveMQSessionSendFlowScheduler"));
 
     void start()
     {

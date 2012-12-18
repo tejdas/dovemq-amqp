@@ -20,6 +20,8 @@ package net.dovemq.transport.connection;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
+import net.dovemq.transport.utils.CAMQPThreadFactory;
+
 import org.apache.log4j.Logger;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
@@ -50,10 +52,10 @@ public final class CAMQPListener
 
     public void start()
     {
-        // Configure the server.
         factory =
-                new NioServerSocketChannelFactory(Executors
-                        .newCachedThreadPool(), Executors.newCachedThreadPool());
+                new NioServerSocketChannelFactory(
+                        Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyBossThread")),
+                        Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyWorkerThread")));
 
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
 
