@@ -51,6 +51,7 @@ import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -375,8 +376,22 @@ class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInterface
     @Override
     public void channelAbruptlyDetached()
     {
-        System.out.println("Session abruptly closed");
-        log.warn("Session abrupt closed");
+        String remoteContainerId = null;
+        if (connection != null)
+        {
+            remoteContainerId = connection.getKey().getRemoteContainerId();
+        }
+        if (StringUtils.isEmpty(remoteContainerId))
+        {
+            System.out.println("Session abruptly closed");
+            log.warn("Session abruptly closed");
+        }
+        else
+        {
+            System.out.println("Session abruptly closed to: " + remoteContainerId);
+            log.warn("Session abruptly closed to: " + remoteContainerId);
+        }
+
         stateActor.channelAbruptlyDetached();
     }
 

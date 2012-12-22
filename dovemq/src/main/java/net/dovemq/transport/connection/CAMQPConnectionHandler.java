@@ -111,11 +111,13 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
     {
         String connectionKey = (connection != null)? connection.getKey().toString() : StringUtils.EMPTY;
         log.warn("CAMQPConnectionHandler.exceptionCaught: " + connectionKey);
+        StringBuilder stackTraceInfo = new StringBuilder();
         StackTraceElement[] elems = Thread.currentThread().getStackTrace();
         for (StackTraceElement elem : elems)
         {
-            log.warn("StackTrace: " + elem.toString());
+            stackTraceInfo.append(elem.toString()).append("\n");
         }
+        log.warn(stackTraceInfo.toString());
     }
 
     @Override
