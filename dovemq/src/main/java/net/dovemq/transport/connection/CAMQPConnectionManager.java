@@ -23,8 +23,12 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.session.CAMQPSessionManager;
+import net.dovemq.transport.utils.CAMQPThreadFactory;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -47,6 +51,15 @@ public final class CAMQPConnectionManager
     private static final ConcurrentMap<CAMQPConnectionKey, CAMQPConnection> openConnections = new ConcurrentHashMap<CAMQPConnectionKey, CAMQPConnection>();
 
     private static final Object shutdownLock = new Object();
+
+    private static final ScheduledExecutorService connectionHeartbeatScheduler =
+            Executors.newScheduledThreadPool(4,
+                    new CAMQPThreadFactory("DoveMQConnectionHeartbeatProcessor"));
+
+    static ScheduledExecutorService getConnectionHeartbeatScheduler()
+    {
+        return connectionHeartbeatScheduler;
+    }
 
     public synchronized static void initialize(String containerId)
     {
@@ -208,6 +221,15 @@ public final class CAMQPConnectionManager
                     shutdownLock.wait();
                 }
             }
+        }
+        catch (InterruptedException e)
+        {
+            Thread.currentThread().interrupt();
+        }
+        connectionHeartbeatScheduler.shutdown();
+        try
+        {
+            connectionHeartbeatScheduler.awaitTermination(300, TimeUnit.SECONDS);
         }
         catch (InterruptedException e)
         {

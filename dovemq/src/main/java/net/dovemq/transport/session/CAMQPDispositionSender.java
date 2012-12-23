@@ -20,8 +20,7 @@ package net.dovemq.transport.session;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.protocol.CAMQPEncoder;
@@ -31,7 +30,6 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionDeliveryState;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionModified;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionRejected;
 import net.dovemq.transport.session.CAMQPSession.CAMQPChannel;
-import net.dovemq.transport.utils.CAMQPThreadFactory;
 import net.jcip.annotations.GuardedBy;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -156,26 +154,23 @@ class CAMQPDispositionSender implements Runnable
     private List<DispositionRange> receiverDispositionRanges = null;
     private final CAMQPSession session;
 
-    private final ScheduledExecutorService dispositionScheduler =
-            Executors.newSingleThreadScheduledExecutor(new CAMQPThreadFactory("DoveMQSessionCumulativeDispositionSender"));
+    private ScheduledFuture<?> scheduledFuture = null;
 
     void start()
     {
-        dispositionScheduler.scheduleWithFixedDelay(this, CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL,
-                CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL, TimeUnit.MILLISECONDS);
+        scheduledFuture = CAMQPSessionManager.getSessionSendDispositionScheduler().scheduleWithFixedDelay(this,
+                CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL,
+                CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL,
+                TimeUnit.MILLISECONDS);
     }
 
     void stop()
     {
-        dispositionScheduler.shutdown();
-        try
+        if ((scheduledFuture != null) && !scheduledFuture.isCancelled())
         {
-            dispositionScheduler.awaitTermination(5000, TimeUnit.MILLISECONDS);
+            scheduledFuture.cancel(false);
         }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-        }
+        scheduledFuture = null;
     }
 
     CAMQPDispositionSender(CAMQPSession session)

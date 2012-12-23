@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
@@ -52,6 +53,16 @@ public class CAMQPSessionManager
     }
 
     private final ExecutorService executor = Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQTransferFrameSenderThread"));
+
+    private static final ScheduledExecutorService sessionSendDispositionScheduler =
+            Executors.newScheduledThreadPool(8,
+                    new CAMQPThreadFactory("DoveMQSessionCumulativeDispositionSender"));
+
+
+    static ScheduledExecutorService getSessionSendDispositionScheduler()
+    {
+        return sessionSendDispositionScheduler;
+    }
 
     private static volatile long maxOutgoingWindowSize = CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE;
     private static volatile long maxIncomingWindowSize = CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE;
@@ -95,10 +106,17 @@ public class CAMQPSessionManager
     private void shutdownManager()
     {
         closeSessions();
-        executor.shutdown();
+
+        shutdownThreadPool(executor);
+        shutdownThreadPool(sessionSendDispositionScheduler);
+    }
+
+    private void shutdownThreadPool(ExecutorService threadPool)
+    {
+        threadPool.shutdown();
         try
         {
-            executor.awaitTermination(300, TimeUnit.SECONDS);
+            threadPool.awaitTermination(300, TimeUnit.SECONDS);
         }
         catch (InterruptedException e)
         {

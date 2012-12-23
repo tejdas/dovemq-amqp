@@ -496,7 +496,7 @@ class CAMQPConnectionStateActor
             CAMQPConnectionManager.connectionAccepted(this, key);
         }
 
-        heartbeatProcessor.start();
+        heartbeatProcessor.scheduleNextHeartbeat();
         synchronized (this)
         {
             openExchangeComplete = true;
