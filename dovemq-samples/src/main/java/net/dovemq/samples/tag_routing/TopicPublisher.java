@@ -38,7 +38,7 @@ public class TopicPublisher
             /*
              * Create a publisher that creates/binds to a topic on the broker.
              */
-            Publisher publisher = session.createPublisher(TOPIC_NAME);
+            Publisher publisher = session.createTagFilterPublisher(TOPIC_NAME);
 
             /*
              * Create and publish a message, with a matching routing tag, so

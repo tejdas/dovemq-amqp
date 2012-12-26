@@ -29,6 +29,7 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
  */
 public final class Publisher implements CAMQPMessageDispositionObserver
 {
+    private final String topicName;
     private volatile DoveMQMessageAckReceiver ackReceiver = null;
     private final CAMQPSourceInterface sourceEndpoint;
 
@@ -63,9 +64,10 @@ public final class Publisher implements CAMQPMessageDispositionObserver
         sourceEndpoint.sendMessage(message);
     }
 
-    Publisher(String sourceName, CAMQPSourceInterface sourceEndpoint)
+    Publisher(String topicName, CAMQPSourceInterface sourceEndpoint)
     {
         super();
+        this.topicName = topicName;
         this.sourceEndpoint = sourceEndpoint;
         sourceEndpoint.registerDispositionObserver(this);
     }

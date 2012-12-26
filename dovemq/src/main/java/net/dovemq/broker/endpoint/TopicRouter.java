@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -55,46 +54,20 @@ final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
         final CAMQPTargetInterface sourceSink;
     }
 
-    private static class SubscriberContext
-    {
-        boolean canMessageBePublished(String messageTag)
-        {
-            if (StringUtils.isEmpty(messageTag))
-            {
-                return false;
-            }
-
-            Matcher matcher =  messageFilterPattern.matcher(messageTag);
-            return matcher.matches();
-        }
-
-        CAMQPSourceInterface getSubscriberProxy()
-        {
-            return subscriberProxy;
-        }
-
-        boolean hasFilter()
-        {
-            return (messageFilterPattern != null);
-        }
-
-        public SubscriberContext(Pattern messageFilterPattern,
-                CAMQPSourceInterface subscriberProxy)
-        {
-            super();
-            this.messageFilterPattern = messageFilterPattern;
-            this.subscriberProxy = subscriberProxy;
-        }
-
-        private final Pattern messageFilterPattern;
-        private final CAMQPSourceInterface subscriberProxy;
-    }
-
-    private final Set<SubscriberContext> subscriberProxies = new CopyOnWriteArraySet<SubscriberContext>();
+    private final String topicName;
+    private final TopicRouterType routerType;
+    private final Set<RoutingEvaluator> subscriberProxies = new CopyOnWriteArraySet<RoutingEvaluator>();
     private final Set<CAMQPTargetInterface> publisherSinks = new CopyOnWriteArraySet<CAMQPTargetInterface>();
 
     private final ConcurrentMap<Long, ConcurrentMap<Long, MessageContext>> inFlightMessagesByPublisherId =
             new ConcurrentHashMap<Long, ConcurrentMap<Long, MessageContext>>();
+
+    TopicRouter(String topicName, TopicRouterType routerType)
+    {
+        super();
+        this.topicName = topicName;
+        this.routerType = routerType;
+    }
 
     /**
      * Acknowledge the completion of a message processing to a Publisher
@@ -133,18 +106,19 @@ final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
         ConcurrentMap<Long, MessageContext> inFlightMsgMap = inFlightMessagesByPublisherId.get(publisherId);
         inFlightMsgMap.put(deliveryId, new MessageContext(subscriberProxies.size(), target));
 
-        String messageTag = message.getApplicationProperty(DoveMQMessageImpl.ROUTING_TAG_KEY);
-
-        for (SubscriberContext subscriberProxy : subscriberProxies)
+        Object routingEvaluationContext = null;
+        if (routerType == TopicRouterType.MessageTagFilter)
         {
-            if (subscriberProxy.hasFilter())
-            {
-                if (subscriberProxy.canMessageBePublished(messageTag))
-                {
-                    subscriberProxy.getSubscriberProxy().sendMessage(message);
-                }
-            }
-            else
+            routingEvaluationContext = message.getApplicationProperty(DoveMQMessageImpl.ROUTING_TAG_KEY);
+        }
+        else if (routerType == TopicRouterType.Hierarchical)
+        {
+            routingEvaluationContext = message.getApplicationProperty(DoveMQMessageImpl.TOPIC_PUBLISH_HIERARCHY_KEY);
+        }
+
+        for (RoutingEvaluator subscriberProxy : subscriberProxies)
+        {
+            if (subscriberProxy.canMessageBePublished(routingEvaluationContext))
             {
                 subscriberProxy.getSubscriberProxy().sendMessage(message);
             }
@@ -153,28 +127,49 @@ final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
 
     void subscriberAttached(CAMQPSourceInterface destination, CAMQPEndpointPolicy endpointPolicy)
     {
-        Pattern messageFilterPattern = null;
-        String messageFilterPatternString = endpointPolicy.getMessageFilterPattern();
-        if (!StringUtils.isEmpty(messageFilterPatternString))
+        if (routerType == TopicRouterType.MessageTagFilter)
         {
-            try
+            Pattern messageFilterPattern = null;
+            String messageFilterPatternString = endpointPolicy.getMessageFilterPattern();
+            if (!StringUtils.isEmpty(messageFilterPatternString))
             {
-                messageFilterPattern = Pattern.compile(messageFilterPatternString);
+                try
+                {
+                    messageFilterPattern = Pattern.compile(messageFilterPatternString);
+                }
+                catch (PatternSyntaxException ex)
+                {
+                    messageFilterPattern = null;
+                }
             }
-            catch (PatternSyntaxException ex)
-            {
-                messageFilterPattern = null;
-            }
+            subscriberProxies.add(new RoutingMessageTagFilterEvaluator(messageFilterPattern, destination));
         }
-        subscriberProxies.add(new SubscriberContext(messageFilterPattern, destination));
+        else if (routerType == TopicRouterType.Hierarchical)
+        {
+            String subscriptionTopicHierarchy = endpointPolicy.getSubscriptionTopicHierarchy();
+            if (!StringUtils.isEmpty(subscriptionTopicHierarchy))
+            {
+                subscriberProxies.add(new RoutingTopicHeirarchyMatcher(subscriptionTopicHierarchy, destination));
+            }
+            else
+            {
+                subscriberProxies.add(new RoutingTopicHeirarchyMatcher(topicName, destination));
+            }
+
+        }
+        else
+        {
+            subscriberProxies.add(new RoutingEvaluator(destination));
+        }
+
         destination.registerDispositionObserver(this);
     }
 
     void subscriberDetached(CAMQPSourceInterface targetProxy)
     {
-        for (SubscriberContext subscriberContext: subscriberProxies)
+        for (RoutingEvaluator subscriberContext: subscriberProxies)
         {
-            if (subscriberContext.subscriberProxy == targetProxy)
+            if (subscriberContext.getSubscriberProxy() == targetProxy)
             {
                 subscriberProxies.remove(subscriberContext);
             }
@@ -227,5 +222,15 @@ final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
         finally
         {
         }
+    }
+
+    String getTopicName()
+    {
+        return topicName;
+    }
+
+    TopicRouterType getRouterType()
+    {
+        return routerType;
     }
 }

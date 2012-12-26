@@ -1,4 +1,4 @@
-package net.dovemq.samples.tag_routing;
+package net.dovemq.samples.hierarchy_routing;
 
 import net.dovemq.api.ConnectionFactory;
 import net.dovemq.api.DoveMQMessage;
@@ -7,15 +7,13 @@ import net.dovemq.api.Session;
 import net.dovemq.api.Subscriber;
 
 /**
- * This sample shows how to create a DoveMQ subscriber that creates or binds to
- * a topic on the DoveMQ broker, and waits for incoming messages. It also
- * demonstrates that the subscriber is not interested in all the messages from
- * the topic, rather only those with a tag that matches with the message filter
- * pattern.
+ * This sample shows how to create a DoveMQ Hierarchical subscriber that creates
+ * or binds to a certain hierarchy under the root topic and waits for incoming
+ * messages. It only gets messages that are published at or above that hierarchy.
  */
 public class TopicSubscriber
 {
-    private static final String TOPIC_NAME = "TagRoutingTopic";
+    private static final String ROOT_TOPIC_NAME = "HierarchyRoutingTopic";
     private static volatile boolean doShutdown = false;
 
     /**
@@ -56,11 +54,11 @@ public class TopicSubscriber
 
             /*
              * Create a subscriber that creates/binds to a topic on the broker.
-             * Also specify the message filter pattern, so the Topic forwards
-             * only those messages that have a tag matching with this pattern.
+             * Also specify the hierarchical scope, so only those messages that
+             * are published at/above this hierarchy are routed to the subscriber.
              */
-            String messageFilterPattern = "ab....yz";
-            Subscriber subscriber = session.createTagFilterSubscriber(TOPIC_NAME, messageFilterPattern);
+            String hierarchicalTopicName = ROOT_TOPIC_NAME + ".foo.bar";
+            Subscriber subscriber = session.createHierarchicalTopicSubscriber(hierarchicalTopicName);
 
             /*
              * Register a message receiver with the consumer to asynchronously

@@ -21,12 +21,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.dovemq.api.DoveMQEndpointPolicy;
+import net.dovemq.broker.endpoint.TopicRouterType;
 import net.dovemq.transport.link.CAMQPLinkConstants;
 import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 
+import org.apache.commons.lang.StringUtils;
+
 public final class CAMQPEndpointPolicy
 {
+    /**
+     * Following key is used by publisher/subscriber end-points to indicate the TopicRouter type.
+     * See {@link TopicRouterType}
+     */
+    private static final String TOPIC_ROUTER_TYPE_KEY = "TopicRouterTypeKey";
+    /**
+     * Following key is used by a subscriber of type {@link TopicRouterType#MessageTagFilter}
+     * to indicate its message filter regex pattern.
+     */
     private static final String MESSAGE_FILTER_PATTERN_KEY = "MessageFilterPatternKey";
 
     public static enum CAMQPMessageDeliveryPolicy
@@ -46,10 +58,24 @@ public final class CAMQPEndpointPolicy
     private final long maxAvailableLimit;
     private final int senderSettleMode;
     private final int receiverSettleMode;
+    private final long minLinkCreditThreshold;
+    private final long linkCreditBoost;
+    private EndpointType endpointType = EndpointType.QUEUE;
     private final CAMQPMessageDeliveryPolicy deliveryPolicy;
     private ReceiverLinkCreditPolicy linkCreditPolicy;
+    private String subscriptionTopicHierarchy;
     private DoveMQEndpointPolicy doveMQEndpointPolicy = new DoveMQEndpointPolicy();
     private final Map<String, String> customProperties = new HashMap<String, String>();
+
+    public String getSubscriptionTopicHierarchy()
+    {
+        return subscriptionTopicHierarchy;
+    }
+
+    public void setSubscriptionTopicHierarchy(String subscriptionTopicHierarchy)
+    {
+        this.subscriptionTopicHierarchy = subscriptionTopicHierarchy;
+    }
 
     public Map<String, String> getCustomProperties()
     {
@@ -60,14 +86,35 @@ public final class CAMQPEndpointPolicy
     {
         return customProperties.get(MESSAGE_FILTER_PATTERN_KEY);
     }
+
     public void setMessageFilterPattern(String messageFilterPattern)
     {
         customProperties.put(MESSAGE_FILTER_PATTERN_KEY,  messageFilterPattern);
     }
+
+    public void setTopicRouterType(TopicRouterType topicType)
+    {
+        customProperties.put(TOPIC_ROUTER_TYPE_KEY,  topicType.name());
+    }
+
+    public TopicRouterType getTopicRouterType()
+    {
+        String topicTypeString = customProperties.get(TOPIC_ROUTER_TYPE_KEY);
+        if (StringUtils.isEmpty(topicTypeString))
+        {
+            return TopicRouterType.Basic;
+        }
+        else
+        {
+            return TopicRouterType.valueOf(topicTypeString);
+        }
+    }
+
     public DoveMQEndpointPolicy getDoveMQEndpointPolicy()
     {
         return doveMQEndpointPolicy;
     }
+
     public void setDoveMQEndpointPolicy(DoveMQEndpointPolicy doveMQEndpointPolicy)
     {
         this.doveMQEndpointPolicy = doveMQEndpointPolicy;
@@ -78,46 +125,51 @@ public final class CAMQPEndpointPolicy
         this.linkCreditPolicy = linkCreditPolicy;
     }
 
-    private final long minLinkCreditThreshold;
-    private final long linkCreditBoost;
-    private EndpointType endpointType = EndpointType.QUEUE;
-
     public EndpointType getEndpointType()
     {
         return endpointType;
     }
+
     public void setEndpointType(EndpointType endpointType)
     {
         this.endpointType = endpointType;
     }
+
     public CAMQPMessageDeliveryPolicy getDeliveryPolicy()
     {
         return deliveryPolicy;
     }
+
     public long getMaxMessageSize()
     {
         return maxMessageSize;
     }
+
     public long getMaxAvailableLimit()
     {
         return maxAvailableLimit;
     }
+
     public int getSenderSettleMode()
     {
         return senderSettleMode;
     }
+
     public int getReceiverSettleMode()
     {
         return receiverSettleMode;
     }
+
     public ReceiverLinkCreditPolicy getLinkCreditPolicy()
     {
         return linkCreditPolicy;
     }
+
     public long getMinLinkCreditThreshold()
     {
         return minLinkCreditThreshold;
     }
+
     public long getLinkCreditBoost()
     {
         return linkCreditBoost;
@@ -139,7 +191,6 @@ public final class CAMQPEndpointPolicy
         this.linkCreditPolicy = linkCreditPolicy;
         this.minLinkCreditThreshold = minLinkCreditThreshold;
         this.linkCreditBoost = linkCreditBoost;
-
 
         if (senderSettleMode.equalsIgnoreCase(CAMQPConstants.SENDER_SETTLE_MODE_SETTLED_STR))
             this.senderSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_SETTLED;

@@ -42,6 +42,7 @@ public class DoveMQMessageImpl implements DoveMQMessage
     private static final String SYMBOL_APPLICATION_ANNOTATIONS = "amqp:application-annotations:map";
     private static final String SYMBOL_FOOTERS = "amqp:footer:map";
     public static final String ROUTING_TAG_KEY = "RoutingTagKey";
+    public static final String TOPIC_PUBLISH_HIERARCHY_KEY = "TopicPublishHierarchyKey";
 
     @Immutable
     private static class DoveMQPayload
@@ -278,6 +279,12 @@ public class DoveMQMessageImpl implements DoveMQMessage
     public void setRoutingTag(String tag)
     {
         addApplicationProperty(ROUTING_TAG_KEY, tag);
+    }
+
+    @Override
+    public void setTopicPublishHierarchy(String topicHierarchy)
+    {
+        addApplicationProperty(TOPIC_PUBLISH_HIERARCHY_KEY, topicHierarchy);
     }
 
     public DoveMQMessageImpl()

@@ -43,6 +43,7 @@ import org.apache.log4j.Logger;
 public class CAMQPSessionManager
 {
     private static final Logger log = Logger.getLogger(CAMQPSessionManager.class);
+    private static final int DEFAULT_SESSION_DISPOSITION_SENDER_THREAD_COUNT = 8;
 
     private static volatile CAMQPSessionManager _sessionManager;
     private static volatile CAMQPSessionSendFlowScheduler sessionSendFlowScheduler;
@@ -55,7 +56,7 @@ public class CAMQPSessionManager
     private final ExecutorService executor = Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQTransferFrameSenderThread"));
 
     private static final ScheduledExecutorService sessionSendDispositionScheduler =
-            Executors.newScheduledThreadPool(8,
+            Executors.newScheduledThreadPool(DEFAULT_SESSION_DISPOSITION_SENDER_THREAD_COUNT,
                     new CAMQPThreadFactory("DoveMQSessionCumulativeDispositionSender"));
 
 

@@ -41,6 +41,7 @@ import org.apache.log4j.Logger;
 public final class CAMQPConnectionManager
 {
     private static final Logger log = Logger.getLogger(CAMQPConnectionManager.class);
+    private static final int DEFAULT_HEARTBEAT_PROCESSOR_THREAD_COUNT = 4;
 
     private static volatile CAMQPConnectionObserver connectionObserver = null;
 
@@ -53,7 +54,7 @@ public final class CAMQPConnectionManager
     private static final Object shutdownLock = new Object();
 
     private static final ScheduledExecutorService connectionHeartbeatScheduler =
-            Executors.newScheduledThreadPool(4,
+            Executors.newScheduledThreadPool(DEFAULT_HEARTBEAT_PROCESSOR_THREAD_COUNT,
                     new CAMQPThreadFactory("DoveMQConnectionHeartbeatProcessor"));
 
     static ScheduledExecutorService getConnectionHeartbeatScheduler()

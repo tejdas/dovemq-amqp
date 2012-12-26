@@ -27,8 +27,9 @@ public interface DoveMQEndpointManager
     public void producerDetached(String queueName, CAMQPTargetInterface producer);
     public void consumerAttached(String queueName, CAMQPSourceInterface consumer, CAMQPEndpointPolicy endpointPolicy);
     public void consumerDetached(String queueName, CAMQPSourceInterface consumer);
-    public void publisherAttached(String topicName, CAMQPTargetInterface producer, CAMQPEndpointPolicy endpointPolicy);
-    public void publisherDetached(String topicName, CAMQPTargetInterface producer);
-    public void subscriberAttached(String topicName, CAMQPSourceInterface consumer, CAMQPEndpointPolicy endpointPolicy);
-    public void subscriberDetached(String topicName, CAMQPSourceInterface consumer);
+
+    public void publisherAttached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy);
+    public void publisherDetached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy);
+    public void subscriberAttached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy);
+    public void subscriberDetached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy);
 }

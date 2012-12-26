@@ -136,5 +136,22 @@ public interface DoveMQMessage
      */
     public Collection<String> getFooterKeys();
 
+    /**
+     * Set a routing tag, that is evaluated by the Broker
+     * against a subscriber's filter to determine is the
+     * message should be routed to the subscriber.
+     *
+     * @param tag
+     */
     public void setRoutingTag(String tag);
+
+    /**
+     * Set a topic publish hierarchy, that is evaluated
+     * by the Broker to determine which hierarchical
+     * Subscriber the message should be routed to.
+     * Example: sports.baseball
+     *
+     * @param topicHierarchy
+     */
+    public void setTopicPublishHierarchy(String topicHierarchy);
 }

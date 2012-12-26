@@ -125,7 +125,7 @@ public final class CAMQPEndpointManager
             }
             else
             {
-                doveMQEndpointManager.subscriberDetached(sourceName, source);
+                doveMQEndpointManager.subscriberDetached(sourceName, source, endpointPolicy);
             }
         }
     }
@@ -140,7 +140,7 @@ public final class CAMQPEndpointManager
             }
             else
             {
-                doveMQEndpointManager.publisherDetached(targetName, target);
+                doveMQEndpointManager.publisherDetached(targetName, target, endpointPolicy);
             }
         }
     }
