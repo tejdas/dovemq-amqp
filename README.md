@@ -22,13 +22,7 @@ Source for the framework.
         link
         endpoint
 
-  b. The package *net.dovemq.broker* contains the broker elements:
-
-        Broker driver
-        TopicRouter
-        QueueRouter
-
-  c. The package *net.dovemq.api* contains API classes:
+  b. The package *net.dovemq.api* contains API classes:
 
         Connection
         Session
