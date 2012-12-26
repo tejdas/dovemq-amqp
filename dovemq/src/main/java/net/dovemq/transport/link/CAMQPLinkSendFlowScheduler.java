@@ -40,45 +40,41 @@ import net.dovemq.transport.utils.CAMQPThreadFactory;
  * @author tejdas
  *
  */
-class CAMQPLinkSendFlowScheduler implements Runnable
-{
+final class CAMQPLinkSendFlowScheduler implements Runnable {
     private static final int LINK_SENDER_REQUEST_CREDIT_TIMER_INTERVAL = 2000;
+
     private final ScheduledExecutorService scheduledExecutor =
             Executors.newSingleThreadScheduledExecutor(new CAMQPThreadFactory("DoveMQLinkSendFlowScheduler"));
 
-    void start()
-    {
-        scheduledExecutor.scheduleWithFixedDelay(this, LINK_SENDER_REQUEST_CREDIT_TIMER_INTERVAL,
-                LINK_SENDER_REQUEST_CREDIT_TIMER_INTERVAL, TimeUnit.MILLISECONDS);
+    void start() {
+        scheduledExecutor.scheduleWithFixedDelay(
+                this,
+                LINK_SENDER_REQUEST_CREDIT_TIMER_INTERVAL,
+                LINK_SENDER_REQUEST_CREDIT_TIMER_INTERVAL,
+                TimeUnit.MILLISECONDS);
     }
 
-    void stop()
-    {
+    void stop() {
         scheduledExecutor.shutdown();
     }
 
     private final ConcurrentMap<Long, CAMQPLinkSender> linkSenders = new ConcurrentHashMap<Long, CAMQPLinkSender>();
 
-    void registerLinkSender(long linkHandle, CAMQPLinkSender linkSender)
-    {
+    void registerLinkSender(long linkHandle, CAMQPLinkSender linkSender) {
         linkSenders.put(linkHandle, linkSender);
     }
 
-    void unregisterLinkSender(long linkHandle)
-    {
+    void unregisterLinkSender(long linkHandle) {
         linkSenders.remove(linkHandle);
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         long currentTime = System.currentTimeMillis();
         Set<Long> registeredLinkSenderHandles = linkSenders.keySet();
-        for (long linkHandle : registeredLinkSenderHandles)
-        {
+        for (long linkHandle : registeredLinkSenderHandles) {
             CAMQPLinkSender linkSender = linkSenders.get(linkHandle);
-            if (linkSender != null)
-            {
+            if (linkSender != null) {
                 linkSender.requestCreditIfUnderFlowControl(currentTime);
             }
         }

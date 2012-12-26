@@ -24,65 +24,53 @@ import org.jboss.netty.buffer.ChannelBuffer;
  * @author tejdas
  *
  */
-public class CAMQPFrameHeader
-{
-    public static CAMQPFrameHeader createFrameHeader(int channelNumber, int frameBodySize)
-    {
+public final class CAMQPFrameHeader {
+    public static CAMQPFrameHeader createFrameHeader(int channelNumber, int frameBodySize) {
         CAMQPFrameHeader frameHeader = new CAMQPFrameHeader();
         frameHeader.setChannelNumber((short) channelNumber);
         frameHeader.setFrameSize(CAMQPFrameConstants.FRAME_HEADER_SIZE + frameBodySize);
         return frameHeader;
     }
 
-    public static ChannelBuffer createEncodedFrameHeader(int channelNumber, int frameBodySize)
-    {
+    public static ChannelBuffer createEncodedFrameHeader(int channelNumber, int frameBodySize) {
         CAMQPFrameHeader frameHeader = createFrameHeader(channelNumber, frameBodySize);
         return CAMQPFrameHeaderCodec.encode(frameHeader);
     }
 
-    public CAMQPFrameHeader()
-    {
+    public CAMQPFrameHeader() {
         super();
         // TODO Auto-generated constructor stub
     }
 
-    public long getFrameSize()
-    {
+    public long getFrameSize() {
         return frameSize;
     }
 
-    public void setFrameSize(long frameSize)
-    {
+    public void setFrameSize(long frameSize) {
         this.frameSize = frameSize;
     }
 
-    public short getChannelNumber()
-    {
+    public short getChannelNumber() {
         return channelNumber;
     }
 
-    public void setChannelNumber(short channelNumber)
-    {
+    public void setChannelNumber(short channelNumber) {
         this.channelNumber = channelNumber;
     }
 
-    public short getDataOffset()
-    {
+    public short getDataOffset() {
         return dataOffset;
     }
 
-    void setDataOffset(short dataOffset)
-    {
+    void setDataOffset(short dataOffset) {
         this.dataOffset = dataOffset;
     }
 
-    public int getFrameType()
-    {
+    public int getFrameType() {
         return frameType;
     }
 
-    public void setFrameType(int frameType)
-    {
+    public void setFrameType(int frameType) {
         this.frameType = frameType;
     }
 

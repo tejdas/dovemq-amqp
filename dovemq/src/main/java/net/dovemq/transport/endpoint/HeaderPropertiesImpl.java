@@ -24,77 +24,64 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionHeader;
 
 import org.apache.commons.lang.StringUtils;
 
-final class HeaderPropertiesImpl implements HeaderProperties
-{
+final class HeaderPropertiesImpl implements HeaderProperties {
     @Override
-    public boolean isDurable()
-    {
+    public boolean isDurable() {
         return properties.getDurable();
     }
 
     @Override
-    public void setDurable(boolean durable)
-    {
+    public void setDurable(boolean durable) {
         properties.setDurable(durable);
     }
 
     @Override
-    public int getPriority()
-    {
+    public int getPriority() {
         return properties.getPriority();
     }
 
     @Override
-    public void setPriority(int val)
-    {
+    public void setPriority(int val) {
         properties.setPriority(val);
     }
 
     @Override
-    public long getTTL()
-    {
+    public long getTTL() {
         return properties.getTtl();
     }
 
     @Override
-    public void setTTL(long ttl)
-    {
+    public void setTTL(long ttl) {
         properties.setTtl(ttl);
     }
 
     @Override
-    public long getDeliveryCount()
-    {
+    public long getDeliveryCount() {
         return properties.getDeliveryCount();
     }
 
     @Override
-    public void setDeliveryCount(long deliveryCount)
-    {
+    public void setDeliveryCount(long deliveryCount) {
         properties.setDeliveryCount(deliveryCount);
     }
 
-    HeaderPropertiesImpl(CAMQPDefinitionHeader properties)
-    {
+    HeaderPropertiesImpl(CAMQPDefinitionHeader properties) {
         super();
         this.properties = properties;
     }
 
-    HeaderPropertiesImpl()
-    {
+    HeaderPropertiesImpl() {
         super();
         this.properties = new CAMQPDefinitionHeader();
     }
 
-    void encode(CAMQPEncoder encoder)
-    {
+    void encode(CAMQPEncoder encoder) {
         CAMQPDefinitionHeader.encode(encoder, properties);
     }
 
-    static HeaderPropertiesImpl decode(CAMQPSyncDecoder decoder)
-    {
+    static HeaderPropertiesImpl decode(CAMQPSyncDecoder decoder) {
         String symbolRead = decoder.readSymbol();
-        assert(StringUtils.equals(symbolRead, CAMQPDefinitionHeader.descriptor));
+        assert (StringUtils.equals(symbolRead, CAMQPDefinitionHeader.descriptor));
         CAMQPDefinitionHeader header = CAMQPDefinitionHeader.decode(decoder);
         return new HeaderPropertiesImpl(header);
     }

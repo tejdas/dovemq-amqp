@@ -28,7 +28,6 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
  * @author tdas
  *
  */
-public interface CAMQPLinkMessageHandlerFactory
-{
+public interface CAMQPLinkMessageHandlerFactory {
     public CAMQPLinkMessageHandler linkAccepted(CAMQPSessionInterface session, CAMQPControlAttach attach);
 }

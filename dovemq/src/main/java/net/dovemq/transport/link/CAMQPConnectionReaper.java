@@ -20,18 +20,15 @@ package net.dovemq.transport.link;
 import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.connection.CAMQPConnectionObserver;
 
-final class CAMQPConnectionReaper implements CAMQPConnectionObserver
-{
+final class CAMQPConnectionReaper implements CAMQPConnectionObserver {
     @Override
-    public void connectionAccepted(CAMQPConnectionInterface connection)
-    {
+    public void connectionAccepted(CAMQPConnectionInterface connection) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void connectionCloseInitiatedByRemotePeer(CAMQPConnectionInterface connection)
-    {
+    public void connectionCloseInitiatedByRemotePeer(CAMQPConnectionInterface connection) {
         connection.closeAsync();
     }
 }

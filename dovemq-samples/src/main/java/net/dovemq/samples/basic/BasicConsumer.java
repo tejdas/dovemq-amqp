@@ -10,28 +10,25 @@ import net.dovemq.api.Session;
  * This sample shows how to create a DoveMQ consumer that creates a transient
  * queue in the DoveMQ broker, and waits for incoming messages.
  */
-public class BasicConsumer
-{
+public class BasicConsumer {
     private static final String QUEUE_NAME = "SampleQueue";
+
     private static volatile boolean doShutdown = false;
 
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
      * with the Consumer.
      */
-    private static class SampleMessageReceiver implements DoveMQMessageReceiver
-    {
+    private static class SampleMessageReceiver implements DoveMQMessageReceiver {
         @Override
-        public void messageReceived(DoveMQMessage message)
-        {
+        public void messageReceived(DoveMQMessage message) {
             byte[] body = message.getPayload();
             String payload = new String(body);
             System.out.println("Received message: " + payload);
         }
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -43,8 +40,7 @@ public class BasicConsumer
          */
         ConnectionFactory.initialize("consumer");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -68,8 +64,7 @@ public class BasicConsumer
              */
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
-                public void run()
-                {
+                public void run() {
                     /*
                      * Close the AMQP session
                      */
@@ -84,20 +79,16 @@ public class BasicConsumer
             });
 
             System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
-            while (!doShutdown)
-            {
-                try
-                {
+            while (!doShutdown) {
+                try {
                     Thread.sleep(1000);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());
             /*
              * Shutdown DoveMQ runtime.

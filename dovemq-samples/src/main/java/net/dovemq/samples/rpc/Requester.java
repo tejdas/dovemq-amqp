@@ -20,8 +20,7 @@ import net.dovemq.api.Session;
  * messageId. The requester uses the correlationId to match the incoming
  * response for the outgoing request.
  */
-public class Requester
-{
+public class Requester {
     /*
      * Outgoing request messages are stored until a response message has been
      * received.
@@ -32,21 +31,18 @@ public class Requester
      * Implementation of a sample MessageReceiver callback, that is registered
      * with the Consumer.
      */
-    private static class SampleMessageReceiver implements DoveMQMessageReceiver
-    {
+    private static class SampleMessageReceiver implements DoveMQMessageReceiver {
         /**
          * Receive the response message. Match its correlationId with the
          * request message's messageId and remove the request message from
          * outstandingRequests map.
          */
         @Override
-        public void messageReceived(DoveMQMessage message)
-        {
+        public void messageReceived(DoveMQMessage message) {
             String correlationId = message.getMessageProperties()
                     .getCorrlelationId();
             DoveMQMessage requestMessage = outstandingRequests.remove(correlationId);
-            if (requestMessage != null)
-            {
+            if (requestMessage != null) {
                 System.out.println("received response for requestId: " + correlationId);
 
                 byte[] body = message.getPayload();
@@ -66,8 +62,7 @@ public class Requester
      */
     private static final String REPLY_TO_ADDRESS = "responseQueue";
 
-    public static void main(String[] args) throws InterruptedException
-    {
+    public static void main(String[] args) throws InterruptedException {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -79,8 +74,7 @@ public class Requester
          */
         ConnectionFactory.initialize("rpcRequester");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -126,8 +120,7 @@ public class Requester
              */
             session.close();
         }
-        finally
-        {
+        finally {
             /*
              * Shutdown DoveMQ runtime.
              */

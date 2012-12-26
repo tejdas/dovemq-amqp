@@ -42,170 +42,141 @@ import org.jboss.netty.buffer.HeapChannelBufferFactory;
  * @author tejdas
  *
  */
-public final class CAMQPEncoder
-{
+public final class CAMQPEncoder {
     private ChannelBuffer buffer = null;
+
     private ChannelBuffer dynamicBuffer = null;
+
     private boolean isComposite = false;
+
     private final Stack<Integer> compoundSizePosition = new Stack<Integer>();
 
-    public static CAMQPEncoder createCAMQPEncoder()
-    {
+    public static CAMQPEncoder createCAMQPEncoder() {
         return new CAMQPEncoder();
     }
 
-    private CAMQPEncoder()
-    {
+    private CAMQPEncoder() {
     }
 
-    public ChannelBuffer getEncodedBuffer()
-    {
+    public ChannelBuffer getEncodedBuffer() {
         ChannelBuffer flushedBuffer;
-        if (dynamicBuffer != null)
-        {
+        if (dynamicBuffer != null) {
             flushedBuffer = ChannelBuffers.wrappedBuffer(buffer, dynamicBuffer);
             dynamicBuffer = null;
         }
-        else
-        {
+        else {
             flushedBuffer = buffer;
         }
 
         buffer = null;
         isComposite = false;
-        assert(compoundSizePosition.empty());
+        assert (compoundSizePosition.empty());
         return flushedBuffer;
     }
 
-    private ChannelBuffer getWritableBuffer()
-    {
-        if (dynamicBuffer == null)
-        {
-            if (buffer == null)
-            {
+    private ChannelBuffer getWritableBuffer() {
+        if (dynamicBuffer == null) {
+            if (buffer == null) {
                 buffer = ChannelBuffers.dynamicBuffer(CAMQPProtocolConstants.DYNAMIC_BUFFER_INITIAL_SIZE, new HeapChannelBufferFactory());
                 return buffer;
             }
-            else
-            {
-                if (isComposite)
-                {
+            else {
+                if (isComposite) {
                     dynamicBuffer = ChannelBuffers.dynamicBuffer(CAMQPProtocolConstants.DYNAMIC_BUFFER_INITIAL_SIZE, new HeapChannelBufferFactory());
                     return dynamicBuffer;
                 }
-                else
-                {
+                else {
                     return buffer;
                 }
             }
         }
-        else
-        {
+        else {
             return dynamicBuffer;
         }
     }
 
-    private ChannelBuffer ensureCapacity(long size)
-    {
-        ChannelBuffer currentBuffer =
-                (dynamicBuffer != null) ? dynamicBuffer : buffer;
+    private ChannelBuffer ensureCapacity(long size) {
+        ChannelBuffer currentBuffer = (dynamicBuffer != null) ? dynamicBuffer : buffer;
 
-        if (size <= (CAMQPProtocolConstants.INT_MAX_VALUE - currentBuffer.capacity()))
-        {
+        if (size <= (CAMQPProtocolConstants.INT_MAX_VALUE - currentBuffer.capacity())) {
             return currentBuffer;
         }
-        if (dynamicBuffer != null)
-        {
+        if (dynamicBuffer != null) {
             buffer = ChannelBuffers.wrappedBuffer(buffer, dynamicBuffer);
         }
-        dynamicBuffer =
-                ChannelBuffers.dynamicBuffer(
-                        CAMQPProtocolConstants.DYNAMIC_BUFFER_INITIAL_SIZE,
-                        new HeapChannelBufferFactory());
+        dynamicBuffer = ChannelBuffers.dynamicBuffer(CAMQPProtocolConstants.DYNAMIC_BUFFER_INITIAL_SIZE, new HeapChannelBufferFactory());
         return dynamicBuffer;
     }
 
-    public void writePayload(CAMQPMessagePayload payload)
-    {
+    public void writePayload(CAMQPMessagePayload payload) {
         ChannelBuffer payloadBody = payload.getPayload();
         writePayloadInternal(payloadBody);
     }
 
-    public void writeNull()
-    {
+    public void writeNull() {
         byte formatCode = (byte) CAMQPFormatCodes.NULL;
         getWritableBuffer().writeByte(formatCode);
     }
 
-    public void writeBoolean(boolean value)
-    {
-        byte formatCode = value? (byte) CAMQPFormatCodes.TRUE : (byte) CAMQPFormatCodes.FALSE;
+    public void writeBoolean(boolean value) {
+        byte formatCode = value ? (byte) CAMQPFormatCodes.TRUE : (byte) CAMQPFormatCodes.FALSE;
         getWritableBuffer().writeByte(formatCode);
     }
 
-    public void writeUByte(int value)
-    {
+    public void writeUByte(int value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.UBYTE;
         writableBuffer.writeByte(formatCode);
         CAMQPCodecUtil.writeUByte(value, writableBuffer);
     }
 
-    public void writeUShort(int value)
-    {
+    public void writeUShort(int value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.USHORT;
         writableBuffer.writeByte(formatCode);
         CAMQPCodecUtil.writeUShort(value, writableBuffer);
     }
 
-    public void writeUInt(long value)
-    {
+    public void writeUInt(long value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.UINT;
         writableBuffer.writeByte(formatCode);
         CAMQPCodecUtil.writeUInt(value, writableBuffer);
     }
 
-    public void writeByte(byte value)
-    {
+    public void writeByte(byte value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.BYTE;
         writableBuffer.writeByte(formatCode);
         writableBuffer.writeByte(value);
     }
 
-    public void writeShort(short value)
-    {
+    public void writeShort(short value) {
         byte formatCode = (byte) CAMQPFormatCodes.SHORT;
         ChannelBuffer writableBuffer = getWritableBuffer();
         writableBuffer.writeByte(formatCode);
         writableBuffer.writeShort(value);
     }
 
-    public void writeInt(int value)
-    {
+    public void writeInt(int value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.INT;
         writableBuffer.writeByte(formatCode);
         writableBuffer.writeInt(value);
     }
 
-    public void writeULong(BigInteger value)
-    {
+    public void writeULong(BigInteger value) {
         writeLong(value.longValue()); // TODO correct?
     }
 
-    public void writeLong(long value)
-    {
+    public void writeLong(long value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.LONG;
         writableBuffer.writeByte(formatCode);
         writableBuffer.writeLong(value);
     }
 
-    public void writeFloat(float value)
-    {
+    public void writeFloat(float value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.FLOAT;
         writableBuffer.writeByte(formatCode);
@@ -213,8 +184,7 @@ public final class CAMQPEncoder
         writableBuffer.writeInt(floatAsInt);
     }
 
-    public void writeDouble(double value)
-    {
+    public void writeDouble(double value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.DOUBLE;
         writableBuffer.writeByte(formatCode);
@@ -222,8 +192,7 @@ public final class CAMQPEncoder
         writableBuffer.writeLong(doubleAsLong);
     }
 
-    public void writeTimeStamp(Date value)
-    {
+    public void writeTimeStamp(Date value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.TIMESTAMP;
         writableBuffer.writeByte(formatCode);
@@ -231,8 +200,7 @@ public final class CAMQPEncoder
         writableBuffer.writeLong(milliSeconds);
     }
 
-    public void writeUUID(UUID value)
-    {
+    public void writeUUID(UUID value) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode = (byte) CAMQPFormatCodes.UUID;
         writableBuffer.writeByte(formatCode);
@@ -242,75 +210,65 @@ public final class CAMQPEncoder
         writableBuffer.writeLong(lsb);
     }
 
-    public void writeUTF8String(String str)
-    {
+    public void writeUTF8String(String str) {
         boolean isSymbol = false;
         boolean isSelfDescribed = true;
         writeString(str, CAMQPProtocolConstants.CHARSET_UTF8, isSymbol, isSelfDescribed);
     }
 
-    public void writeUTF16String(String str)
-    {
+    public void writeUTF16String(String str) {
         boolean isSymbol = false;
         boolean isSelfDescribed = true;
         writeString(str, CAMQPProtocolConstants.CHARSET_UTF16, isSymbol, isSelfDescribed);
     }
 
-    public void writeSymbol(String symbol)
-    {
+    public void writeSymbol(String symbol) {
         boolean isSymbol = true;
         boolean isSelfDescribed = true;
         writeString(symbol, CAMQPProtocolConstants.CHARSET_UTF8, isSymbol, isSelfDescribed);
     }
 
-    public void writeUTF8StringArrayElement(String str)
-    {
+    public void writeUTF8StringArrayElement(String str) {
         boolean isSymbol = false;
         boolean isSelfDescribed = false;
         writeString(str, CAMQPProtocolConstants.CHARSET_UTF8, isSymbol, isSelfDescribed);
     }
 
-    public void writeUTF16StringArrayElement(String str)
-    {
+    public void writeUTF16StringArrayElement(String str) {
         boolean isSymbol = false;
         boolean isSelfDescribed = false;
         writeString(str, CAMQPProtocolConstants.CHARSET_UTF16, isSymbol, isSelfDescribed);
     }
 
-    public void writeSymbolArrayElement(String symbol)
-    {
+    public void writeSymbolArrayElement(String symbol) {
         boolean isSymbol = true;
         boolean isSelfDescribed = false;
         writeString(symbol, CAMQPProtocolConstants.CHARSET_UTF8, isSymbol, isSelfDescribed);
     }
 
-    private void writeString(String str, String charSet, boolean isSymbol, boolean isSelfDescribed)
-    {
+    private void writeString(String str, String charSet, boolean isSymbol, boolean isSelfDescribed) {
         byte[] encodedString;
-        try
-        {
+        try {
             encodedString = str.getBytes(charSet);
         }
-        catch (UnsupportedEncodingException e)
-        {
+        catch (UnsupportedEncodingException e) {
             throw new CAMQPCodecException(CAMQPTypes.STR8_UTF8, CAMQPFormatCodes.STR8_UTF8, e);
         }
         long size = encodedString.length;
 
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode;
-        if (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE)
-        {
-            if (isSelfDescribed)
-            {
-                if (isSymbol)
-                {
+        if (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE) {
+            if (isSelfDescribed) {
+                if (isSymbol) {
                     formatCode = (byte) CAMQPFormatCodes.SYM8;
                 }
-                else
-                {
+                else {
                     // TODO
-                    //formatCode = (charSet.equalsIgnoreCase(CAMQPProtocolConstants.CHARSET_UTF8)) ? (byte) CAMQPFormatCodes.STR8_UTF8 : (byte) CAMQPFormatCodes.STR8_UTF32;
+                    // formatCode =
+                    // (charSet.equalsIgnoreCase(CAMQPProtocolConstants.CHARSET_UTF8))
+                    // ? (byte) CAMQPFormatCodes.STR8_UTF8 : (byte)
+                    // CAMQPFormatCodes.STR8_UTF32;
                     formatCode = (byte) CAMQPFormatCodes.STR8_UTF8;
                 }
                 writableBuffer.writeByte(formatCode);
@@ -323,63 +281,51 @@ public final class CAMQPEncoder
             ChannelBuffer bufferToCopy = ensureCapacity(size);
             bufferToCopy.writeBytes(encodedString, 0, (int) size);
         }
-        else if (size <= (int) CAMQPProtocolConstants.UINT_MAX_VALUE)
-        {
-            if (isSelfDescribed)
-            {
-                if (isSymbol)
-                {
+        else if (size <= (int) CAMQPProtocolConstants.UINT_MAX_VALUE) {
+            if (isSelfDescribed) {
+                if (isSymbol) {
                     formatCode = (byte) CAMQPFormatCodes.SYM32;
                 }
-                else
-                {
+                else {
                     // TODO
-                    //formatCode = (charSet.equalsIgnoreCase(CAMQPProtocolConstants.CHARSET_UTF8)) ? (byte) CAMQPFormatCodes.STR32_UTF8 : (byte) CAMQPFormatCodes.STR32_UTF16;
+                    // formatCode =
+                    // (charSet.equalsIgnoreCase(CAMQPProtocolConstants.CHARSET_UTF8))
+                    // ? (byte) CAMQPFormatCodes.STR32_UTF8 : (byte)
+                    // CAMQPFormatCodes.STR32_UTF16;
                     formatCode = (byte) CAMQPFormatCodes.STR32_UTF8;
                 }
                 writableBuffer.writeByte(formatCode);
             }
             CAMQPCodecUtil.writeUInt(size, writableBuffer);
-            ChannelBuffer wrappedBinaryData =
-                    ChannelBuffers.wrappedBuffer(encodedString);
-            if (dynamicBuffer != null)
-            {
+            ChannelBuffer wrappedBinaryData = ChannelBuffers.wrappedBuffer(encodedString);
+            if (dynamicBuffer != null) {
                 buffer = ChannelBuffers.wrappedBuffer(buffer, dynamicBuffer, wrappedBinaryData);
                 dynamicBuffer = null;
-            } else
-            {
+            }
+            else {
                 buffer = ChannelBuffers.wrappedBuffer(buffer, wrappedBinaryData);
             }
             isComposite = true;
-        } else
-        {
+        }
+        else {
             // error condition
             return;
         }
     }
 
     /*
-     * Adopts the buffer containing binaryData, if copyFree
-     * is true.
-     *
-     * FormatCodes.VBIN8 : Ignores copyFree and ALWAYS deep-copy
-     * the buffer.
-     *
-     * FormatCodes.VBIN16 : If copyFree is true, then adopts the buffer
-     * as ChannelBuffers.wrappedBuffer. Otherwise, deep-copies the buffer
-     * into DynamicChannelBuffer.
-     *
-     * FormatCodes.VBIN32 : If copyFree is true, then adopts the buffer
-     * as ChannelBuffers.wrappedBuffer. Otherwise, deep-copies into a
-     * stand-alone ChannelBuffer and creates a wrappedBuffer.
+     * Adopts the buffer containing binaryData, if copyFree is true.
+     * FormatCodes.VBIN8 : Ignores copyFree and ALWAYS deep-copy the buffer.
+     * FormatCodes.VBIN16 : If copyFree is true, then adopts the buffer as
+     * ChannelBuffers.wrappedBuffer. Otherwise, deep-copies the buffer into
+     * DynamicChannelBuffer. FormatCodes.VBIN32 : If copyFree is true, then
+     * adopts the buffer as ChannelBuffers.wrappedBuffer. Otherwise, deep-copies
+     * into a stand-alone ChannelBuffer and creates a wrappedBuffer.
      */
-    public void
-    writeBinary(byte[] binaryData, long size, boolean copyFree)
-    {
+    public void writeBinary(byte[] binaryData, long size, boolean copyFree) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         byte formatCode;
-        if (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE)
-        {
+        if (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE) {
             formatCode = (byte) CAMQPFormatCodes.VBIN8;
             writableBuffer.writeByte(formatCode);
             CAMQPCodecUtil.writeUByte((int) size, writableBuffer);
@@ -391,14 +337,12 @@ public final class CAMQPEncoder
             bufferToCopy.writeBytes(binaryData, 0, (int) size);
             return;
         }
-        else if (size <= CAMQPProtocolConstants.UINT_MAX_VALUE)
-        {
+        else if (size <= CAMQPProtocolConstants.UINT_MAX_VALUE) {
             formatCode = (byte) CAMQPFormatCodes.VBIN32;
             writableBuffer.writeByte(formatCode);
             CAMQPCodecUtil.writeUInt(size, writableBuffer);
         }
-        else
-        {
+        else {
             // error condition
             return;
         }
@@ -406,128 +350,104 @@ public final class CAMQPEncoder
         writeBinaryBody(binaryData, copyFree);
     }
 
-    private void
-    writePayloadInternal(ChannelBuffer binaryData)
-    {
-        if (dynamicBuffer != null)
-        {
+    private void writePayloadInternal(ChannelBuffer binaryData) {
+        if (dynamicBuffer != null) {
             buffer = ChannelBuffers.wrappedBuffer(buffer, dynamicBuffer, binaryData);
             dynamicBuffer = null;
         }
-        else
-        {
+        else {
             buffer = ChannelBuffers.wrappedBuffer(buffer, binaryData);
         }
         isComposite = true;
     }
 
-    private void writeBinaryBody(byte[] binaryData, boolean copyFree)
-    {
+    private void writeBinaryBody(byte[] binaryData, boolean copyFree) {
         ChannelBuffer wrappedBinaryData;
-        if (copyFree)
-        {
+        if (copyFree) {
             wrappedBinaryData = ChannelBuffers.wrappedBuffer(binaryData);
         }
-        else
-        {
-            //assert(size > CAMQPProtocolConstants.USHORT_MAX_VALUE); // TODO
+        else {
+            // assert(size > CAMQPProtocolConstants.USHORT_MAX_VALUE); // TODO
             wrappedBinaryData = ChannelBuffers.copiedBuffer(binaryData);
         }
 
-        if (dynamicBuffer != null)
-        {
+        if (dynamicBuffer != null) {
             buffer = ChannelBuffers.wrappedBuffer(buffer, dynamicBuffer, wrappedBinaryData);
             dynamicBuffer = null;
         }
-        else
-        {
+        else {
             buffer = ChannelBuffers.wrappedBuffer(buffer, wrappedBinaryData);
         }
         isComposite = true;
     }
 
-    public void  writeNumericDescriptor(long domainID, long descriptorID)
-    {
+    public void writeNumericDescriptor(long domainID, long descriptorID) {
         writeUInt((domainID << 32) | descriptorID);
     }
 
-    public void writeBinaryPayload(byte[] binaryData, long size)
-    {
-        byte formatCode = (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE)?
-                (byte) CAMQPFormatCodes.VBIN8 : (byte) CAMQPFormatCodes.VBIN32;
+    public void writeBinaryPayload(byte[] binaryData, long size) {
+        byte formatCode = (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE) ? (byte) CAMQPFormatCodes.VBIN8 : (byte) CAMQPFormatCodes.VBIN32;
         writeSymbolicConstructor(CAMQPProtocolConstants.SYMBOL_BINARY_PAYLOAD, formatCode);
 
         ChannelBuffer writableBuffer = getWritableBuffer();
 
-        if (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE)
-        {
+        if (size <= CAMQPProtocolConstants.UBYTE_MAX_VALUE) {
             CAMQPCodecUtil.writeUByte((int) size, writableBuffer);
             ChannelBuffer bufferToCopy = ensureCapacity(size);
             bufferToCopy.writeBytes(binaryData, 0, (int) size);
             return;
         }
-        else if (size <= CAMQPProtocolConstants.UINT_MAX_VALUE)
-        {
+        else if (size <= CAMQPProtocolConstants.UINT_MAX_VALUE) {
             CAMQPCodecUtil.writeUInt(size, writableBuffer);
             writeBinaryBody(binaryData, false);
         }
-        else
-        {
+        else {
             // error condition
             return;
         }
     }
 
-    public void writeSymbolicConstructor(String symbol, int formatCode)
-    {
+    public void writeSymbolicConstructor(String symbol, int formatCode) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         CAMQPCodecUtil.writeUByte(0, writableBuffer);
         writeSymbol(symbol);
         getWritableBuffer().writeByte((byte) formatCode);
     }
 
-    public void writeListDescriptor(String symbol, long listCount)
-    {
-        int formatCode = (listCount <= 255)? CAMQPFormatCodes.LIST8 : CAMQPFormatCodes.LIST32;
+    public void writeListDescriptor(String symbol, long listCount) {
+        int formatCode = (listCount <= 255) ? CAMQPFormatCodes.LIST8 : CAMQPFormatCodes.LIST32;
         writeCompoundDescriptor(symbol, formatCode, listCount);
     }
 
-    public void writeMapDescriptor(String symbol, long mapCount)
-    {
-        int formatCode = (mapCount <= 255)? CAMQPFormatCodes.MAP8 : CAMQPFormatCodes.MAP32;
+    public void writeMapDescriptor(String symbol, long mapCount) {
+        int formatCode = (mapCount <= 255) ? CAMQPFormatCodes.MAP8 : CAMQPFormatCodes.MAP32;
         writeCompoundDescriptor(symbol, formatCode, mapCount * 2);
     }
 
-    public void writeArrayDescriptor(String symbol, long arrayCount)
-    {
+    public void writeArrayDescriptor(String symbol, long arrayCount) {
         int formatCode = CAMQPFormatCodes.ARRAY8; // April 21 2011
         writeCompoundDescriptor(symbol, formatCode, arrayCount);
     }
 
-    private void writeCompoundDescriptor(String symbol, int formatCode, long compoundCount)
-    {
+    private void writeCompoundDescriptor(String symbol, int formatCode, long compoundCount) {
         writeSymbolicConstructor(symbol, formatCode);
         writeCompoundHeader(formatCode, compoundCount);
     }
 
-    public void writePrimitiveDescriptor(int primitiveFormatCode)
-    {
+    public void writePrimitiveDescriptor(int primitiveFormatCode) {
         ChannelBuffer writableBuffer = getWritableBuffer();
         CAMQPCodecUtil.writeUByte(0, writableBuffer);
         getWritableBuffer().writeByte((byte) primitiveFormatCode);
     }
 
     // REFACTOR TODO
-    public void writeListHeaderForMultiple(long listCount, int listElementFormatCode)
-    {
+    public void writeListHeaderForMultiple(long listCount, int listElementFormatCode) {
         /*
-         * DescriptorForMultipleTrue ListFormatCode ListSize ListCount ListElementFormatCode
-         *
-         * For example of LIST8  of symbols (SYM8) and size 0x57 and count 3 it would look like the following:
-         * 00 41 C0 57 03 A3
+         * DescriptorForMultipleTrue ListFormatCode ListSize ListCount
+         * ListElementFormatCode For example of LIST8 of symbols (SYM8) and size
+         * 0x57 and count 3 it would look like the following: 00 41 C0 57 03 A3
          */
-        if (listCount > 1)
-        {
+        if (listCount > 1) {
             int formatCode = (listCount <= 255) ? CAMQPFormatCodes.LIST8 : CAMQPFormatCodes.LIST32;
             ChannelBuffer writableBuffer = getWritableBuffer();
             CAMQPCodecUtil.writeUByte(0, writableBuffer);
@@ -536,37 +456,32 @@ public final class CAMQPEncoder
             writeCompoundHeader(formatCode, listCount);
             getWritableBuffer().writeByte((byte) listElementFormatCode);
         }
-        else
-        {
+        else {
             getWritableBuffer().writeByte((byte) listElementFormatCode);
         }
     }
 
-    public void writeListHeaderArrayElement(long listCount)
-    {
-        int formatCode = (listCount <= 255)? CAMQPFormatCodes.LIST8 : CAMQPFormatCodes.LIST32;
+    public void writeListHeaderArrayElement(long listCount) {
+        int formatCode = (listCount <= 255) ? CAMQPFormatCodes.LIST8 : CAMQPFormatCodes.LIST32;
         writeCompoundHeader(formatCode, listCount);
     }
 
-    public void writeArrayHeader(long arrayCount, int arrayElementFormatCode)
-    {
-        int formatCode = (arrayCount <= 255)? CAMQPFormatCodes.ARRAY8 : CAMQPFormatCodes.ARRAY32;
+    public void writeArrayHeader(long arrayCount, int arrayElementFormatCode) {
+        int formatCode = (arrayCount <= 255) ? CAMQPFormatCodes.ARRAY8 : CAMQPFormatCodes.ARRAY32;
         getWritableBuffer().writeByte((byte) formatCode);
         writeCompoundHeader(formatCode, arrayCount);
         getWritableBuffer().writeByte((byte) arrayElementFormatCode);
     }
 
     // REFACTOR TODO
-    public void writeArrayHeaderForMultiple(long arrayCount, int arrayElementFormatCode)
-    {
+    public void writeArrayHeaderForMultiple(long arrayCount, int arrayElementFormatCode) {
         /*
-         * DescriptorForMultipleTrue ArrayFormatCode ArraySize ArrayCount ArrayElementFormatCode
-         *
-         * For example of ARRAY8  of symbols (SYM8) and size 0x57 and count 3 it would look like the following:
-         * 00 41 E0 57 03 A3
+         * DescriptorForMultipleTrue ArrayFormatCode ArraySize ArrayCount
+         * ArrayElementFormatCode For example of ARRAY8 of symbols (SYM8) and
+         * size 0x57 and count 3 it would look like the following: 00 41 E0 57
+         * 03 A3
          */
-        if (arrayCount > 1)
-        {
+        if (arrayCount > 1) {
             int formatCode = (arrayCount <= 255) ? CAMQPFormatCodes.ARRAY8 : CAMQPFormatCodes.ARRAY32;
             ChannelBuffer writableBuffer = getWritableBuffer();
             CAMQPCodecUtil.writeUByte(0, writableBuffer);
@@ -575,27 +490,23 @@ public final class CAMQPEncoder
             writeCompoundHeader(formatCode, arrayCount);
             getWritableBuffer().writeByte((byte) arrayElementFormatCode);
         }
-        else
-        {
+        else {
             getWritableBuffer().writeByte((byte) arrayElementFormatCode);
         }
     }
 
-    public void writeMapHeader(long mapCount)
-    {
-        int formatCode = (mapCount <= 255)? CAMQPFormatCodes.MAP8 : CAMQPFormatCodes.MAP32;
+    public void writeMapHeader(long mapCount) {
+        int formatCode = (mapCount <= 255) ? CAMQPFormatCodes.MAP8 : CAMQPFormatCodes.MAP32;
         getWritableBuffer().writeByte((byte) formatCode);
         writeCompoundHeader(formatCode, mapCount * 2);
     }
 
-    public void fillCompoundSize(long compoundCount)
-    {
-        if (compoundSizePosition.size() == 0)
-        {
+    public void fillCompoundSize(long compoundCount) {
+        if (compoundSizePosition.size() == 0) {
             return;
         }
 
-        int width = (compoundCount <= 255)? Width.FIXED_ONE.widthOctets() : Width.FIXED_FOUR.widthOctets();
+        int width = (compoundCount <= 255) ? Width.FIXED_ONE.widthOctets() : Width.FIXED_FOUR.widthOctets();
         int position = compoundSizePosition.pop();
         /*
          * We need to exclude the size field from the compound size.
@@ -603,8 +514,7 @@ public final class CAMQPEncoder
         long compoundSize = getWritableBuffer().readableBytes() - (position + width);
         getWritableBuffer().markWriterIndex();
 
-        if (width == 1)
-        {
+        if (width == 1) {
             CAMQPCodecUtil.writeUByteAt((int) compoundSize, position, getWritableBuffer());
         }
         else // (width == 4)
@@ -614,19 +524,15 @@ public final class CAMQPEncoder
         getWritableBuffer().resetWriterIndex();
     }
 
-    public void encodePropertiesMap(String symbol, Map<String, String> properties)
-    {
-        if (properties == null)
-        {
+    public void encodePropertiesMap(String symbol, Map<String, String> properties) {
+        if (properties == null) {
             writeMapDescriptor(symbol, 0);
             fillCompoundSize(0);
         }
-        else
-        {
+        else {
             writeMapDescriptor(symbol, properties.size());
             Set<Entry<String, String>> entries = properties.entrySet();
-            for (Entry<String, String> entry : entries)
-            {
+            for (Entry<String, String> entry : entries) {
                 writeSymbol(entry.getKey());
                 writeUTF8String(entry.getValue());
             }
@@ -634,12 +540,10 @@ public final class CAMQPEncoder
         }
     }
 
-    private void writeCompoundHeader(int formatCode, long compoundCount)
-    {
+    private void writeCompoundHeader(int formatCode, long compoundCount) {
         int width = CAMQPCodecUtil.computeWidth(formatCode);
         compoundSizePosition.push(getWritableBuffer().readableBytes());
-        if (width == 1)
-        {
+        if (width == 1) {
             // size of the composite structure: for now set to 0 TODO
             CAMQPCodecUtil.writeUByte(0, getWritableBuffer());
             CAMQPCodecUtil.writeUByte((int) compoundCount, getWritableBuffer());

@@ -27,45 +27,44 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
  *
  * @author tejdas
  */
-public final class Publisher implements CAMQPMessageDispositionObserver
-{
+public final class Publisher implements CAMQPMessageDispositionObserver {
     private final String topicName;
+
     private volatile DoveMQMessageAckReceiver ackReceiver = null;
+
     private final CAMQPSourceInterface sourceEndpoint;
 
     /**
-     * Register a DoveMQMessageAckReceiver with the Publisher, so that
-     * the sender will be asynchronously notified of a message acknowledgment.
+     * Register a DoveMQMessageAckReceiver with the Publisher, so that the
+     * sender will be asynchronously notified of a message acknowledgment.
      *
      * @param ackReceiver
      */
-    public void registerMessageAckReceiver(DoveMQMessageAckReceiver ackReceiver)
-    {
+    public void registerMessageAckReceiver(DoveMQMessageAckReceiver ackReceiver) {
         this.ackReceiver = ackReceiver;
     }
 
     /**
      * Publish an AMQP message.
+     *
      * @param message
      */
-    public void publishMessage(DoveMQMessage message)
-    {
+    public void publishMessage(DoveMQMessage message) {
         sourceEndpoint.sendMessage(message);
     }
 
     /**
      * Publish a binary payload as an AMQP message.
+     *
      * @param payload
      */
-    public void publishMessage(byte[] payload)
-    {
+    public void publishMessage(byte[] payload) {
         DoveMQMessage message = MessageFactory.createMessage();
         message.addPayload(payload);
         sourceEndpoint.sendMessage(message);
     }
 
-    Publisher(String topicName, CAMQPSourceInterface sourceEndpoint)
-    {
+    Publisher(String topicName, CAMQPSourceInterface sourceEndpoint) {
         super();
         this.topicName = topicName;
         this.sourceEndpoint = sourceEndpoint;
@@ -73,10 +72,8 @@ public final class Publisher implements CAMQPMessageDispositionObserver
     }
 
     @Override
-    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source)
-    {
-        if (ackReceiver != null)
-        {
+    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source) {
+        if (ackReceiver != null) {
             ackReceiver.messageAcknowledged(message);
         }
     }

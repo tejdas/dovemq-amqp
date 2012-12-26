@@ -10,11 +10,10 @@ import net.dovemq.api.Session;
  * This sample shows how to create a DoveMQ publisher that creates/binds to a
  * Topic on the DoveMQ broker, and sends messages.
  */
-public class TopicPublisher
-{
+public class TopicPublisher {
     private static final String TOPIC_NAME = "SampleTopic";
-    public static void main(String[] args)
-    {
+
+    public static void main(String[] args) {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -26,8 +25,7 @@ public class TopicPublisher
          */
         ConnectionFactory.initialize("publisher");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -42,8 +40,7 @@ public class TopicPublisher
             /*
              * Create and publish some messages.
              */
-            for (int i = 0; i < 5; i++)
-            {
+            for (int i = 0; i < 5; i++) {
                 DoveMQMessage message = MessageFactory.createMessage();
                 String msg = "Hello from Publisher: message: " + i;
                 System.out.println("publishing message: " + msg);
@@ -63,8 +60,7 @@ public class TopicPublisher
              */
             session.close();
         }
-        finally
-        {
+        finally {
             /*
              * Shutdown DoveMQ runtime.
              */

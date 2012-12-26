@@ -20,19 +20,15 @@ package net.dovemq.transport.connection;
 import net.dovemq.transport.protocol.CAMQPProtocolConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlOpen;
 
-public final class CAMQPConnectionProperties
-{
-    public static CAMQPConnectionProperties createConnectionProperties()
-    {
+public final class CAMQPConnectionProperties {
+    public static CAMQPConnectionProperties createConnectionProperties() {
         return new CAMQPConnectionProperties();
     }
 
-    private CAMQPConnectionProperties()
-    {
+    private CAMQPConnectionProperties() {
     }
 
-    CAMQPConnectionProperties cloneProperties()
-    {
+    CAMQPConnectionProperties cloneProperties() {
         CAMQPConnectionProperties cloned = new CAMQPConnectionProperties();
         cloned.heartbeatInterval = this.heartbeatInterval;
         cloned.maxChannels = this.maxChannels;
@@ -40,53 +36,42 @@ public final class CAMQPConnectionProperties
         return cloned;
     }
 
-    void update(CAMQPControlOpen peerRequested)
-    {
-        if (peerRequested.getChannelMax() <= CAMQPConnectionConstants.MAX_CHANNELS_SUPPORTED)
-        {
+    void update(CAMQPControlOpen peerRequested) {
+        if (peerRequested.getChannelMax() <= CAMQPConnectionConstants.MAX_CHANNELS_SUPPORTED) {
             this.maxChannels = peerRequested.getChannelMax();
         }
-        else
-        {
+        else {
             this.maxChannels = CAMQPConnectionConstants.MAX_CHANNELS_SUPPORTED;
         }
-        if (peerRequested.getMaxFrameSize() <= CAMQPProtocolConstants.INT_MAX_VALUE)
-        {
+        if (peerRequested.getMaxFrameSize() <= CAMQPProtocolConstants.INT_MAX_VALUE) {
             this.maxFrameSizeSupported = peerRequested.getMaxFrameSize();
         }
-        else
-        {
+        else {
             this.maxFrameSizeSupported = CAMQPProtocolConstants.INT_MAX_VALUE;
         }
     }
 
-    long getMaxFrameSizeSupported()
-    {
+    long getMaxFrameSizeSupported() {
         return maxFrameSizeSupported;
     }
 
-    void setMaxFrameSizeSupported(long maxFrameSizeSupported)
-    {
+    void setMaxFrameSizeSupported(long maxFrameSizeSupported) {
         this.maxFrameSizeSupported = maxFrameSizeSupported;
     }
 
-    int getMaxChannels()
-    {
+    int getMaxChannels() {
         return maxChannels;
     }
 
-    void setMaxChannels(int maxChannels)
-    {
+    void setMaxChannels(int maxChannels) {
         this.maxChannels = maxChannels;
     }
 
-    long getHeartbeatInterval()
-    {
+    long getHeartbeatInterval() {
         return heartbeatInterval;
     }
 
-    void setHeartbeatInterval(long heartbeatInterval)
-    {
+    void setHeartbeatInterval(long heartbeatInterval) {
         this.heartbeatInterval = heartbeatInterval;
     }
 

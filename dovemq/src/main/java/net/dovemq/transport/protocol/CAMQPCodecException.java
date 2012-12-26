@@ -19,27 +19,27 @@ package net.dovemq.transport.protocol;
 
 import net.dovemq.transport.protocol.data.CAMQPTypes;
 
-public class CAMQPCodecException extends RuntimeException
-{
+public final class CAMQPCodecException extends RuntimeException {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
+
     private final CAMQPTypes type;
+
     private final int formatCode;
-    
-    public CAMQPCodecException(CAMQPTypes type, int formatCode, Throwable ex)
-    {
+
+    public CAMQPCodecException(CAMQPTypes type, int formatCode, Throwable ex) {
         super(ex);
         this.type = type;
         this.formatCode = formatCode;
     }
-    public CAMQPTypes getType()
-    {
+
+    public CAMQPTypes getType() {
         return type;
     }
-    public int getFormatCode()
-    {
+
+    public int getFormatCode() {
         return formatCode;
     }
 }

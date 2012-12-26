@@ -28,127 +28,155 @@ import java.util.Collection;
  * @author tejdas
  *
  */
-public interface DoveMQMessage
-{
+public interface DoveMQMessage {
     /**
      * Return message header properties.
+     *
      * @return
      */
     public HeaderProperties getHeaderProperties();
+
     /**
      * Add a delivery annotation {key, value} pair.
+     *
      * @param key
      * @param val
      */
     public void addDeliveryAnnotation(String key, String val);
+
     /**
      * Get a delivery annotation by key.
+     *
      * @param key
      * @return
      */
     public String getDeliveryAnnotation(String key);
+
     /**
      * Get all delivery annotation keys.
+     *
      * @return
      */
     public Collection<String> getDeliveryAnnotationKeys();
+
     /**
      * Add a message annotation {key, value} pair.
+     *
      * @param key
      * @param val
      */
     public void addMessageAnnotation(String key, String val);
+
     /**
      * Get a message annotation by key.
+     *
      * @param key
      * @return
      */
     public String getMessageAnnotation(String key);
+
     /**
      * Get all message annotation keys.
+     *
      * @return
      */
     public Collection<String> getMessageAnnotationKeys();
+
     /**
      * Get MessageProperties.
+     *
      * @return
      */
     public MessageProperties getMessageProperties();
+
     /**
      * Add an application property {key, value} pair.
+     *
      * @param key
      * @param val
      */
     public void addApplicationProperty(String key, String val);
+
     /**
      * Get an application property by key.
+     *
      * @param key
      * @return
      */
     public String getApplicationProperty(String key);
+
     /**
      * Get all application property keys.
+     *
      * @return
      */
     public Collection<String> getApplicationPropertyKeys();
+
     /**
-     * Add a payload.
-     * The AMQP message can have more than 1 payload.
+     * Add a payload. The AMQP message can have more than 1 payload.
+     *
      * @param payload
      */
     public void addPayload(byte[] payload);
+
     /**
-     * Indicates if the AMQP message has one payload
-     * or a collection of more than one payloads.
+     * Indicates if the AMQP message has one payload or a collection of more
+     * than one payloads.
+     *
      * @return
      */
     public boolean hasMultiplePayloads();
+
     /**
-     * Get the message payload,
-     * OR
-     * If there are multiple payloads, then
-     * get the first payload.
+     * Get the message payload, OR If there are multiple payloads, then get the
+     * first payload.
+     *
      * @return
      */
     public byte[] getPayload();
+
     /**
-     * Get a collection of all payloads.
-     * If the message has only one payload,
+     * Get a collection of all payloads. If the message has only one payload,
      * then the collection has a size of 1.
+     *
      * @return
      */
     public Collection<byte[]> getPayloads();
+
     /**
      * Add a footer by {key, value} pair.
+     *
      * @param key
      * @param val
      */
     public void addFooter(String key, String val);
+
     /**
      * Get a footer by key.
+     *
      * @param key
      * @return
      */
     public String getFooter(String key);
+
     /**
      * Get all footer keys.
+     *
      * @return
      */
     public Collection<String> getFooterKeys();
 
     /**
-     * Set a routing tag, that is evaluated by the Broker
-     * against a subscriber's filter to determine is the
-     * message should be routed to the subscriber.
+     * Set a routing tag, that is evaluated by the Broker against a subscriber's
+     * filter to determine is the message should be routed to the subscriber.
      *
      * @param tag
      */
     public void setRoutingTag(String tag);
 
     /**
-     * Set a topic publish hierarchy, that is evaluated
-     * by the Broker to determine which hierarchical
-     * Subscriber the message should be routed to.
+     * Set a topic publish hierarchy, that is evaluated by the Broker to
+     * determine which hierarchical Subscriber the message should be routed to.
      * Example: sports.baseball
      *
      * @param topicHierarchy

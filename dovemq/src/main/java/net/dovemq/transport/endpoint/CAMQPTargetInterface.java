@@ -29,11 +29,10 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
  * @author tdas
  *
  */
-public interface CAMQPTargetInterface
-{
+public interface CAMQPTargetInterface {
     /**
-     * Used by Broker and Consumer/Subscriber to register a {@link CAMQPMessageReceiver}
-     * to receive messages.
+     * Used by Broker and Consumer/Subscriber to register a
+     * {@link CAMQPMessageReceiver} to receive messages.
      *
      * @param messageReceiver
      */
@@ -51,23 +50,27 @@ public interface CAMQPTargetInterface
     public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode);
 
     /**
-     * Called by Link Sender upon receipt of disposition control frame.
-     * Receives a collection of deliveryIds corresponding to messages being disposed.
-     * Processes the messages that are received by this end-point, and returns back a collection
-     * of unprocessed messages. The reason this happens is that, for a session attached to
-     * multiple links, a batched disposition frame may contain messages received by different
-     * link end-points.
+     * Called by Link Sender upon receipt of disposition control frame. Receives
+     * a collection of deliveryIds corresponding to messages being disposed.
+     * Processes the messages that are received by this end-point, and returns
+     * back a collection of unprocessed messages. The reason this happens is
+     * that, for a session attached to multiple links, a batched disposition
+     * frame may contain messages received by different link end-points.
      *
-     * @param deliveryIds: collection of deliveryIds for batched disposition of messages.
-     * @param isMessageSettledByPeer: true/false.
+     * @param deliveryIds
+     *            : collection of deliveryIds for batched disposition of
+     *            messages.
+     * @param isMessageSettledByPeer
+     *            : true/false.
      * @param newState
-     * @return
-     *      A Collection of deliveryIds for messages that are not received by this end-point.
+     * @return A Collection of deliveryIds for messages that are not received by
+     *         this end-point.
      */
     public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
 
     /**
      * Called by DoveMQMessageReceiver to acknowledge processing of a message.
+     *
      * @param deliveryId
      */
     public void acknowledgeMessageProcessingComplete(long deliveryId);

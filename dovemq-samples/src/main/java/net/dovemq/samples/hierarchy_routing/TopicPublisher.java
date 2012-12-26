@@ -11,11 +11,10 @@ import net.dovemq.api.Session;
  * Topic on the DoveMQ broker, and publishes messages. It also demonstrates how
  * the message is targeted to a publish hierarchy scope.
  */
-public class TopicPublisher
-{
+public class TopicPublisher {
     private static final String ROOT_TOPIC_NAME = "HierarchyRoutingTopic";
-    public static void main(String[] args)
-    {
+
+    public static void main(String[] args) {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -27,8 +26,7 @@ public class TopicPublisher
          */
         ConnectionFactory.initialize("publisher");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -41,8 +39,8 @@ public class TopicPublisher
             Publisher publisher = session.createHierarchicalTopicPublisher(ROOT_TOPIC_NAME);
 
             /*
-             * Create and publish a message, without a topic publisher hierarchy,
-             * so the subscriber should get it.
+             * Create and publish a message, without a topic publisher
+             * hierarchy, so the subscriber should get it.
              */
             DoveMQMessage message = MessageFactory.createMessage();
             String msg = "Hello from Publisher, first message, published at hierarchy: " + ROOT_TOPIC_NAME;
@@ -63,9 +61,8 @@ public class TopicPublisher
             publisher.publishMessage(message1);
 
             /*
-             * Create and publish a message a topic publisher hierarchy,
-             * that the subscriber is scoped under, and therefore
-             * should get it.
+             * Create and publish a message a topic publisher hierarchy, that
+             * the subscriber is scoped under, and therefore should get it.
              */
             DoveMQMessage message2 = MessageFactory.createMessage();
             String topicPublisherHierarchy2 = ROOT_TOPIC_NAME + ".foo.bar";
@@ -76,28 +73,26 @@ public class TopicPublisher
             publisher.publishMessage(message2);
 
             /*
-             * Create and publish a message a topic publisher hierarchy,
-             * that the subscriber is not scoped under, and therefore
-             * should not get it.
+             * Create and publish a message a topic publisher hierarchy, that
+             * the subscriber is not scoped under, and therefore should not get
+             * it.
              */
             DoveMQMessage message3 = MessageFactory.createMessage();
             String topicPublisherHierarchy3 = ROOT_TOPIC_NAME + ".bar";
-            String msg3 = "Hello from Publisher, fourth message: published at hierarchy: " +
-            topicPublisherHierarchy3 + " the subscriber should not get this message";
+            String msg3 = "Hello from Publisher, fourth message: published at hierarchy: " + topicPublisherHierarchy3 + " the subscriber should not get this message";
             System.out.println("publishing message: " + msg3);
             message3.addPayload(msg3.getBytes());
             message3.setTopicPublishHierarchy(topicPublisherHierarchy3);
             publisher.publishMessage(message3);
 
             /*
-             * Create and publish a message a topic publisher hierarchy,
-             * that the subscriber is not scoped under, and therefore
-             * should not get it.
+             * Create and publish a message a topic publisher hierarchy, that
+             * the subscriber is not scoped under, and therefore should not get
+             * it.
              */
             DoveMQMessage message4 = MessageFactory.createMessage();
             String topicPublisherHierarchy4 = ROOT_TOPIC_NAME + "foo.ba";
-            String msg4 = "Hello from Publisher, fourth message: published at hierarchy: " +
-            topicPublisherHierarchy4 + " the subscriber should not get this message";
+            String msg4 = "Hello from Publisher, fourth message: published at hierarchy: " + topicPublisherHierarchy4 + " the subscriber should not get this message";
             System.out.println("publishing message: " + msg4);
             message4.addPayload(msg4.getBytes());
             message4.setTopicPublishHierarchy(topicPublisherHierarchy4);
@@ -108,8 +103,7 @@ public class TopicPublisher
              */
             session.close();
         }
-        finally
-        {
+        finally {
             /*
              * Shutdown DoveMQ runtime.
              */

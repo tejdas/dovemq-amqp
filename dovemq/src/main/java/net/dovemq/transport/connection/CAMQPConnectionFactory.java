@@ -33,38 +33,29 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
  * @author tejdas
  *
  */
-public final class CAMQPConnectionFactory
-{
+public final class CAMQPConnectionFactory {
     private static final Logger log = Logger.getLogger(CAMQPConnectionFactory.class);
 
     private static final CAMQPConnectionFactory connectionFactory = new CAMQPConnectionFactory();
 
     private final ClientBootstrap bootstrap;
 
-    public static CAMQPConnectionInterface createCAMQPConnection(String targetHostName, CAMQPConnectionProperties connectionProps)
-    {
+    public static CAMQPConnectionInterface createCAMQPConnection(String targetHostName, CAMQPConnectionProperties connectionProps) {
         return connectionFactory.createConnection(targetHostName, connectionProps);
     }
 
-    public static void shutdown()
-    {
+    public static void shutdown() {
         connectionFactory.shutdownFactory();
     }
 
-    private CAMQPConnectionFactory()
-    {
-        bootstrap = new ClientBootstrap(
-                new NioClientSocketChannelFactory(
-                        Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyBossThread")),
-                        Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyWorkerThread"))));
+    private CAMQPConnectionFactory() {
+        bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyBossThread")), Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyWorkerThread"))));
 
         bootstrap.setPipelineFactory(new CAMQPConnectionPipelineFactory(true, null));
     }
 
-    private CAMQPConnection createConnection(String targetContainerId, CAMQPConnectionProperties connectionProps)
-    {
-        if (-1 == targetContainerId.indexOf('@'))
-        {
+    private CAMQPConnection createConnection(String targetContainerId, CAMQPConnectionProperties connectionProps) {
+        if (-1 == targetContainerId.indexOf('@')) {
             String errorInfo = String.format("Malformed containerID (%s), target Host could not be determined", targetContainerId);
             log.fatal(errorInfo);
             throw new IllegalArgumentException(errorInfo);
@@ -73,12 +64,10 @@ public final class CAMQPConnectionFactory
 
         ChannelFuture connectFuture = null;
         InetSocketAddress remoteAddress = new InetSocketAddress(targetHostName, CAMQPConnectionConstants.AMQP_IANA_PORT);
-        if (remoteAddress.isUnresolved())
-        {
+        if (remoteAddress.isUnresolved()) {
             String targetHostNameUnqualified = targetHostName.split("\\.")[0];
             remoteAddress = new InetSocketAddress(targetHostNameUnqualified, CAMQPConnectionConstants.AMQP_IANA_PORT);
-            if (remoteAddress.isUnresolved())
-            {
+            if (remoteAddress.isUnresolved()) {
                 String errorMessage = String.format("Could not resolve remote address to endpoint: %s", targetHostName);
                 log.error(errorMessage);
                 throw new CAMQPConnectionException(errorMessage);
@@ -87,31 +76,30 @@ public final class CAMQPConnectionFactory
         connectFuture = bootstrap.connect(remoteAddress);
 
         Channel channel = connectFuture.awaitUninterruptibly().getChannel();
-        if ((channel == null) || (!channel.isConnected()))
-        {
+        if ((channel == null) || (!channel.isConnected())) {
             String errorMessage = String.format("Connection could not be established to endpoint: %s", targetHostName);
             log.error(errorMessage);
             throw new CAMQPConnectionException(errorMessage, connectFuture.getCause());
         }
 
         /*
-         * Instantiate a sister incoming handler from the pipeline to
-         * receive data from AMQP peer
+         * Instantiate a sister incoming handler from the pipeline to receive
+         * data from AMQP peer
          */
-        CAMQPConnectionHandler handler = channel.getPipeline().get(CAMQPConnectionHandler.class);
+        CAMQPConnectionHandler handler = channel.getPipeline()
+                .get(CAMQPConnectionHandler.class);
 
         CAMQPConnection amqpConnection = new CAMQPConnection(handler.getStateActor());
         /*
-         * Initiate handshake and wait for handshake complete
-         * TODO handshake timeout
+         * Initiate handshake and wait for handshake complete TODO handshake
+         * timeout
          */
         amqpConnection.initialize(channel, connectionProps);
         amqpConnection.waitForReady();
         return amqpConnection;
     }
 
-    private void shutdownFactory()
-    {
+    private void shutdownFactory() {
         // Shut down all thread pools to exit.
         bootstrap.releaseExternalResources();
     }

@@ -34,34 +34,29 @@ import org.apache.commons.lang.StringUtils;
  * @author tejdas
  *
  */
-public class RoutingMessageTagFilterEvaluator extends RoutingEvaluator
-{
+class RoutingMessageTagFilterEvaluator extends RoutingEvaluator {
     /**
-     * Evaluate the routingEvaluationContext (messageRoutingTag)
-     * of the incoming message against the Subscriber's message-filter
-     * pattern to determine if the message could be routed to the subscriber.
+     * Evaluate the routingEvaluationContext (messageRoutingTag) of the incoming
+     * message against the Subscriber's message-filter pattern to determine if
+     * the message could be routed to the subscriber.
      */
     @Override
-    boolean canMessageBePublished(Object routingEvaluationContext)
-    {
-        if (messageFilterPattern == null)
-        {
+    boolean canMessageBePublished(Object routingEvaluationContext) {
+        if (messageFilterPattern == null) {
             return true;
         }
 
         String messageTag = (String) routingEvaluationContext;
-        if (StringUtils.isEmpty(messageTag))
-        {
+        if (StringUtils.isEmpty(messageTag)) {
             return false;
         }
 
-        Matcher matcher =  messageFilterPattern.matcher(messageTag);
+        Matcher matcher = messageFilterPattern.matcher(messageTag);
         return matcher.matches();
     }
 
     public RoutingMessageTagFilterEvaluator(Pattern messageFilterPattern,
-            CAMQPSourceInterface subscriberProxy)
-    {
+            CAMQPSourceInterface subscriberProxy) {
         super(subscriberProxy);
         this.messageFilterPattern = messageFilterPattern;
     }

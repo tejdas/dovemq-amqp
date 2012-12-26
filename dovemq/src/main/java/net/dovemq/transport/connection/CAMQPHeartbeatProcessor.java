@@ -35,89 +35,82 @@ import org.jboss.netty.buffer.ChannelBuffer;
  * @author tejdas
  *
  */
-class CAMQPHeartbeatProcessor implements Runnable
-{
+final class CAMQPHeartbeatProcessor implements Runnable {
     @GuardedBy("this")
     private Date lastReceivedHeartBeatTime = null;
 
     private CAMQPConnectionStateActor stateActor = null;
+
     private CAMQPSender sender = null;
+
     private ScheduledFuture<?> scheduledFuture = null;
 
-    void scheduleNextHeartbeat()
-    {
-        scheduledFuture = CAMQPConnectionManager.getConnectionHeartbeatScheduler().scheduleWithFixedDelay(this,
-                CAMQPConnectionConstants.HEARTBEAT_PERIOD,
-                CAMQPConnectionConstants.HEARTBEAT_PERIOD,
-                TimeUnit.MILLISECONDS);
+    void scheduleNextHeartbeat() {
+        scheduledFuture = CAMQPConnectionManager.getConnectionHeartbeatScheduler()
+                .scheduleWithFixedDelay(this,
+                        CAMQPConnectionConstants.HEARTBEAT_PERIOD,
+                        CAMQPConnectionConstants.HEARTBEAT_PERIOD,
+                        TimeUnit.MILLISECONDS);
     }
 
-    CAMQPHeartbeatProcessor(CAMQPConnectionStateActor stateActor, CAMQPSender sender)
-    {
+    CAMQPHeartbeatProcessor(CAMQPConnectionStateActor stateActor,
+            CAMQPSender sender) {
         super();
         this.stateActor = stateActor;
         this.sender = sender;
     }
 
-    synchronized void receivedHeartbeat()
-    {
+    synchronized void receivedHeartbeat() {
         lastReceivedHeartBeatTime = new Date();
     }
 
     /**
-     * Even after the scheduled timer encapsulating CAMQPHeartbeatProcessor is cancelled,
-     * a reference to it is still held by CAMQPConnectionManager._scheduledExecutor. As
-     * a result, CAMQPHeartbeatProcessor is still around even after the AMQP connection is
-     * closed. The following hack is to at least ensure that the references to CAMQPConnectionStateActor
-     * and CAMQPSender is released, so they are not around after the connection closure.
+     * Even after the scheduled timer encapsulating CAMQPHeartbeatProcessor is
+     * cancelled, a reference to it is still held by
+     * CAMQPConnectionManager._scheduledExecutor. As a result,
+     * CAMQPHeartbeatProcessor is still around even after the AMQP connection is
+     * closed. The following hack is to at least ensure that the references to
+     * CAMQPConnectionStateActor and CAMQPSender is released, so they are not
+     * around after the connection closure.
      */
-    void stop()
-    {
-        if ((scheduledFuture != null) && !scheduledFuture.isCancelled())
-        {
+    void stop() {
+        if ((scheduledFuture != null) && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
         }
         scheduledFuture = null;
 
-        synchronized (this)
-        {
+        synchronized (this) {
             stateActor = null;
             sender = null;
         }
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         boolean heartBeatDelayed = false;
         Date now = new Date();
 
         CAMQPConnectionStateActor localStateActor = null;
         CAMQPSender localSender = null;
-        synchronized (this)
-        {
-            if ((stateActor == null) || (sender == null))
-            {
+        synchronized (this) {
+            if ((stateActor == null) || (sender == null)) {
                 /*
                  * HeartbeatProcessor already shutdown
                  */
                 return;
             }
 
-            if (lastReceivedHeartBeatTime != null)
-            {
+            if (lastReceivedHeartBeatTime != null) {
                 heartBeatDelayed = (now.getTime() - lastReceivedHeartBeatTime.getTime() > 2 * CAMQPConnectionConstants.HEARTBEAT_PERIOD);
             }
             localStateActor = this.stateActor;
             localSender = this.sender;
         }
 
-        if (heartBeatDelayed)
-        {
+        if (heartBeatDelayed) {
             localStateActor.notifyHeartbeatDelay();
         }
-        else
-        {
+        else {
             CAMQPFrameHeader frameHeader = new CAMQPFrameHeader();
             frameHeader.setChannelNumber((short) 0);
             frameHeader.setFrameSize(CAMQPFrameConstants.FRAME_HEADER_SIZE);

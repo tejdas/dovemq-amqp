@@ -20,7 +20,6 @@ package net.dovemq.broker.endpoint;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
-public interface CAMQPMessageReceiver
-{
+public interface CAMQPMessageReceiver {
     public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target);
 }

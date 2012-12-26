@@ -36,60 +36,52 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author tejdas
  */
-public final class Session
-{
+public final class Session {
     private final String endpointId;
+
     private final CAMQPSessionInterface session;
 
-    Session(String endpointId, CAMQPSessionInterface session)
-    {
+    Session(String endpointId, CAMQPSessionInterface session) {
         super();
         this.endpointId = endpointId;
         this.session = session;
     }
 
-    public void close()
-    {
+    public void close() {
         session.close();
     }
 
     /**
-     * Create a Producer and bind it to a transient queue
-     * on the DoveMQ broker.
+     * Create a Producer and bind it to a transient queue on the DoveMQ broker.
      *
      * @param queueName
      * @return
      */
-    public Producer createProducer(String queueName)
-    {
+    public Producer createProducer(String queueName) {
         String source = String.format("%s.%s", endpointId, queueName);
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, queueName, new CAMQPEndpointPolicy());
         return new Producer(source, sender);
     }
 
     /**
-     * Create a Consumer and bind it to a transient queue
-     * on the DoveMQ broker.
+     * Create a Consumer and bind it to a transient queue on the DoveMQ broker.
      *
      * @param queueName
      * @return
      */
-    public Consumer createConsumer(String queueName)
-    {
+    public Consumer createConsumer(String queueName) {
         String target = String.format("%s.%s", endpointId, queueName);
         CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(session, queueName, target, new CAMQPEndpointPolicy());
         return new Consumer(target, receiver);
     }
 
     /**
-     * Create a Consumer and bind it to a transient queue
-     * on the DoveMQ broker.
+     * Create a Consumer and bind it to a transient queue on the DoveMQ broker.
      *
      * @param queueName
      * @return
      */
-    public Consumer createConsumer(String queueName, DoveMQEndpointPolicy doveMQEndpointPolicy)
-    {
+    public Consumer createConsumer(String queueName, DoveMQEndpointPolicy doveMQEndpointPolicy) {
         String target = String.format("%s.%s", endpointId, queueName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setDoveMQEndpointPolicy(doveMQEndpointPolicy);
@@ -98,14 +90,12 @@ public final class Session
     }
 
     /**
-     * Create a Publisher and bind it to a Topic
-     * on the DoveMQ broker.
+     * Create a Publisher and bind it to a Topic on the DoveMQ broker.
      *
      * @param topicName
      * @return
      */
-    public Publisher createPublisher(String topicName)
-    {
+    public Publisher createPublisher(String topicName) {
         validateTopicName(topicName);
         String source = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
@@ -115,14 +105,12 @@ public final class Session
     }
 
     /**
-     * Create a Subscriber and bind it to Topic
-     * on the DoveMQ broker.
+     * Create a Subscriber and bind it to Topic on the DoveMQ broker.
      *
      * @param topicName
      * @return
      */
-    public Subscriber createSubscriber(String topicName)
-    {
+    public Subscriber createSubscriber(String topicName) {
         validateTopicName(topicName);
         String target = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
@@ -132,14 +120,13 @@ public final class Session
     }
 
     /**
-     * Create a Tag Filter Publisher and bind it to a Topic
-     * on the DoveMQ broker.
+     * Create a Tag Filter Publisher and bind it to a Topic on the DoveMQ
+     * broker.
      *
      * @param topicName
      * @return
      */
-    public Publisher createTagFilterPublisher(String topicName)
-    {
+    public Publisher createTagFilterPublisher(String topicName) {
         validateTopicName(topicName);
         String source = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
@@ -150,17 +137,15 @@ public final class Session
     }
 
     /**
-     * Create a subscriber and bind it to Topic.
-     * Specify a messageFilterPattern, so that only
-     * messages with a matching routing tag are forwarded
-     * to this subscriber.
+     * Create a subscriber and bind it to Topic. Specify a messageFilterPattern,
+     * so that only messages with a matching routing tag are forwarded to this
+     * subscriber.
      *
      * @param topicName
      * @param messageFilterPattern
      * @return
      */
-    public Subscriber createTagFilterSubscriber(String topicName, String messageFilterPattern)
-    {
+    public Subscriber createTagFilterSubscriber(String topicName, String messageFilterPattern) {
         validateTopicName(topicName);
         Pattern.compile(messageFilterPattern);
         String target = String.format("%s.%s", endpointId, topicName);
@@ -173,15 +158,14 @@ public final class Session
     }
 
     /**
-     * Create a Hierarchical Topic Publisher and bind it to a Topic
-     * on the DoveMQ broker.
+     * Create a Hierarchical Topic Publisher and bind it to a Topic on the
+     * DoveMQ broker.
      *
-     * @param topicRootName: root Topic name of the Hierarchy.
-     * Example: sports
+     * @param topicRootName
+     *            : root Topic name of the Hierarchy. Example: sports
      * @return
      */
-    public Publisher createHierarchicalTopicPublisher(String topicRootName)
-    {
+    public Publisher createHierarchicalTopicPublisher(String topicRootName) {
         validateTopicName(topicRootName);
         String source = String.format("%s.%s", endpointId, topicRootName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
@@ -192,17 +176,15 @@ public final class Session
     }
 
     /**
-     * Create a Hierarchical Topic Subscriber and bind it to a Topic
-     * on the DoveMQ broker.
+     * Create a Hierarchical Topic Subscriber and bind it to a Topic on the
+     * DoveMQ broker.
      *
-     * @param topicName: Hierarchical topic name.
-     * Example: sports.baseball
+     * @param topicName
+     *            : Hierarchical topic name. Example: sports.baseball
      * @return
      */
-    public Subscriber createHierarchicalTopicSubscriber(String topicName)
-    {
-        if (StringUtils.isEmpty(topicName))
-        {
+    public Subscriber createHierarchicalTopicSubscriber(String topicName) {
+        if (StringUtils.isEmpty(topicName)) {
             throw new IllegalArgumentException("Topic name cannot be null or empty");
         }
 
@@ -214,15 +196,12 @@ public final class Session
         return new Subscriber(target, receiver);
     }
 
-    private static void validateTopicName(String topicName)
-    {
-        if (StringUtils.isEmpty(topicName))
-        {
+    private static void validateTopicName(String topicName) {
+        if (StringUtils.isEmpty(topicName)) {
             throw new IllegalArgumentException("Topic name cannot be null or empty");
         }
 
-        if (topicName.contains("."))
-        {
+        if (topicName.contains(".")) {
             throw new IllegalArgumentException(". not allowed in topic name");
         }
     }

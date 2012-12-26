@@ -21,13 +21,12 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-public interface CAMQPConnectionInterface
-{
+public interface CAMQPConnectionInterface {
     public int reserveOutgoingChannel();
 
     /**
-     * Register an incoming channel with the channelHandler, so that
-     * the incoming frames on the rxChannel could be dispatched.
+     * Register an incoming channel with the channelHandler, so that the
+     * incoming frames on the rxChannel could be dispatched.
      *
      * @param receiveChannelNumber
      * @param channelHandler
@@ -37,8 +36,7 @@ public interface CAMQPConnectionInterface
     void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSessionInterface session);
 
     /**
-     * Called by the session layer to detach itself from an
-     * outgoing channel.
+     * Called by the session layer to detach itself from an outgoing channel.
      *
      * @param outgoingChannelNumber
      * @param incomingChannelNumber
@@ -47,6 +45,7 @@ public interface CAMQPConnectionInterface
 
     /**
      * Send an AMQP frame on the specified channel
+     *
      * @param data
      * @param channelId
      */

@@ -28,48 +28,41 @@ import net.dovemq.transport.protocol.data.CAMQPControlEnd;
 
 import org.apache.log4j.Logger;
 
-public final class CAMQPSessionFrameHandler
-{
+public final class CAMQPSessionFrameHandler {
     private static final Logger log = Logger.getLogger(CAMQPSessionFrameHandler.class);
+
     private final ConcurrentMap<Integer, CAMQPSession> sessionsHandshakeInProgress = new ConcurrentHashMap<Integer, CAMQPSession>();
 
-    public static CAMQPSessionFrameHandler createInstance()
-    {
+    public static CAMQPSessionFrameHandler createInstance() {
         return new CAMQPSessionFrameHandler();
     }
 
-    public void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSessionInterface session)
-    {
+    public void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSessionInterface session) {
         sessionsHandshakeInProgress.put(sendChannelNumber, (CAMQPSession) session);
     }
 
-    public void frameReceived(int channelNumber, CAMQPFrame frame, CAMQPConnectionInterface connection)
-    {
+    public void frameReceived(int channelNumber, CAMQPFrame frame, CAMQPConnectionInterface connection) {
         CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
         decoder.take(frame.getBody());
         String controlName = decoder.readSymbol();
-        if (controlName.equalsIgnoreCase(CAMQPControlBegin.descriptor))
-        {
+        if (controlName.equalsIgnoreCase(CAMQPControlBegin.descriptor)) {
             CAMQPControlBegin beginControl = CAMQPControlBegin.decode(decoder);
             int remoteChannelNumber = beginControl.getRemoteChannel();
-            if (remoteChannelNumber > 0)
-            {
+            if (remoteChannelNumber > 0) {
                 /*
                  * Session initiator
                  */
                 CAMQPSession sessionHIP = sessionsHandshakeInProgress.remove(remoteChannelNumber);
-                if (sessionHIP != null)
-                {
+                if (sessionHIP != null) {
                     sessionHIP.beginResponse(beginControl, frame.getHeader());
                 }
-                else
-                {
+                else {
                     // TODO handle error
-                    log.error("Could not find session with channelNumber: " + remoteChannelNumber + " in the list of sessions for which handshake is pending");
+                    log.error("Could not find session with channelNumber: " + remoteChannelNumber +
+                            " in the list of sessions for which handshake is pending");
                 }
             }
-            else
-            {
+            else {
                 /*
                  * session acceptor
                  */
@@ -78,8 +71,7 @@ public final class CAMQPSessionFrameHandler
                 stateActor.beginReceived(beginContext);
             }
         }
-        else if (controlName.equalsIgnoreCase(CAMQPControlEnd.descriptor))
-        {
+        else if (controlName.equalsIgnoreCase(CAMQPControlEnd.descriptor)) {
             log.error("No CAMQPSessionHandler found for Session DETACH control");
             log.error("Session DETACH control should have been dispatched directly to CAMQPSessionHandler");
             // TODO handle error

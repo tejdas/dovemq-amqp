@@ -29,18 +29,15 @@ import org.jboss.netty.channel.ChannelFutureListener;
  * @author tejdas
  *
  */
-enum SenderState
-{
+enum SenderState {
     ACTIVE, CLOSE_REQUESTED, CLOSED
 }
 
 @ThreadSafe
-class CAMQPSender implements ChannelFutureListener
-{
+final class CAMQPSender implements ChannelFutureListener {
     private final Channel channel;
 
-    Channel getChannel()
-    {
+    Channel getChannel() {
         return channel;
     }
 
@@ -48,66 +45,50 @@ class CAMQPSender implements ChannelFutureListener
 
     private int outstandingWrites = 0;
 
-    CAMQPSender(Channel channel)
-    {
+    CAMQPSender(Channel channel) {
         super();
         this.channel = channel;
     }
 
-    void close()
-    {
-        synchronized (this)
-        {
-            if (state != SenderState.ACTIVE)
-            {
+    void close() {
+        synchronized (this) {
+            if (state != SenderState.ACTIVE) {
                 return;
             }
             state = SenderState.CLOSE_REQUESTED;
-            if (outstandingWrites > 0)
-            {
+            if (outstandingWrites > 0) {
                 return;
             }
         }
         closeChannel();
     }
 
-    synchronized void waitForClose()
-    {
-        try
-        {
-            while (state != SenderState.CLOSED)
-            {
+    synchronized void waitForClose() {
+        try {
+            while (state != SenderState.CLOSED) {
                 wait();
             }
         }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    synchronized boolean isClosed()
-    {
+    synchronized boolean isClosed() {
         return (state == SenderState.CLOSED);
     }
 
     /**
-     * When this method is called concurrently, one thread
-     * assumes the role of sender and the other threads
-     * just enqueue the outgoing frame.
-     *
-     * Gives connection frames higher priority that session/link
-     * frames.
+     * When this method is called concurrently, one thread assumes the role of
+     * sender and the other threads just enqueue the outgoing frame. Gives
+     * connection frames higher priority that session/link frames.
      *
      * @param data
      * @param frameType
      */
-    void sendBuffer(ChannelBuffer data, int frameType)
-    {
-        synchronized (this)
-        {
-            if (state != SenderState.ACTIVE)
-            {
+    void sendBuffer(ChannelBuffer data, int frameType) {
+        synchronized (this) {
+            if (state != SenderState.ACTIVE) {
                 return;
             }
             outstandingWrites++;
@@ -118,30 +99,23 @@ class CAMQPSender implements ChannelFutureListener
     }
 
     @Override
-    public void operationComplete(ChannelFuture future)
-    {
-        synchronized (this)
-        {
+    public void operationComplete(ChannelFuture future) {
+        synchronized (this) {
             outstandingWrites--;
-            if ((outstandingWrites > 0) || (state != SenderState.CLOSE_REQUESTED))
-            {
+            if ((outstandingWrites > 0) || (state != SenderState.CLOSE_REQUESTED)) {
                 return;
             }
         }
         closeChannel();
     }
 
-    private void closeChannel()
-    {
-        try
-        {
+    private void closeChannel() {
+        try {
             ChannelFuture future = channel.close();
             future.awaitUninterruptibly();
         }
-        finally
-        {
-            synchronized (this)
-            {
+        finally {
+            synchronized (this) {
                 state = SenderState.CLOSED;
                 notify();
             }

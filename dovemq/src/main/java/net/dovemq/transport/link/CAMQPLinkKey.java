@@ -24,77 +24,65 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionTarget;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-class CAMQPLinkKey
-{
-    String getSource()
-    {
+final class CAMQPLinkKey {
+    String getSource() {
         return source;
     }
 
-    String getTarget()
-    {
+    String getTarget() {
         return target;
     }
 
-    CAMQPLinkKey(String source, String target)
-    {
+    CAMQPLinkKey(String source, String target) {
         super();
         this.source = source;
         this.target = target;
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if ((obj == null) || (!(obj instanceof CAMQPLinkKey)))
             return false;
 
         CAMQPLinkKey otherKey = (CAMQPLinkKey) obj;
 
-        return (StringUtils.equalsIgnoreCase(this.source, otherKey.source) &&
-                StringUtils.equalsIgnoreCase(this.target, otherKey.target));
+        return (StringUtils.equalsIgnoreCase(this.source, otherKey.source) && StringUtils.equalsIgnoreCase(this.target, otherKey.target));
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return source + ":" + target;
     }
 
-    static CAMQPLinkKey createLinkKey(CAMQPControlAttach attach)
-    {
+    static CAMQPLinkKey createLinkKey(CAMQPControlAttach attach) {
         String sourceString = null;
         String targetString = null;
         Object source = attach.getSource();
-        if (source instanceof CAMQPDefinitionSource)
-        {
+        if (source instanceof CAMQPDefinitionSource) {
             CAMQPDefinitionSource endpoint = (CAMQPDefinitionSource) source;
             sourceString = (String) endpoint.getAddress();
         }
 
         Object target = attach.getTarget();
-        if (target instanceof CAMQPDefinitionTarget)
-        {
+        if (target instanceof CAMQPDefinitionTarget) {
             CAMQPDefinitionTarget endpoint = (CAMQPDefinitionTarget) target;
             targetString = (String) endpoint.getAddress();
         }
 
-        if (sourceString!=null && targetString!=null)
-        {
+        if (sourceString != null && targetString != null) {
             return new CAMQPLinkKey(sourceString, targetString);
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     private final String source;
+
     private final String target;
 }

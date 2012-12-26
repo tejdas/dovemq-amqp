@@ -22,35 +22,38 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.jcip.annotations.Immutable;
 
 @Immutable
-public class CAMQPMessage
-{
-    public String getDeliveryTag()
-    {
+public final class CAMQPMessage {
+    public String getDeliveryTag() {
         return deliveryTag;
     }
-    public CAMQPMessagePayload getPayload()
-    {
+
+    public CAMQPMessagePayload getPayload() {
         return payload;
     }
-    public DoveMQMessage getMessage()
-    {
+
+    public DoveMQMessage getMessage() {
         return message;
     }
-    public CAMQPMessage(String deliveryTag, CAMQPMessagePayload payload)
-    {
+
+    public CAMQPMessage(String deliveryTag, CAMQPMessagePayload payload) {
         super();
         this.deliveryTag = deliveryTag;
         this.payload = payload;
         this.message = null;
     }
-    public CAMQPMessage(String deliveryTag, CAMQPMessagePayload payload, DoveMQMessage message)
-    {
+
+    public CAMQPMessage(String deliveryTag,
+            CAMQPMessagePayload payload,
+            DoveMQMessage message) {
         super();
         this.deliveryTag = deliveryTag;
         this.payload = payload;
         this.message = message;
     }
+
     private final String deliveryTag;
+
     private final CAMQPMessagePayload payload;
+
     private final DoveMQMessage message;
 }

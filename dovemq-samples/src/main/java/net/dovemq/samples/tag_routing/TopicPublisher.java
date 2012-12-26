@@ -11,11 +11,10 @@ import net.dovemq.api.Session;
  * Topic on the DoveMQ broker, and publishes messages. It also demonstrates how
  * the message is sent with a routing tag.
  */
-public class TopicPublisher
-{
+public class TopicPublisher {
     private static final String TOPIC_NAME = "TagRoutingTopic";
-    public static void main(String[] args)
-    {
+
+    public static void main(String[] args) {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -27,8 +26,7 @@ public class TopicPublisher
          */
         ConnectionFactory.initialize("publisher");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -75,8 +73,7 @@ public class TopicPublisher
              */
             session.close();
         }
-        finally
-        {
+        finally {
             /*
              * Shutdown DoveMQ runtime.
              */

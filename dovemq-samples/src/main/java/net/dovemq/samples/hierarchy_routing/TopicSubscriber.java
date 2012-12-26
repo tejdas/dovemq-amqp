@@ -9,30 +9,28 @@ import net.dovemq.api.Subscriber;
 /**
  * This sample shows how to create a DoveMQ Hierarchical subscriber that creates
  * or binds to a certain hierarchy under the root topic and waits for incoming
- * messages. It only gets messages that are published at or above that hierarchy.
+ * messages. It only gets messages that are published at or above that
+ * hierarchy.
  */
-public class TopicSubscriber
-{
+public class TopicSubscriber {
     private static final String ROOT_TOPIC_NAME = "HierarchyRoutingTopic";
+
     private static volatile boolean doShutdown = false;
 
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
      * with the Consumer.
      */
-    private static class SampleMessageReceiver implements DoveMQMessageReceiver
-    {
+    private static class SampleMessageReceiver implements DoveMQMessageReceiver {
         @Override
-        public void messageReceived(DoveMQMessage message)
-        {
+        public void messageReceived(DoveMQMessage message) {
             byte[] body = message.getPayload();
             String payload = new String(body);
             System.out.println("Received message: " + payload);
         }
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -44,8 +42,7 @@ public class TopicSubscriber
          */
         ConnectionFactory.initialize("subscriber");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -55,7 +52,8 @@ public class TopicSubscriber
             /*
              * Create a subscriber that creates/binds to a topic on the broker.
              * Also specify the hierarchical scope, so only those messages that
-             * are published at/above this hierarchy are routed to the subscriber.
+             * are published at/above this hierarchy are routed to the
+             * subscriber.
              */
             String hierarchicalTopicName = ROOT_TOPIC_NAME + ".foo.bar";
             Subscriber subscriber = session.createHierarchicalTopicSubscriber(hierarchicalTopicName);
@@ -72,8 +70,7 @@ public class TopicSubscriber
              */
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
-                public void run()
-                {
+                public void run() {
                     /*
                      * Close the AMQP session
                      */
@@ -88,20 +85,16 @@ public class TopicSubscriber
             });
 
             System.out.println("waiting for messages. Press Ctl-C to shut down subscriber.");
-            while (!doShutdown)
-            {
-                try
-                {
+            while (!doShutdown) {
+                try {
                     Thread.sleep(1000);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());
             /*
              * Shutdown DoveMQ runtime.

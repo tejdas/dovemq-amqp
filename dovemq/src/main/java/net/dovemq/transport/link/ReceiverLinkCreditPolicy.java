@@ -24,8 +24,7 @@ package net.dovemq.transport.link;
  *
  * @author tejdas
  */
-public enum ReceiverLinkCreditPolicy
-{
+public enum ReceiverLinkCreditPolicy {
     /*
      * Link credit is offered by the target receiver, whenever
      * it wants to get message(s).

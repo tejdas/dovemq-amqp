@@ -17,16 +17,13 @@
 
 package net.dovemq.broker.driver;
 
-class DoveMQBrokerShutdownHook extends Thread
-{
-    DoveMQBrokerShutdownHook()
-    {
+final class DoveMQBrokerShutdownHook extends Thread {
+    DoveMQBrokerShutdownHook() {
         super();
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         DoveMQBrokerDriver.shutdown();
     }
 }

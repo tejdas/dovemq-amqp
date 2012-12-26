@@ -35,31 +35,31 @@ import net.jcip.annotations.Immutable;
 
 import org.apache.commons.lang.StringUtils;
 
-public class DoveMQMessageImpl implements DoveMQMessage
-{
+public final class DoveMQMessageImpl implements DoveMQMessage {
     private static final String SYMBOL_DELIVERY_ANNOTATIONS = "amqp:delivery-annotations:map";
+
     private static final String SYMBOL_MESSAGE_ANNOTATIONS = "amqp:message-annotations:map";
+
     private static final String SYMBOL_APPLICATION_ANNOTATIONS = "amqp:application-annotations:map";
+
     private static final String SYMBOL_FOOTERS = "amqp:footer:map";
+
     public static final String ROUTING_TAG_KEY = "RoutingTagKey";
+
     public static final String TOPIC_PUBLISH_HIERARCHY_KEY = "TopicPublishHierarchyKey";
 
     @Immutable
-    private static class DoveMQPayload
-    {
-        public DoveMQPayload(byte[] payload)
-        {
+    private static class DoveMQPayload {
+        public DoveMQPayload(byte[] payload) {
             super();
             this.payload = Arrays.copyOf(payload, payload.length);
         }
 
-        void encode(CAMQPEncoder encoder)
-        {
+        void encode(CAMQPEncoder encoder) {
             encoder.writeBinaryPayload(payload, payload.length);
         }
 
-        byte[] getPayload()
-        {
+        byte[] getPayload() {
             return payload;
         }
 
@@ -67,208 +67,163 @@ public class DoveMQMessageImpl implements DoveMQMessage
     }
 
     @Override
-    public HeaderProperties getHeaderProperties()
-    {
+    public HeaderProperties getHeaderProperties() {
         return headerProperties;
     }
 
     @Override
-    public void addDeliveryAnnotation(String key, String val)
-    {
-        if (deliveryAnnotations == null)
-        {
+    public void addDeliveryAnnotation(String key, String val) {
+        if (deliveryAnnotations == null) {
             deliveryAnnotations = new HashMap<String, String>();
         }
-        deliveryAnnotations.put(key,  val);
+        deliveryAnnotations.put(key, val);
     }
 
     @Override
-    public void addMessageAnnotation(String key, String val)
-    {
-        if (messageAnnotations == null)
-        {
+    public void addMessageAnnotation(String key, String val) {
+        if (messageAnnotations == null) {
             messageAnnotations = new HashMap<String, String>();
         }
-        messageAnnotations.put(key,  val);
+        messageAnnotations.put(key, val);
     }
 
     @Override
-    public MessageProperties getMessageProperties()
-    {
+    public MessageProperties getMessageProperties() {
         return messageProperties;
     }
 
     @Override
-    public void addApplicationProperty(String key, String val)
-    {
-        if (applicationProperties == null)
-        {
+    public void addApplicationProperty(String key, String val) {
+        if (applicationProperties == null) {
             applicationProperties = new HashMap<String, String>();
         }
-        applicationProperties.put(key,  val);
+        applicationProperties.put(key, val);
     }
 
     @Override
-    public void addPayload(byte[] body)
-    {
-        if (payloads != null)
-        {
+    public void addPayload(byte[] body) {
+        if (payloads != null) {
             payloads.add(new DoveMQPayload(body));
         }
-        else if (payload != null)
-        {
+        else if (payload != null) {
             payloads = new ArrayList<DoveMQPayload>();
             payloads.add(new DoveMQPayload(body));
         }
-        else
-        {
+        else {
             payload = new DoveMQPayload(body);
         }
     }
 
     @Override
-    public void addFooter(String key, String val)
-    {
-        if (footers == null)
-        {
+    public void addFooter(String key, String val) {
+        if (footers == null) {
             footers = new HashMap<String, String>();
         }
-        footers.put(key,  val);
+        footers.put(key, val);
     }
 
     @Override
-    public String getDeliveryAnnotation(String key)
-    {
-        if (deliveryAnnotations != null)
-        {
+    public String getDeliveryAnnotation(String key) {
+        if (deliveryAnnotations != null) {
             return deliveryAnnotations.get(key);
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     @Override
-    public Collection<String> getDeliveryAnnotationKeys()
-    {
-        if (deliveryAnnotations != null)
-        {
+    public Collection<String> getDeliveryAnnotationKeys() {
+        if (deliveryAnnotations != null) {
             return deliveryAnnotations.keySet();
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     @Override
-    public String getMessageAnnotation(String key)
-    {
-        if (messageAnnotations != null)
-        {
+    public String getMessageAnnotation(String key) {
+        if (messageAnnotations != null) {
             return messageAnnotations.get(key);
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     @Override
-    public Collection<String> getMessageAnnotationKeys()
-    {
-        if (messageAnnotations != null)
-        {
+    public Collection<String> getMessageAnnotationKeys() {
+        if (messageAnnotations != null) {
             return messageAnnotations.keySet();
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     @Override
-    public String getApplicationProperty(String key)
-    {
-        if (applicationProperties != null)
-        {
+    public String getApplicationProperty(String key) {
+        if (applicationProperties != null) {
             return applicationProperties.get(key);
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     @Override
-    public Collection<String> getApplicationPropertyKeys()
-    {
-        if (applicationProperties != null)
-        {
+    public Collection<String> getApplicationPropertyKeys() {
+        if (applicationProperties != null) {
             return applicationProperties.keySet();
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     @Override
-    public String getFooter(String key)
-    {
-        if (footers != null)
-        {
+    public String getFooter(String key) {
+        if (footers != null) {
             return footers.get(key);
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     @Override
-    public Collection<String> getFooterKeys()
-    {
-        if (footers != null)
-        {
+    public Collection<String> getFooterKeys() {
+        if (footers != null) {
             return footers.keySet();
         }
-        else
-        {
+        else {
             return null;
         }
     }
 
     @Override
-    public boolean hasMultiplePayloads()
-    {
+    public boolean hasMultiplePayloads() {
         return (payloads != null);
     }
 
     @Override
-    public byte[] getPayload()
-    {
-        if (payload != null)
-        {
+    public byte[] getPayload() {
+        if (payload != null) {
             return payload.getPayload();
         }
         return null;
     }
 
     @Override
-    public Collection<byte[]> getPayloads()
-    {
+    public Collection<byte[]> getPayloads() {
         Collection<byte[]> payloadCollection = null;
-        if (payload != null)
-        {
+        if (payload != null) {
             payloadCollection = new ArrayList<byte[]>();
             payloadCollection.add(payload.getPayload());
         }
-        if (payloads != null)
-        {
-            for (DoveMQPayload payload: payloads)
-            {
+        if (payloads != null) {
+            for (DoveMQPayload payload : payloads) {
                 payloadCollection.add(payload.getPayload());
             }
         }
@@ -276,33 +231,29 @@ public class DoveMQMessageImpl implements DoveMQMessage
     }
 
     @Override
-    public void setRoutingTag(String tag)
-    {
+    public void setRoutingTag(String tag) {
         addApplicationProperty(ROUTING_TAG_KEY, tag);
     }
 
     @Override
-    public void setTopicPublishHierarchy(String topicHierarchy)
-    {
+    public void setTopicPublishHierarchy(String topicHierarchy) {
         addApplicationProperty(TOPIC_PUBLISH_HIERARCHY_KEY, topicHierarchy);
     }
 
-    public DoveMQMessageImpl()
-    {
+    public DoveMQMessageImpl() {
         super();
         headerProperties = new HeaderPropertiesImpl();
         messageProperties = new MessagePropertiesImpl();
     }
 
-    private DoveMQMessageImpl(HeaderPropertiesImpl headerProps, MessagePropertiesImpl messageProps)
-    {
+    private DoveMQMessageImpl(HeaderPropertiesImpl headerProps,
+            MessagePropertiesImpl messageProps) {
         super();
         headerProperties = headerProps;
         messageProperties = messageProps;
     }
 
-    public void encode(CAMQPEncoder encoder)
-    {
+    public void encode(CAMQPEncoder encoder) {
         headerProperties.encode(encoder);
 
         encoder.encodePropertiesMap(SYMBOL_DELIVERY_ANNOTATIONS, deliveryAnnotations);
@@ -313,15 +264,12 @@ public class DoveMQMessageImpl implements DoveMQMessage
 
         encoder.encodePropertiesMap(SYMBOL_APPLICATION_ANNOTATIONS, applicationProperties);
 
-        if (payload != null)
-        {
+        if (payload != null) {
             payload.encode(encoder);
         }
 
-        if (payloads != null)
-        {
-            for (DoveMQPayload payload : payloads)
-            {
+        if (payloads != null) {
+            for (DoveMQPayload payload : payloads) {
                 payload.encode(encoder);
             }
         }
@@ -329,22 +277,21 @@ public class DoveMQMessageImpl implements DoveMQMessage
         encoder.encodePropertiesMap(SYMBOL_FOOTERS, footers);
     }
 
-    public static DoveMQMessageImpl decode(CAMQPSyncDecoder decoder)
-    {
+    public static DoveMQMessageImpl decode(CAMQPSyncDecoder decoder) {
         HeaderPropertiesImpl headerProps = HeaderPropertiesImpl.decode(decoder);
 
         String symbolRead = decoder.readSymbol();
-        assert(StringUtils.equals(symbolRead, SYMBOL_DELIVERY_ANNOTATIONS));
+        assert (StringUtils.equals(symbolRead, SYMBOL_DELIVERY_ANNOTATIONS));
         Map<String, String> deliveryAnnotations = decoder.decodePropertiesMap();
 
         symbolRead = decoder.readSymbol();
-        assert(StringUtils.equals(symbolRead, SYMBOL_MESSAGE_ANNOTATIONS));
+        assert (StringUtils.equals(symbolRead, SYMBOL_MESSAGE_ANNOTATIONS));
         Map<String, String> messageAnnotations = decoder.decodePropertiesMap();
 
         MessagePropertiesImpl messageProps = MessagePropertiesImpl.decode(decoder);
 
         symbolRead = decoder.readSymbol();
-        assert(StringUtils.equals(symbolRead, SYMBOL_APPLICATION_ANNOTATIONS));
+        assert (StringUtils.equals(symbolRead, SYMBOL_APPLICATION_ANNOTATIONS));
         Map<String, String> applicationAnnotations = decoder.decodePropertiesMap();
 
         DoveMQMessageImpl message = new DoveMQMessageImpl(headerProps, messageProps);
@@ -352,23 +299,18 @@ public class DoveMQMessageImpl implements DoveMQMessage
         message.messageAnnotations = messageAnnotations;
         message.applicationProperties = applicationAnnotations;
 
-        while (true)
-        {
+        while (true) {
             symbolRead = decoder.readSymbol();
-            if (symbolRead.equals(SYMBOL_FOOTERS))
-            {
+            if (symbolRead.equals(SYMBOL_FOOTERS)) {
                 break;
             }
-            assert(StringUtils.equals(symbolRead, CAMQPProtocolConstants.SYMBOL_BINARY_PAYLOAD));
+            assert (StringUtils.equals(symbolRead, CAMQPProtocolConstants.SYMBOL_BINARY_PAYLOAD));
             byte[] payloadBytes = decoder.readBinaryPayload();
-            if (message.payload == null)
-            {
+            if (message.payload == null) {
                 message.payload = new DoveMQPayload(payloadBytes);
             }
-            else
-            {
-                if (message.payloads == null)
-                {
+            else {
+                if (message.payloads == null) {
                     message.payloads = new ArrayList<DoveMQPayload>();
                 }
                 message.payloads.add(new DoveMQPayload(payloadBytes));
@@ -379,48 +321,51 @@ public class DoveMQMessageImpl implements DoveMQMessage
         return message;
     }
 
-    public CAMQPMessagePayload marshal()
-    {
+    public CAMQPMessagePayload marshal() {
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         encode(encoder);
         return new CAMQPMessagePayload(encoder.getEncodedBuffer());
     }
 
-    public static DoveMQMessageImpl unmarshal(CAMQPMessagePayload payload)
-    {
+    public static DoveMQMessageImpl unmarshal(CAMQPMessagePayload payload) {
         CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
         decoder.take(payload.getPayload());
         return DoveMQMessageImpl.decode(decoder);
     }
 
-    public long getDeliveryId()
-    {
+    public long getDeliveryId() {
         return deliveryId;
     }
 
-    public void setDeliveryId(long deliveryId)
-    {
+    public void setDeliveryId(long deliveryId) {
         this.deliveryId = deliveryId;
     }
 
-    public long getSourceId()
-    {
+    public long getSourceId() {
         return sourceId;
     }
 
-    public void setSourceId(long sourceHashCode)
-    {
+    public void setSourceId(long sourceHashCode) {
         this.sourceId = sourceHashCode;
     }
 
     private final HeaderPropertiesImpl headerProperties;
+
     private Map<String, String> deliveryAnnotations = null;
+
     private Map<String, String> messageAnnotations = null;
+
     private final MessagePropertiesImpl messageProperties;
+
     private Map<String, String> applicationProperties = null;
+
     private DoveMQPayload payload = null;
+
     private List<DoveMQPayload> payloads = null;
+
     private Map<String, String> footers = null;
+
     private long deliveryId = -1;
+
     private long sourceId = -1;
 }

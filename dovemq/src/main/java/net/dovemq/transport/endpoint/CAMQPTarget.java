@@ -38,17 +38,19 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
  *
  * @author tejdas
  */
-class CAMQPTarget implements CAMQPTargetInterface
-{
+final class CAMQPTarget implements CAMQPTargetInterface {
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
 
     private final Map<Long, Boolean> deliveriesWaitingExplicitAck = new ConcurrentHashMap<Long, Boolean>();
+
     private final CAMQPLinkReceiverInterface linkReceiver;
+
     private final CAMQPEndpointPolicy endpointPolicy;
+
     private volatile CAMQPMessageReceiver messageReceiver = null;
 
-    CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver,  CAMQPEndpointPolicy endpointPolicy)
-    {
+    CAMQPTarget(CAMQPLinkReceiverInterface linkReceiver,
+            CAMQPEndpointPolicy endpointPolicy) {
         super();
         this.linkReceiver = linkReceiver;
         this.endpointPolicy = endpointPolicy;
@@ -61,28 +63,22 @@ class CAMQPTarget implements CAMQPTargetInterface
      * unsettled messages to unsettled map.
      */
     @Override
-    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode)
-    {
+    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode) {
         boolean settled = false;
-        if (receiverSettleMode == CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST)
-        {
+        if (receiverSettleMode == CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST) {
             // settle the message and send disposition with the settled state
             settled = true;
         }
-        else
-        {
+        else {
             settled = settledBySender;
         }
 
-        if (!settled)
-        {
+        if (!settled) {
             unsettledDeliveries.put(deliveryId, new CAMQPMessage(deliveryTag, message));
         }
 
-        if (!settledBySender)
-        {
-            if (expectAck())
-            {
+        if (!settledBySender) {
+            if (expectAck()) {
                 deliveriesWaitingExplicitAck.put(deliveryId, settled);
             }
         }
@@ -90,8 +86,7 @@ class CAMQPTarget implements CAMQPTargetInterface
         /*
          * Dispatch the message to target receiver.
          */
-        if (messageReceiver != null)
-        {
+        if (messageReceiver != null) {
             DoveMQMessageImpl decodedMessage = DoveMQMessageImpl.unmarshal(message);
             decodedMessage.setDeliveryId(deliveryId);
             messageReceiver.messageReceived(decodedMessage, this);
@@ -100,10 +95,8 @@ class CAMQPTarget implements CAMQPTargetInterface
         /*
          * Do not send the disposition if it is already settled by the sender.
          */
-        if (!settledBySender)
-        {
-            if (!expectAck())
-            {
+        if (!settledBySender) {
+            if (!expectAck()) {
                 // send the disposition
                 sendDisposition(deliveryId, settled, new CAMQPDefinitionAccepted());
             }
@@ -115,24 +108,19 @@ class CAMQPTarget implements CAMQPTargetInterface
      * transferIds from unsettled map.
      */
     @Override
-    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
-    {
-        if (!isMessageSettledByPeer)
-        {
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState) {
+        if (!isMessageSettledByPeer) {
             return deliveryIds;
         }
         List<Long> settledDeliveryIds = new ArrayList<Long>();
-        for (long deliveryId : deliveryIds)
-        {
+        for (long deliveryId : deliveryIds) {
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
-            if (message != null)
-            {
+            if (message != null) {
                 settledDeliveryIds.add(deliveryId);
             }
         }
 
-        if (!settledDeliveryIds.isEmpty())
-        {
+        if (!settledDeliveryIds.isEmpty()) {
             deliveryIds.removeAll(settledDeliveryIds);
         }
         /*
@@ -142,8 +130,7 @@ class CAMQPTarget implements CAMQPTargetInterface
         return deliveryIds;
     }
 
-    private void sendDisposition(long deliveryId, boolean settled, Object settledState)
-    {
+    private void sendDisposition(long deliveryId, boolean settled, Object settledState) {
         /*
          * Send disposition frame
          */
@@ -152,34 +139,29 @@ class CAMQPTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver)
-    {
+    public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver) {
         this.messageReceiver = targetReceiver;
     }
 
     @Override
-    public void acknowledgeMessageProcessingComplete(long deliveryId)
-    {
+    public void acknowledgeMessageProcessingComplete(long deliveryId) {
         linkReceiver.acknowledgeMessageProcessingComplete();
-        if (expectAck())
-        {
+        if (expectAck()) {
             Boolean settled = deliveriesWaitingExplicitAck.remove(deliveryId);
-            if (settled != null)
-            {
+            if (settled != null) {
                 // send the disposition
                 sendDisposition(deliveryId, settled, new CAMQPDefinitionAccepted());
             }
         }
     }
 
-    private boolean expectAck()
-    {
-        return ((messageReceiver != null) && (endpointPolicy.getDoveMQEndpointPolicy().getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS));
+    private boolean expectAck() {
+        return ((messageReceiver != null) && (endpointPolicy.getDoveMQEndpointPolicy()
+                .getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS));
     }
 
     @Override
-    public long getId()
-    {
+    public long getId() {
         return linkReceiver.getHandle();
     }
 }

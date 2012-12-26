@@ -19,24 +19,40 @@ package net.dovemq.api;
 
 import java.util.Date;
 
-public interface MessageProperties
-{
+public interface MessageProperties {
     public String getMessageId();
+
     public void setMessageId(String messageId);
+
     public String getCorrlelationId();
+
     public void setCorrlelationId(String corrlelationId);
+
     public String getUserId();
+
     public void setUserId(String userId);
+
     public String getToAddress();
+
     public void setToAddress(String toAddress);
+
     public String getReplyToAddress();
+
     public void setReplyToAddress(String replyToAddress);
+
     public String getSubject();
+
     public void setSubject(String subject);
+
     public String getContentType();
+
     public void setContentType(String contentType);
+
     public Date getCreationTime();
+
     public void setCreationTime(Date creationTime);
+
     public Date getExpiryTime();
+
     public void setExpiryTime(Date expiryTime);
 }

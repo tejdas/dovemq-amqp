@@ -44,31 +44,31 @@ import org.jboss.netty.channel.Channel;
  *
  */
 @ThreadSafe
-final class CAMQPConnection implements CAMQPConnectionInterface
-{
+final class CAMQPConnection implements CAMQPConnectionInterface {
     private final CAMQPConnectionStateActor stateActor;
 
     private CAMQPSender sender = null;
 
     @GuardedBy("stateActor")
     private final Map<Integer, CAMQPIncomingChannelHandler> incomingChannels = new HashMap<Integer, CAMQPIncomingChannelHandler>();
+
     @GuardedBy("stateActor")
     private final boolean[] outgoingChannelsInUse = new boolean[CAMQPConnectionConstants.MAX_CHANNELS_SUPPORTED];
 
     private final CAMQPSessionFrameHandler sessionFrameHandler = CAMQPSessionFrameHandler.createInstance();
-    public CAMQPSessionFrameHandler getSessionFrameHandler()
-    {
+
+    public CAMQPSessionFrameHandler getSessionFrameHandler() {
         return sessionFrameHandler;
     }
 
-    CAMQPConnection(CAMQPConnectionStateActor stateActor)
-    {
+    CAMQPConnection(CAMQPConnectionStateActor stateActor) {
         Arrays.fill(outgoingChannelsInUse, false);
         this.stateActor = stateActor;
-        if (!stateActor.isInitiator)
-        {
+        if (!stateActor.isInitiator) {
             sender = stateActor.sender;
-            CAMQPConnectionHandler connectionHandler = sender.getChannel().getPipeline().get(CAMQPConnectionHandler.class);
+            CAMQPConnectionHandler connectionHandler = sender.getChannel()
+                    .getPipeline()
+                    .get(CAMQPConnectionHandler.class);
             connectionHandler.registerConnection(this);
         }
     }
@@ -76,39 +76,38 @@ final class CAMQPConnection implements CAMQPConnectionInterface
     /*
      * For Junit test
      */
-    public CAMQPConnection()
-    {
+    public CAMQPConnection() {
         stateActor = null;
     }
 
     @Override
-    public CAMQPConnectionKey getKey()
-    {
+    public CAMQPConnectionKey getKey() {
         return stateActor.key;
     }
 
     /**
      * Send an AMQP frame on the specified channel
+     *
      * @param data
      * @param channelId
      */
     @Override
-    public void sendFrame(ChannelBuffer data, int channelId)
-    {
+    public void sendFrame(ChannelBuffer data, int channelId) {
         ChannelBuffer header = CAMQPFrameHeader.createEncodedFrameHeader(channelId, data.readableBytes());
         sender.sendBuffer(ChannelBuffers.wrappedBuffer(header, data), CAMQPFrameConstants.FRAME_TYPE_SESSION);
     }
 
     /**
      * Initiate AMQP connection handshake
+     *
      * @param channel
      * @param connectionProps
      */
-    void initialize(Channel channel, CAMQPConnectionProperties connectionProps)
-    {
+    void initialize(Channel channel, CAMQPConnectionProperties connectionProps) {
         stateActor.setChannel(channel);
 
-        CAMQPConnectionHandler connectionHandler = channel.getPipeline().get(CAMQPConnectionHandler.class);
+        CAMQPConnectionHandler connectionHandler = channel.getPipeline()
+                .get(CAMQPConnectionHandler.class);
         connectionHandler.registerConnection(this);
 
         stateActor.initiateHandshake(connectionProps);
@@ -117,8 +116,7 @@ final class CAMQPConnection implements CAMQPConnectionInterface
     /**
      * Wait for AMQP handshake to complete
      */
-    void waitForReady()
-    {
+    void waitForReady() {
         stateActor.waitForOpenExchange();
         sender = stateActor.sender;
         CAMQPConnectionManager.connectionCreated(stateActor.key, this);
@@ -128,8 +126,7 @@ final class CAMQPConnection implements CAMQPConnectionInterface
      * Synchronously close the connection
      */
     @Override
-    public void close()
-    {
+    public void close() {
         stateActor.sendCloseControl();
         sender.waitForClose();
     }
@@ -138,39 +135,32 @@ final class CAMQPConnection implements CAMQPConnectionInterface
      * Asynchronously close the connection
      */
     @Override
-    public void closeAsync()
-    {
+    public void closeAsync() {
         stateActor.sendCloseControl();
     }
 
-    boolean isClosed()
-    {
+    boolean isClosed() {
         return sender.isClosed();
     }
 
     /**
-     * Called by the session layer to reserve
-     * an outgoing channel, which it will
+     * Called by the session layer to reserve an outgoing channel, which it will
      * subsequently attach to.
+     *
      * @return
      */
     @Override
-    public int reserveOutgoingChannel()
-    {
-        synchronized (stateActor)
-        {
+    public int reserveOutgoingChannel() {
+        synchronized (stateActor) {
             int maxChannels = stateActor.getConnectionProps().getMaxChannels();
-            if (!stateActor.canAttachChannels())
-            {
+            if (!stateActor.canAttachChannels()) {
                 return -1; // TODO
             }
             /*
              * ChannelID 0 is reserved for Connection control
              */
-            for (int i = 1; i < maxChannels; i++)
-            {
-                if (!outgoingChannelsInUse[i])
-                {
+            for (int i = 1; i < maxChannels; i++) {
+                if (!outgoingChannelsInUse[i]) {
                     outgoingChannelsInUse[i] = true;
                     return i;
                 }
@@ -180,91 +170,76 @@ final class CAMQPConnection implements CAMQPConnectionInterface
     }
 
     /**
-     * Register an incoming channel with the channelHandler, so that
-     * the incoming frames on the rxChannel could be dispatched.
+     * Register an incoming channel with the channelHandler, so that the
+     * incoming frames on the rxChannel could be dispatched.
      *
      * @param receiveChannelNumber
      * @param channelHandler
      */
     @Override
-    public void register(int receiveChannelNumber, CAMQPIncomingChannelHandler channelHandler)
-    {
-        synchronized (stateActor)
-        {
-            if (stateActor.canAttachChannels())
-            {
+    public void register(int receiveChannelNumber, CAMQPIncomingChannelHandler channelHandler) {
+        synchronized (stateActor) {
+            if (stateActor.canAttachChannels()) {
                 incomingChannels.put(receiveChannelNumber, channelHandler);
             }
         }
     }
 
     /**
-     * Called by the session layer to detach itself from an
-     * outgoing channel.
+     * Called by the session layer to detach itself from an outgoing channel.
      *
      * @param outgoingChannelNumber
      * @param incomingChannelNumber
      */
     @Override
-    public void detach(int outgoingChannelNumber, int incomingChannelNumber)
-    {
-        synchronized (stateActor)
-        {
+    public void detach(int outgoingChannelNumber, int incomingChannelNumber) {
+        synchronized (stateActor) {
             outgoingChannelsInUse[outgoingChannelNumber] = false;
             incomingChannels.remove(incomingChannelNumber);
         }
     }
 
     /**
-     * Dispatches the incoming AMQP frame to the channelHandler
-     * associated with the channelNumber (if it's already attached),
-     * or to CAMQPSessionFrameHandler if it hasn't been attached yet.
+     * Dispatches the incoming AMQP frame to the channelHandler associated with
+     * the channelNumber (if it's already attached), or to
+     * CAMQPSessionFrameHandler if it hasn't been attached yet.
      *
      * @param channelNumber
      * @param frame
      */
-    void frameReceived(int channelNumber, CAMQPFrame frame)
-    {
+    void frameReceived(int channelNumber, CAMQPFrame frame) {
         CAMQPIncomingChannelHandler channelHandler = null;
-        synchronized (stateActor)
-        {
+        synchronized (stateActor) {
             channelHandler = incomingChannels.get(channelNumber);
         }
 
-        if (channelHandler == null)
-        {
+        if (channelHandler == null) {
             /*
              * The channel has not been attached yet. Dispatch to the
-             * CAMQPSessionFrameHandler so it can attach a channelHandler
-             * to it.
+             * CAMQPSessionFrameHandler so it can attach a channelHandler to it.
              */
             sessionFrameHandler.frameReceived(channelNumber, frame, this);
         }
-        else
-        {
+        else {
             channelHandler.frameReceived(frame);
         }
     }
 
-    void aborted()
-    {
+    void aborted() {
         Collection<CAMQPIncomingChannelHandler> channelsToDetach = new ArrayList<CAMQPIncomingChannelHandler>();
 
-        synchronized (stateActor)
-        {
+        synchronized (stateActor) {
             if (incomingChannels.size() > 0)
                 channelsToDetach.addAll(incomingChannels.values());
         }
-        for (CAMQPIncomingChannelHandler channelHandler : channelsToDetach)
-        {
+        for (CAMQPIncomingChannelHandler channelHandler : channelsToDetach) {
             channelHandler.channelAbruptlyDetached();
         }
         sender.close();
     }
 
     @Override
-    public void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSessionInterface session)
-    {
+    public void registerSessionHandshakeInProgress(int sendChannelNumber, CAMQPSessionInterface session) {
         sessionFrameHandler.registerSessionHandshakeInProgress(sendChannelNumber, session);
     }
 }

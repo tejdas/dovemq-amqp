@@ -29,32 +29,32 @@ import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
-public final class CAMQPListener
-{
+public final class CAMQPListener {
     private static final Logger log = Logger.getLogger(CAMQPListener.class);
+
     private boolean hasShutdown = false;
+
     private final String listenAddress = "0.0.0.0";
+
     private final CAMQPConnectionProperties defaultConnectionProps;
 
     private ChannelFactory factory = null;
+
     private Channel serverChannel = null;
+
     private CAMQPConnectionPipelineFactory pipelineFactory = null;
 
-    public static CAMQPListener createCAMQPListener(CAMQPConnectionProperties defaultConnectionProps)
-    {
+    public static CAMQPListener createCAMQPListener(CAMQPConnectionProperties defaultConnectionProps) {
         return new CAMQPListener(defaultConnectionProps);
     }
 
-    private CAMQPListener(CAMQPConnectionProperties defaultConnectionProps)
-    {
+    private CAMQPListener(CAMQPConnectionProperties defaultConnectionProps) {
         this.defaultConnectionProps = defaultConnectionProps;
     }
 
-    public void start()
-    {
-        factory =
-                new NioServerSocketChannelFactory(
-                        Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyBossThread")),
+    public void start() {
+        factory = new NioServerSocketChannelFactory(
+                Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyBossThread")),
                         Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyWorkerThread")));
 
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
@@ -66,17 +66,14 @@ public final class CAMQPListener
         System.out.println("DoveMQ Listener on port: " + CAMQPConnectionConstants.AMQP_IANA_PORT);
     }
 
-    public void shutdown()
-    {
-        synchronized (this)
-        {
-            if (hasShutdown)
-            {
+    public void shutdown() {
+        synchronized (this) {
+            if (hasShutdown) {
                 return;
             }
             hasShutdown = true;
         }
-        // CAMQPSessionManager.shutdown(); // TODO needed here???
+
         ChannelFuture future = serverChannel.close();
         future.awaitUninterruptibly();
         factory.releaseExternalResources();

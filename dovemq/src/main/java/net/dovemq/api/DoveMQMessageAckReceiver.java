@@ -25,7 +25,6 @@ package net.dovemq.api;
  *
  * @author tejdas
  */
-public interface DoveMQMessageAckReceiver
-{
+public interface DoveMQMessageAckReceiver {
     public void messageAcknowledged(DoveMQMessage message);
 }

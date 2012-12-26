@@ -21,43 +21,34 @@ package net.dovemq.api;
  * Class used to programatically configure a DoveMQ endpoint.
  * @author tejdas
  */
-public final class DoveMQEndpointPolicy
-{
+public final class DoveMQEndpointPolicy {
     /**
-     * AUTO: the message is automatically acknowledged by the runtime
-     * after it has been delivered to the consumer via
-     * {@link DoveMQMessageReceiver#messageReceived()}
-     *
-     * CONSUMER_ACKS: the message recipient needs to explicitly
-     * acknowledge the receipt of the message via
-     * {@link Consumer#acknowledge(DoveMQMessage)}
+     * AUTO: the message is automatically acknowledged by the runtime after it
+     * has been delivered to the consumer via
+     * {@link DoveMQMessageReceiver#messageReceived()} CONSUMER_ACKS: the
+     * message recipient needs to explicitly acknowledge the receipt of the
+     * message via {@link Consumer#acknowledge(DoveMQMessage)}
      */
-    public static enum MessageAcknowledgementPolicy
-    {
-        AUTO,
-        CONSUMER_ACKS,
+    public static enum MessageAcknowledgementPolicy {
+        AUTO, CONSUMER_ACKS,
     }
 
-    public DoveMQEndpointPolicy()
-    {
+    public DoveMQEndpointPolicy() {
         super();
         this.ackPolicy = MessageAcknowledgementPolicy.AUTO;
     }
 
-    public DoveMQEndpointPolicy(MessageAcknowledgementPolicy ackPolicy)
-    {
+    public DoveMQEndpointPolicy(MessageAcknowledgementPolicy ackPolicy) {
         super();
         this.ackPolicy = ackPolicy;
     }
 
-    public DoveMQEndpointPolicy(DoveMQEndpointPolicy that)
-    {
+    public DoveMQEndpointPolicy(DoveMQEndpointPolicy that) {
         super();
         this.ackPolicy = that.ackPolicy;
     }
 
-    public MessageAcknowledgementPolicy getAckPolicy()
-    {
+    public MessageAcknowledgementPolicy getAckPolicy() {
         return ackPolicy;
     }
 

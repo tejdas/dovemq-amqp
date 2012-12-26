@@ -31,24 +31,20 @@ import org.apache.commons.lang.StringUtils;
  * @author tejdas
  *
  */
-public class RoutingTopicHeirarchyMatcher extends RoutingEvaluator
-{
+class RoutingTopicHeirarchyMatcher extends RoutingEvaluator {
     /**
-     * Evaluate the routingEvaluationContext (topicPublishHierarchy)
-     * of the incoming message against the Subscriber's topic hierarchy
-     * to determine if the message could be routed to the subscriber.
+     * Evaluate the routingEvaluationContext (topicPublishHierarchy) of the
+     * incoming message against the Subscriber's topic hierarchy to determine if
+     * the message could be routed to the subscriber.
      */
     @Override
-    boolean canMessageBePublished(Object routingEvaluationContext)
-    {
+    boolean canMessageBePublished(Object routingEvaluationContext) {
         String publisherTopicHierarchy = (String) routingEvaluationContext;
-        if (StringUtils.isEmpty(publisherTopicHierarchy))
-        {
+        if (StringUtils.isEmpty(publisherTopicHierarchy)) {
             return true;
         }
 
-        if (subscriberTopicHierarchy.equalsIgnoreCase(publisherTopicHierarchy))
-        {
+        if (subscriberTopicHierarchy.equalsIgnoreCase(publisherTopicHierarchy)) {
             return true;
         }
 
@@ -57,8 +53,7 @@ public class RoutingTopicHeirarchyMatcher extends RoutingEvaluator
     }
 
     public RoutingTopicHeirarchyMatcher(String subscriberTopicHierarchy,
-            CAMQPSourceInterface subscriberProxy)
-    {
+            CAMQPSourceInterface subscriberProxy) {
         super(subscriberProxy);
         this.subscriberTopicHierarchy = subscriberTopicHierarchy;
     }

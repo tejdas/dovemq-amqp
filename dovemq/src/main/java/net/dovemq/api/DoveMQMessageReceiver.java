@@ -23,7 +23,6 @@ package net.dovemq.api;
  *
  * @author tejdas
  */
-public interface DoveMQMessageReceiver
-{
+public interface DoveMQMessageReceiver {
     public void messageReceived(DoveMQMessage message);
 }

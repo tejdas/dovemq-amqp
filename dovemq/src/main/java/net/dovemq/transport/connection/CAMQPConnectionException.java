@@ -17,8 +17,7 @@
 
 package net.dovemq.transport.connection;
 
-public class CAMQPConnectionException extends RuntimeException
-{
+public final class CAMQPConnectionException extends RuntimeException {
     /**
      *
      */

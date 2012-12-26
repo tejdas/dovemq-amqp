@@ -20,45 +20,38 @@ package net.dovemq.transport.connection;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-public class CAMQPConnectionKey
-{
-    public CAMQPConnectionKey(String remoteContainerId, int ephemeralPort)
-    {
+public final class CAMQPConnectionKey {
+    public CAMQPConnectionKey(String remoteContainerId, int ephemeralPort) {
         super();
         this.remoteContainerId = remoteContainerId;
         this.ephemeralPort = ephemeralPort;
     }
 
-    public String getRemoteContainerId()
-    {
+    public String getRemoteContainerId() {
         return remoteContainerId;
     }
 
-    void setRemoteContainerId(String remoteContainerId)
-    {
+    void setRemoteContainerId(String remoteContainerId) {
         this.remoteContainerId = remoteContainerId;
     }
 
-    int getEphemeralPort()
-    {
+    int getEphemeralPort() {
         return ephemeralPort;
     }
 
-    void setEphemeralPort(int ephemeralPort)
-    {
+    void setEphemeralPort(int ephemeralPort) {
         this.ephemeralPort = ephemeralPort;
     }
 
-    CAMQPConnectionKey()
-    {
+    CAMQPConnectionKey() {
     }
 
     private String remoteContainerId;
+
     private int ephemeralPort = 0;
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if ((obj == null) || (!(obj instanceof CAMQPConnectionKey)))
             return false;
 
@@ -71,14 +64,12 @@ public class CAMQPConnectionKey
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return remoteContainerId + "." + ephemeralPort;
     }
 }

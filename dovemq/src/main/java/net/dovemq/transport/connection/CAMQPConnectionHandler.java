@@ -55,50 +55,46 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
  * @author tejdas
  *
  */
-class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
-{
+final class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler {
     private static final Logger log = Logger.getLogger(CAMQPConnectionHandler.class);
 
     private final CAMQPConnectionStateActor stateActor;
+
     private volatile CAMQPConnection connection = null;
 
-    void registerConnection(CAMQPConnection connection)
-    {
+    void registerConnection(CAMQPConnection connection) {
         this.connection = connection;
     }
 
-    CAMQPConnectionStateActor getStateActor()
-    {
+    CAMQPConnectionStateActor getStateActor() {
         return stateActor;
     }
 
-    CAMQPConnectionHandler(boolean isInitiator, CAMQPConnectionProperties connectionProps)
-    {
+    CAMQPConnectionHandler(boolean isInitiator,
+            CAMQPConnectionProperties connectionProps) {
         stateActor = new CAMQPConnectionStateActor(isInitiator, connectionProps);
     }
 
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
-    {
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
         Channel channel = ctx.getChannel();
         assert (channel != null);
         stateActor.setChannel(channel);
         ctx.sendUpstream(e);
 
-        CAMQPFrameDecoder frameDecoder = channel.getPipeline().get(CAMQPFrameDecoder.class);
+        CAMQPFrameDecoder frameDecoder = channel.getPipeline()
+                .get(CAMQPFrameDecoder.class);
         frameDecoder.setConnectionStateActor(stateActor);
     }
 
     @Override
-    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception
-    {
+    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         stateActor.disconnectReceived();
         super.channelDisconnected(ctx, e);
     }
 
     @Override
-    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception
-    {
+    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
         super.handleUpstream(ctx, e);
     }
 
@@ -107,51 +103,44 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
      * {@link ChannelHandler}.
      */
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
-    {
-        String connectionKey = (connection != null)? connection.getKey().toString() : StringUtils.EMPTY;
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+        String connectionKey = (connection != null) ? connection.getKey()
+                .toString() : StringUtils.EMPTY;
         log.warn("CAMQPConnectionHandler.exceptionCaught: " + connectionKey);
         StringBuilder stackTraceInfo = new StringBuilder();
         StackTraceElement[] elems = Thread.currentThread().getStackTrace();
-        for (StackTraceElement elem : elems)
-        {
+        for (StackTraceElement elem : elems) {
             stackTraceInfo.append(elem.toString()).append("\n");
         }
         log.warn(stackTraceInfo.toString());
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, final MessageEvent e)
-    {
+    public void messageReceived(ChannelHandlerContext ctx, final MessageEvent e) {
         Object message = e.getMessage();
-        if (message instanceof CAMQPHandshakeFrame)
-        {
+        if (message instanceof CAMQPHandshakeFrame) {
             handshakeFrameReceived((CAMQPHandshakeFrame) message);
         }
-        else if (message instanceof CAMQPFrame)
-        {
+        else if (message instanceof CAMQPFrame) {
             frameReceived((CAMQPFrame) message);
         }
-        else
-        {
+        else {
             ctx.sendUpstream(e);
         }
     }
 
-    private void handshakeFrameReceived(CAMQPHandshakeFrame frame)
-    {
+    private void handshakeFrameReceived(CAMQPHandshakeFrame frame) {
         stateActor.connectionHeaderBytesReceived(frame.getBody());
     }
 
     /**
      * Process incoming AMQP frames
+     *
      * @param frame
      */
-    private void frameReceived(CAMQPFrame frame)
-    {
+    private void frameReceived(CAMQPFrame frame) {
         ChannelBuffer frameBody = frame.getBody();
-        if (frameBody == null)
-        {
+        if (frameBody == null) {
             /*
              * Heart-Beat control frame
              */
@@ -161,29 +150,25 @@ class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler
 
         CAMQPFrameHeader frameHeader = frame.getHeader();
         int channelNumber = frameHeader.getChannelNumber();
-        if (channelNumber == 0)
-        {
+        if (channelNumber == 0) {
             /*
              * connection frame
              */
             CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
             decoder.take(frameBody);
             String controlName = decoder.readSymbol();
-            if (controlName.equalsIgnoreCase(CAMQPControlOpen.descriptor))
-            {
+            if (controlName.equalsIgnoreCase(CAMQPControlOpen.descriptor)) {
                 CAMQPControlOpen peerConnectionProps = CAMQPControlOpen.decode(decoder);
 
                 stateActor.openControlReceived(peerConnectionProps);
             }
-            else if (controlName.equalsIgnoreCase(CAMQPControlClose.descriptor))
-            {
+            else if (controlName.equalsIgnoreCase(CAMQPControlClose.descriptor)) {
                 CAMQPControlClose closeContext = CAMQPControlClose.decode(decoder);
                 stateActor.closeControlReceived(closeContext);
             }
         }
 
-        else
-        {
+        else {
             /*
              * session/link frame
              */

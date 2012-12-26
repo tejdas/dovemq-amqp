@@ -37,210 +37,171 @@ import net.jcip.annotations.ThreadSafe;
  * @author tejdas
  */
 @ThreadSafe
-class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable
-{
+final class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterface, Runnable {
     private volatile CAMQPSourceInterface source = null;
 
     @Override
-    public void registerSource(CAMQPSourceInterface source)
-    {
+    public void registerSource(CAMQPSourceInterface source) {
         this.source = source;
     }
 
     /*
-     * messageOutstanding is set to true before calling CAMQPSessionInterface.sendTransfer()
-     *
-     * It is set to false after the message has been sent by the session layer, in the callback:
-     * messageSent()
-     *
+     * messageOutstanding is set to true before calling
+     * CAMQPSessionInterface.sendTransfer() It is set to false after the message
+     * has been sent by the session layer, in the callback: messageSent()
      */
     private AtomicBoolean messageOutstanding = new AtomicBoolean(false);
 
     private boolean sendInProgress = false;
+
     private boolean drainRequested = false;
 
-    public CAMQPLinkAsyncSender(CAMQPSessionInterface session)
-    {
+    public CAMQPLinkAsyncSender(CAMQPSessionInterface session) {
         super(session);
     }
 
     @Override
-    public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
-    {
+    public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload) {
         // TODO error condition : should never be called for CAMQPLinkSender
     }
 
     @Override
-    public void flowReceived(CAMQPControlFlow flow)
-    {
+    public void flowReceived(CAMQPControlFlow flow) {
         boolean messagesParked = false;
         CAMQPControlFlow outgoingFlow = null;
 
         long availableMessageCount = source.getMessageCount();
-        synchronized (this)
-        {
+        synchronized (this) {
             available = availableMessageCount;
-            if (flow.isSetLinkCredit() && (flow.getLinkCredit() >= 0))
-            {
-                if (flow.isSetDeliveryCount())
-                {
+            if (flow.isSetLinkCredit() && (flow.getLinkCredit() >= 0)) {
+                if (flow.isSetDeliveryCount()) {
                     linkCredit = flow.getLinkCredit() - (deliveryCount - flow.getDeliveryCount());
                 }
-                else
-                {
+                else {
                     linkCredit = flow.getLinkCredit() - deliveryCount;
                 }
             }
 
-            if (flow.isSetDrain())
-            {
+            if (flow.isSetDrain()) {
                 drainRequested = flow.getDrain();
             }
 
-            if (!sendInProgress)
-            {
-                if ((available > 0) && (linkCredit > 0))
-                {
+            if (!sendInProgress) {
+                if ((available > 0) && (linkCredit > 0)) {
                     sendInProgress = true;
                     messagesParked = true;
                 }
-                else if (drainRequested)
-                {
+                else if (drainRequested) {
                     outgoingFlow = processDrainRequested(true);
                 }
             }
 
-            if (flow.isSetEcho() && flow.getEcho() && (outgoingFlow == null))
-            {
+            if (flow.isSetEcho() && flow.getEcho() && (outgoingFlow == null)) {
                 outgoingFlow = populateFlowFrame();
             }
         }
 
-        if (outgoingFlow != null)
-        {
+        if (outgoingFlow != null) {
             session.sendFlow(outgoingFlow);
         }
 
-        if (messagesParked)
-        {
+        if (messagesParked) {
             CAMQPSessionManager.getExecutor().execute(this);
         }
     }
 
     @Override
-    public void sendMessage(CAMQPMessage message)
-    {
+    public void sendMessage(CAMQPMessage message) {
         /*
          * Not implemented
          */
     }
 
     @Override
-    public void messageSent(CAMQPControlTransfer transferFrame)
-    {
+    public void messageSent(CAMQPControlTransfer transferFrame) {
         /*
-         * In case of message fragmentation, change the I/O flow
-         * state only when the last fragment has been sent
+         * In case of message fragmentation, change the I/O flow state only when
+         * the last fragment has been sent
          */
-        if (transferFrame.getMore())
-        {
+        if (transferFrame.getMore()) {
             return;
         }
 
         boolean checkMessageAvailability = false;
         boolean parkedMessages = false;
         CAMQPControlFlow flow = null;
-        synchronized (this)
-        {
+        synchronized (this) {
             messageOutstanding.set(false);
 
-            if (available > 0)
-            {
+            if (available > 0) {
                 available--;
             }
             deliveryCount++;
             linkCredit--;
 
-            if (!sendInProgress)
-            {
+            if (!sendInProgress) {
                 checkMessageAvailability = ((linkCredit > 0) && (available == 0));
 
-                if (drainRequested && (linkCredit <= 0) && !checkMessageAvailability)
-                {
+                if (drainRequested && (linkCredit <= 0) && !checkMessageAvailability) {
                     flow = processDrainRequested(available > 0);
                 }
             }
         }
 
         long messageCount = 0;
-        if (checkMessageAvailability)
-        {
+        if (checkMessageAvailability) {
             messageCount = source.getMessageCount();
         }
 
-        synchronized (this)
-        {
-            if (checkMessageAvailability)
-            {
+        synchronized (this) {
+            if (checkMessageAvailability) {
                 available = messageCount;
             }
 
-            if (!sendInProgress)
-            {
-                if ((available > 0) && (linkCredit > 0))
-                {
+            if (!sendInProgress) {
+                if ((available > 0) && (linkCredit > 0)) {
                     parkedMessages = true;
                     sendInProgress = true;
                 }
-                else if (drainRequested)
-                {
+                else if (drainRequested) {
                     flow = processDrainRequested(true);
                 }
             }
         }
 
-        if (flow != null)
-        {
+        if (flow != null) {
             session.sendFlow(flow);
         }
 
-        if (parkedMessages)
-        {
+        if (parkedMessages) {
             CAMQPSessionManager.getExecutor().execute(this);
         }
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         CAMQPMessage message = null;
         CAMQPControlFlow flow = null;
         String deliveryTag = null;
 
-        while (true)
-        {
+        while (true) {
             message = source.getMessage();
-            if (message != null)
-            {
+            if (message != null) {
                 deliveryTag = message.getDeliveryTag();
                 messageOutstanding.set(true);
                 send(message, source);
             }
 
-            synchronized (this)
-            {
-                if ((deliveryTag != null) && messageOutstanding.get())
-                {
+            synchronized (this) {
+                if ((deliveryTag != null) && messageOutstanding.get()) {
                     sendInProgress = false;
                     break;
                 }
 
-                if ((message == null) || (linkCredit <= 0))
-                {
+                if ((message == null) || (linkCredit <= 0)) {
                     sendInProgress = false;
 
-                    if (drainRequested)
-                    {
+                    if (drainRequested) {
                         flow = processDrainRequested(available > 0);
                     }
                     break;
@@ -248,54 +209,45 @@ class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderI
             }
         }
 
-        if (flow != null)
-        {
+        if (flow != null) {
             session.sendFlow(flow);
         }
     }
 
     @GuardedBy("this")
-    private CAMQPControlFlow processDrainRequested(boolean availableKnown)
-    {
+    private CAMQPControlFlow processDrainRequested(boolean availableKnown) {
         if (linkCredit > 0)
             deliveryCount += linkCredit;
         linkCredit = 0;
         drainRequested = false;
-        if (availableKnown)
-        {
+        if (availableKnown) {
             return populateFlowFrame();
         }
-        else
-        {
+        else {
             return populateFlowFrameAvailableUnknown();
         }
     }
 
     @Override
-    public LinkRole getRole()
-    {
+    public LinkRole getRole() {
         return LinkRole.LinkSender;
     }
 
     @Override
-    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
-    {
-        if (source != null)
-        {
+    public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState) {
+        if (source != null) {
             return source.processDisposition(deliveryIds, isMessageSettledByPeer, newState);
         }
         return deliveryIds;
     }
 
     @Override
-    Object getEndpoint()
-    {
+    Object getEndpoint() {
         return source;
     }
 
     @Override
-    public long getHandle()
-    {
+    public long getHandle() {
         return linkHandle;
     }
 }

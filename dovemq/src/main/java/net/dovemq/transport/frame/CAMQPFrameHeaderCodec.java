@@ -17,20 +17,18 @@
 
 package net.dovemq.transport.frame;
 
+import net.dovemq.transport.protocol.CAMQPCodecUtil;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
-
-import net.dovemq.transport.protocol.CAMQPCodecUtil;
 
 /**
  * Encoder/Decoder of AMQP frame header
  * @author tejdas
  *
  */
-public class CAMQPFrameHeaderCodec
-{
-    public static ChannelBuffer encode(CAMQPFrameHeader header)
-    {
+public final class CAMQPFrameHeaderCodec {
+    public static ChannelBuffer encode(CAMQPFrameHeader header) {
         int variableHeaderSize = (header.getDataOffset() - CAMQPFrameConstants.DEFAULT_DATA_OFFSET) * 4;
         ChannelBuffer headerBuffer = ChannelBuffers.dynamicBuffer(CAMQPFrameConstants.FRAME_HEADER_SIZE + variableHeaderSize);
 
@@ -43,8 +41,7 @@ public class CAMQPFrameHeaderCodec
         return headerBuffer;
     }
 
-    public static CAMQPFrameHeader decode(ChannelBuffer buffer)
-    {
+    public static CAMQPFrameHeader decode(ChannelBuffer buffer) {
         CAMQPFrameHeader frameHeader = new CAMQPFrameHeader();
 
         long frameSize = CAMQPCodecUtil.readUInt(buffer);
@@ -59,8 +56,7 @@ public class CAMQPFrameHeaderCodec
         short channelNumber = (short) CAMQPCodecUtil.readUShort(buffer);
         frameHeader.setChannelNumber(channelNumber);
 
-        if (dataOffset > CAMQPFrameConstants.DEFAULT_DATA_OFFSET)
-        {
+        if (dataOffset > CAMQPFrameConstants.DEFAULT_DATA_OFFSET) {
             buffer.skipBytes((dataOffset - CAMQPFrameConstants.DEFAULT_DATA_OFFSET) * 4);
         }
         return frameHeader;

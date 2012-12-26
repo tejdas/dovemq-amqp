@@ -24,44 +24,38 @@ import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
-public final class CAMQPEndpointManager
-{
+public final class CAMQPEndpointManager {
     private static CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
+
     private static DoveMQEndpointManager doveMQEndpointManager = null;
 
-    public static void registerDoveMQEndpointManager(DoveMQEndpointManager doveMQEndpointManager)
-    {
+    public static void registerDoveMQEndpointManager(DoveMQEndpointManager doveMQEndpointManager) {
         CAMQPEndpointManager.doveMQEndpointManager = doveMQEndpointManager;
     }
 
-    public static CAMQPEndpointPolicy getDefaultEndpointPolicy()
-    {
+    public static CAMQPEndpointPolicy getDefaultEndpointPolicy() {
         return defaultEndpointPolicy;
     }
 
-    public static void setDefaultEndpointPolicy(CAMQPEndpointPolicy defaultEndpointPolicy)
-    {
+    public static void setDefaultEndpointPolicy(CAMQPEndpointPolicy defaultEndpointPolicy) {
         CAMQPEndpointManager.defaultEndpointPolicy = defaultEndpointPolicy;
     }
 
-    public static CAMQPSourceInterface createSource(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPSourceInterface createSource(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPLinkSenderInterface linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target, endpointPolicy);
         CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
         linkSender.registerSource(dovemqSource);
         return dovemqSource;
     }
 
-    public static CAMQPSourceInterface createSource(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPSourceInterface createSource(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPLinkSenderInterface linkSender = CAMQPLinkFactory.createLinkSender(session, source, target, endpointPolicy);
         CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
         linkSender.registerSource(dovemqSource);
         return dovemqSource;
     }
 
-    public static CAMQPTargetInterface createTarget(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPTargetInterface createTarget(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(containerId, source, target, endpointPolicy);
         CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
         linkReceiver.registerTarget(dovemqTarget);
@@ -69,8 +63,7 @@ public final class CAMQPEndpointManager
         return dovemqTarget;
     }
 
-    public static CAMQPTargetInterface createTarget(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPTargetInterface createTarget(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(session, source, target, endpointPolicy);
         CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
         linkReceiver.registerTarget(dovemqTarget);
@@ -78,68 +71,52 @@ public final class CAMQPEndpointManager
         return dovemqTarget;
     }
 
-    public static CAMQPSourceInterface sourceEndpointAttached(String source, CAMQPLinkSenderInterface linkSender, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPSourceInterface sourceEndpointAttached(String source, CAMQPLinkSenderInterface linkSender, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
         linkSender.registerSource(dovemqSource);
-        if (doveMQEndpointManager != null)
-        {
-            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE)
-            {
+        if (doveMQEndpointManager != null) {
+            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
                 doveMQEndpointManager.consumerAttached(source, dovemqSource, endpointPolicy);
             }
-            else
-            {
+            else {
                 doveMQEndpointManager.subscriberAttached(source, dovemqSource, endpointPolicy);
             }
         }
         return dovemqSource;
     }
 
-    public static CAMQPTargetInterface targetEndpointAttached(String target, CAMQPLinkReceiverInterface linkReceiver, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPTargetInterface targetEndpointAttached(String target, CAMQPLinkReceiverInterface linkReceiver, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
         linkReceiver.registerTarget(dovemqTarget);
         linkReceiver.provideLinkCredit();
-        if (doveMQEndpointManager != null)
-        {
-            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE)
-            {
+        if (doveMQEndpointManager != null) {
+            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
                 doveMQEndpointManager.producerAttached(target, dovemqTarget, endpointPolicy);
             }
-            else
-            {
+            else {
                 doveMQEndpointManager.publisherAttached(target, dovemqTarget, endpointPolicy);
             }
         }
         return dovemqTarget;
     }
 
-    public static void sourceEndpointDetached(String sourceName, CAMQPSourceInterface source, CAMQPEndpointPolicy endpointPolicy)
-    {
-        if (doveMQEndpointManager != null)
-        {
-            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE)
-            {
+    public static void sourceEndpointDetached(String sourceName, CAMQPSourceInterface source, CAMQPEndpointPolicy endpointPolicy) {
+        if (doveMQEndpointManager != null) {
+            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
                 doveMQEndpointManager.consumerDetached(sourceName, source);
             }
-            else
-            {
+            else {
                 doveMQEndpointManager.subscriberDetached(sourceName, source, endpointPolicy);
             }
         }
     }
 
-    public static void targetEndpointDetached(String targetName, CAMQPTargetInterface target, CAMQPEndpointPolicy endpointPolicy)
-    {
-        if (doveMQEndpointManager != null)
-        {
-            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE)
-            {
+    public static void targetEndpointDetached(String targetName, CAMQPTargetInterface target, CAMQPEndpointPolicy endpointPolicy) {
+        if (doveMQEndpointManager != null) {
+            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
                 doveMQEndpointManager.producerDetached(targetName, target);
             }
-            else
-            {
+            else {
                 doveMQEndpointManager.publisherDetached(targetName, target, endpointPolicy);
             }
         }

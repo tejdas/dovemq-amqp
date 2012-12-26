@@ -26,63 +26,52 @@ import net.dovemq.transport.connection.CAMQPConnectionInterface;
  * @author tejdas
  *
  */
-public final class CAMQPSessionFactory
-{
+public final class CAMQPSessionFactory {
     private static final CAMQPSessionFactory sessionFactory = new CAMQPSessionFactory();
 
-    private CAMQPSessionFactory()
-    {
+    private CAMQPSessionFactory() {
     }
 
     /**
-     * If a session already exists to the AMQP target, return it. Otherwise, create
-     * a new session.
+     * If a session already exists to the AMQP target, return it. Otherwise,
+     * create a new session.
      *
      * @param targetContainerId
      * @return
      */
-    public static CAMQPSessionInterface getOrCreateCAMQPSession(String targetContainerId)
-    {
+    public static CAMQPSessionInterface getOrCreateCAMQPSession(String targetContainerId) {
         List<CAMQPSession> sessionList = CAMQPSessionManager.getAllSessions(targetContainerId);
-        if (sessionList.isEmpty())
-        {
+        if (sessionList.isEmpty()) {
             return sessionFactory.createSession(targetContainerId, false);
         }
 
-        return sessionList.get(0); // TODO get the session with minimal linkReceivers attached
+        return sessionList.get(0);
     }
 
-    public static CAMQPSessionInterface createCAMQPSession(CAMQPConnectionInterface connection)
-    {
-         return sessionFactory.createSession(connection);
+    public static CAMQPSessionInterface createCAMQPSession(CAMQPConnectionInterface connection) {
+        return sessionFactory.createSession(connection);
     }
 
-    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId)
-    {
-         return sessionFactory.createSession(targetContainerId, false);
+    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId) {
+        return sessionFactory.createSession(targetContainerId, false);
     }
 
-    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId, boolean exclusiveConnection)
-    {
-         return sessionFactory.createSession(targetContainerId, true);
+    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId, boolean exclusiveConnection) {
+        return sessionFactory.createSession(targetContainerId, true);
     }
 
-    private CAMQPSession createSession(String targetContainerId, boolean exclusiveConnection)
-    {
+    private CAMQPSession createSession(String targetContainerId, boolean exclusiveConnection) {
         CAMQPConnectionInterface connection;
-        if (exclusiveConnection)
-        {
+        if (exclusiveConnection) {
             connection = CAMQPSessionManager.createCAMQPConnection(targetContainerId);
         }
-        else
-        {
+        else {
             connection = CAMQPSessionManager.getCAMQPConnection(targetContainerId);
         }
         return createSession(connection);
     }
 
-    private CAMQPSession createSession(CAMQPConnectionInterface connection)
-    {
+    private CAMQPSession createSession(CAMQPConnectionInterface connection) {
         CAMQPSession session = new CAMQPSession(connection);
         session.open();
         return session;

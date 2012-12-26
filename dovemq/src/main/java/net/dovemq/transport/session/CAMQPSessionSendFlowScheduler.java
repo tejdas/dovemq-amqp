@@ -27,52 +27,46 @@ import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.utils.CAMQPThreadFactory;
 
-class CAMQPSessionSendFlowScheduler implements Runnable
-{
+final class CAMQPSessionSendFlowScheduler implements Runnable {
     private final ScheduledExecutorService scheduledExecutor =
-            Executors.newSingleThreadScheduledExecutor(new CAMQPThreadFactory("DoveMQSessionSendFlowScheduler"));
+            Executors.newSingleThreadScheduledExecutor(
+                    new CAMQPThreadFactory("DoveMQSessionSendFlowScheduler"));
 
-    void start()
-    {
-        scheduledExecutor.scheduleWithFixedDelay(this, CAMQPSessionConstants.SESSION_SENDER_REQUEST_CREDIT_TIMER_INTERVAL,
-                CAMQPSessionConstants.SESSION_SENDER_REQUEST_CREDIT_TIMER_INTERVAL, TimeUnit.MILLISECONDS);
+    void start() {
+        scheduledExecutor.scheduleWithFixedDelay(
+                this,
+                CAMQPSessionConstants.SESSION_SENDER_REQUEST_CREDIT_TIMER_INTERVAL,
+                CAMQPSessionConstants.SESSION_SENDER_REQUEST_CREDIT_TIMER_INTERVAL,
+                TimeUnit.MILLISECONDS);
     }
 
-    void stop()
-    {
+    void stop() {
         scheduledExecutor.shutdown();
-        try
-        {
+        try {
             scheduledExecutor.awaitTermination(5000, TimeUnit.MILLISECONDS);
         }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
     private final ConcurrentMap<String, CAMQPSession> sessions = new ConcurrentHashMap<String, CAMQPSession>();
 
-    void registerSession(String sessionId, CAMQPSession session)
-    {
+    void registerSession(String sessionId, CAMQPSession session) {
         sessions.put(sessionId, session);
     }
 
-    void unregisterSession(String sessionId)
-    {
+    void unregisterSession(String sessionId) {
         sessions.remove(sessionId);
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         Date currentTime = new Date();
         Set<String> registeredSessionIds = sessions.keySet();
-        for (String sessionId : registeredSessionIds)
-        {
+        for (String sessionId : registeredSessionIds) {
             CAMQPSession session = sessions.get(sessionId);
-            if (session != null)
-            {
+            if (session != null) {
                 session.requestOrProvideCreditIfUnderFlowControl(currentTime);
             }
         }

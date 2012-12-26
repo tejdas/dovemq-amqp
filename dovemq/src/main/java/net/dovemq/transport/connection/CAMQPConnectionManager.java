@@ -38,9 +38,9 @@ import org.apache.log4j.Logger;
  * @author tejdas
  *
  */
-public final class CAMQPConnectionManager
-{
+public final class CAMQPConnectionManager {
     private static final Logger log = Logger.getLogger(CAMQPConnectionManager.class);
+
     private static final int DEFAULT_HEARTBEAT_PROCESSOR_THREAD_COUNT = 4;
 
     private static volatile CAMQPConnectionObserver connectionObserver = null;
@@ -49,7 +49,8 @@ public final class CAMQPConnectionManager
 
     private static volatile boolean shutdownInProgress = false;
 
-    private static final ConcurrentMap<CAMQPConnectionKey, CAMQPConnection> openConnections = new ConcurrentHashMap<CAMQPConnectionKey, CAMQPConnection>();
+    private static final ConcurrentMap<CAMQPConnectionKey, CAMQPConnection> openConnections =
+            new ConcurrentHashMap<CAMQPConnectionKey, CAMQPConnection>();
 
     private static final Object shutdownLock = new Object();
 
@@ -57,24 +58,19 @@ public final class CAMQPConnectionManager
             Executors.newScheduledThreadPool(DEFAULT_HEARTBEAT_PROCESSOR_THREAD_COUNT,
                     new CAMQPThreadFactory("DoveMQConnectionHeartbeatProcessor"));
 
-    static ScheduledExecutorService getConnectionHeartbeatScheduler()
-    {
+    static ScheduledExecutorService getConnectionHeartbeatScheduler() {
         return connectionHeartbeatScheduler;
     }
 
-    public synchronized static void initialize(String containerId)
-    {
-        if (CAMQPConnectionManager.containerId == null)
-        {
+    public synchronized static void initialize(String containerId) {
+        if (CAMQPConnectionManager.containerId == null) {
             String hostName = "localhost";
-            try
-            {
+            try {
                 InetAddress localMachine = InetAddress.getLocalHost();
                 hostName = localMachine.getHostAddress();
                 log.debug("hostName: " + hostName);
             }
-            catch (java.net.UnknownHostException uhe)
-            {
+            catch (java.net.UnknownHostException uhe) {
                 log.error("Caught UnknownHostException while resolving canonicalHostName: " + uhe.getMessage());
                 // handle exception
             }
@@ -87,153 +83,120 @@ public final class CAMQPConnectionManager
     /*
      * Used only by CAMQP functional tests
      */
-    public static CAMQPConnection getCAMQPConnection(String targetContainerId)
-    {
+    public static CAMQPConnection getCAMQPConnection(String targetContainerId) {
         Collection<CAMQPConnectionKey> keys = openConnections.keySet();
-        for (CAMQPConnectionKey key : keys)
-        {
-            if (StringUtils.equalsIgnoreCase(key.getRemoteContainerId(), targetContainerId))
-            {
+        for (CAMQPConnectionKey key : keys) {
+            if (StringUtils.equalsIgnoreCase(key.getRemoteContainerId(), targetContainerId)) {
                 return openConnections.get(key);
             }
         }
         return null;
     }
 
-    public static CAMQPConnection getAnyCAMQPConnection(String targetContainerId)
-    {
+    public static CAMQPConnection getAnyCAMQPConnection(String targetContainerId) {
         return getCAMQPConnection(targetContainerId);
     }
 
-    public static void registerConnectionObserver(CAMQPConnectionObserver connectionAcceptor)
-    {
+    public static void registerConnectionObserver(CAMQPConnectionObserver connectionAcceptor) {
         CAMQPConnectionManager.connectionObserver = connectionAcceptor;
     }
 
-    public static String getContainerId()
-    {
+    public static String getContainerId() {
         return containerId;
     }
 
-    static Collection<String> listConnections()
-    {
+    static Collection<String> listConnections() {
         Collection<String> connectionList = new ArrayList<String>();
         Set<CAMQPConnectionKey> keys = openConnections.keySet();
-        for (CAMQPConnectionKey k : keys)
-        {
+        for (CAMQPConnectionKey k : keys) {
             connectionList.add(k.toString());
         }
         return connectionList;
     }
 
-    static void connectionClosed(CAMQPConnectionKey key)
-    {
+    static void connectionClosed(CAMQPConnectionKey key) {
         connectionClosedInternal(key);
         CAMQPSessionManager.connectionClosed(key);
     }
 
-    static void connectionAborted(CAMQPConnectionKey key)
-    {
+    static void connectionAborted(CAMQPConnectionKey key) {
         CAMQPConnection abortedConnection = connectionClosedInternal(key);
-        if (abortedConnection != null)
-        {
+        if (abortedConnection != null) {
             abortedConnection.aborted();
         }
         CAMQPSessionManager.connectionClosed(key);
     }
 
-    private static CAMQPConnection connectionClosedInternal(CAMQPConnectionKey key)
-    {
+    private static CAMQPConnection connectionClosedInternal(CAMQPConnectionKey key) {
         CAMQPConnection connection = openConnections.remove(key);
-        synchronized (shutdownLock)
-        {
-            if ((openConnections.size() == 0) && shutdownInProgress)
-            {
+        synchronized (shutdownLock) {
+            if ((openConnections.size() == 0) && shutdownInProgress) {
                 shutdownLock.notifyAll();
             }
         }
         return connection;
     }
 
-    static void connectionCreated(CAMQPConnectionKey key, CAMQPConnection connection)
-    {
+    static void connectionCreated(CAMQPConnectionKey key, CAMQPConnection connection) {
         connectionCreatedInternal(key, connection);
     }
 
-    private static void connectionCreatedInternal(CAMQPConnectionKey key, CAMQPConnection connection)
-    {
-        if (shutdownInProgress)
-        {
+    private static void connectionCreatedInternal(CAMQPConnectionKey key, CAMQPConnection connection) {
+        if (shutdownInProgress) {
             log.error("Shutdown is already in progress: cannot add CAMQPConnection to ConnectionManager's openConnectionsList");
             return; // TODO handle error
         }
         openConnections.put(key, connection);
     }
 
-    static void connectionAccepted(CAMQPConnectionStateActor stateActor, CAMQPConnectionKey key)
-    {
+    static void connectionAccepted(CAMQPConnectionStateActor stateActor, CAMQPConnectionKey key) {
         CAMQPConnection amqpConnection = new CAMQPConnection(stateActor);
         connectionCreatedInternal(key, amqpConnection);
-        if (connectionObserver != null)
-        {
+        if (connectionObserver != null) {
             connectionObserver.connectionAccepted(amqpConnection);
         }
     }
 
-    public static void connectionCloseInitiatedByRemotePeer(CAMQPConnectionKey key)
-    {
-        if (connectionObserver != null)
-        {
+    public static void connectionCloseInitiatedByRemotePeer(CAMQPConnectionKey key) {
+        if (connectionObserver != null) {
             CAMQPConnection connection = openConnections.get(key);
-            if (connection != null)
-            {
+            if (connection != null) {
                 connectionObserver.connectionCloseInitiatedByRemotePeer(connection);
             }
-            else
-            {
+            else {
                 log.warn("Connection not found in the openConnections list: " + key.getRemoteContainerId() + "  " + key.getEphemeralPort());
             }
         }
     }
 
-    public static void shutdown()
-    {
-        if (shutdownInProgress)
-        {
+    public static void shutdown() {
+        if (shutdownInProgress) {
             return;
         }
         shutdownInProgress = true;
 
         Collection<CAMQPConnectionKey> connectionKeys = openConnections.keySet();
-        for (CAMQPConnectionKey connectionKey : connectionKeys)
-        {
+        for (CAMQPConnectionKey connectionKey : connectionKeys) {
             CAMQPConnection connection = openConnections.get(connectionKey);
-            if (connection != null)
-            {
+            if (connection != null) {
                 connection.closeAsync();
             }
         }
-        try
-        {
-            synchronized (shutdownLock)
-            {
-                while (openConnections.size() > 0)
-                {
+        try {
+            synchronized (shutdownLock) {
+                while (openConnections.size() > 0) {
                     shutdownLock.wait();
                 }
             }
         }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
         connectionHeartbeatScheduler.shutdown();
-        try
-        {
+        try {
             connectionHeartbeatScheduler.awaitTermination(300, TimeUnit.SECONDS);
         }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 

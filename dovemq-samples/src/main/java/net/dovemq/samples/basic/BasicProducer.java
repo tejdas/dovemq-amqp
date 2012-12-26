@@ -10,11 +10,10 @@ import net.dovemq.api.Session;
  * This sample shows how to create a DoveMQ producer that creates a transient
  * queue in the DoveMQ broker, and sends messages.
  */
-public class BasicProducer
-{
+public class BasicProducer {
     private static final String QUEUE_NAME = "SampleQueue";
-    public static void main(String[] args)
-    {
+
+    public static void main(String[] args) {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -26,8 +25,7 @@ public class BasicProducer
          */
         ConnectionFactory.initialize("producer");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -42,8 +40,7 @@ public class BasicProducer
             /*
              * Create and send some messages.
              */
-            for (int i = 0; i < 20; i++)
-            {
+            for (int i = 0; i < 20; i++) {
                 DoveMQMessage message = MessageFactory.createMessage();
                 String msg = "Hello from Producer: msg: " + i;
                 System.out.println("sending message: " + msg);
@@ -63,8 +60,7 @@ public class BasicProducer
              */
             session.close();
         }
-        finally
-        {
+        finally {
             /*
              * Shutdown DoveMQ runtime.
              */

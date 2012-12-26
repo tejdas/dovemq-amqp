@@ -42,47 +42,46 @@ import org.apache.log4j.Logger;
  * @author tejdas
  *
  */
-final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver
-{
+final class QueueRouter implements
+        CAMQPMessageReceiver,
+        CAMQPMessageDispositionObserver {
     private static final Logger log = Logger.getLogger(QueueRouter.class);
 
     private final Queue<DoveMQMessage> messageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
+
     private final Queue<CAMQPSourceInterface> consumerProxies = new LinkedList<CAMQPSourceInterface>();
-    private final ConcurrentMap<Long, ConcurrentMap<Long, DoveMQMessage>> inFlightMessagesByConsumerId =
-            new ConcurrentHashMap<Long, ConcurrentMap<Long, DoveMQMessage>>();
+
+    private final ConcurrentMap<Long, ConcurrentMap<Long, DoveMQMessage>> inFlightMessagesByConsumerId = new ConcurrentHashMap<Long, ConcurrentMap<Long, DoveMQMessage>>();
 
     private CAMQPTargetInterface producerSink = null;
+
     private boolean sendInProgress = false;
 
     private final String queueName;
-    public QueueRouter(String queueName)
-    {
+
+    public QueueRouter(String queueName) {
         super();
         this.queueName = queueName;
     }
 
     /**
-     * Returns the next consumer proxy to send the message to.
-     * It picks up the consumers in a round-robin manner.
+     * Returns the next consumer proxy to send the message to. It picks up the
+     * consumers in a round-robin manner.
      *
      * @return
      */
     @GuardedBy("this")
-    private CAMQPSourceInterface getNextConsumerProxy()
-    {
-        if (consumerProxies.isEmpty())
-        {
+    private CAMQPSourceInterface getNextConsumerProxy() {
+        if (consumerProxies.isEmpty()) {
             return null;
         }
-        else if (consumerProxies.size() == 1)
-        {
+        else if (consumerProxies.size() == 1) {
             return consumerProxies.peek();
         }
-        else
-        {
+        else {
             /*
-             * To achieve round-robin behavior, remove the consumer proxy
-             * from the head of the queue, and add it to the tail of the queue.
+             * To achieve round-robin behavior, remove the consumer proxy from
+             * the head of the queue, and add it to the tail of the queue.
              */
             CAMQPSourceInterface nextDestination = consumerProxies.poll();
             consumerProxies.add(nextDestination);
@@ -92,13 +91,10 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
 
     /**
      * Called by CAMQPTarget upon receipt of an incoming message.
-     *
      */
     @Override
-    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
-    {
-        if (!messageQueue.add(message))
-        {
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target) {
+        if (!messageQueue.add(message)) {
             // TODO queue full
         }
 
@@ -106,10 +102,8 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
         ((DoveMQMessageImpl) message).setSourceId(producerId);
 
         CAMQPSourceInterface currentConsumerProxy = null;
-        synchronized (this)
-        {
-            if (sendInProgress || (consumerProxies.isEmpty()))
-            {
+        synchronized (this) {
+            if (sendInProgress || (consumerProxies.isEmpty())) {
                 return;
             }
             sendInProgress = true;
@@ -121,41 +115,33 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
 
     /**
      * Route messages (off messageQueue) to consumer proxies.
+     *
      * @param consumerProxy
      */
-    private void sendMessages(CAMQPSourceInterface consumerProxy)
-    {
-        while (true)
-        {
+    private void sendMessages(CAMQPSourceInterface consumerProxy) {
+        while (true) {
             DoveMQMessage messageToSend = messageQueue.peek();
-            if (messageToSend == null)
-            {
-                synchronized (this)
-                {
+            if (messageToSend == null) {
+                synchronized (this) {
                     sendInProgress = false;
                     return;
                 }
             }
 
-            if (consumerProxy == null)
-            {
-                synchronized (this)
-                {
+            if (consumerProxy == null) {
+                synchronized (this) {
                     consumerProxy = getNextConsumerProxy();
-                    if (consumerProxy == null)
-                    {
+                    if (consumerProxy == null) {
                         sendInProgress = false;
                         return;
                     }
                 }
             }
 
-            try
-            {
+            try {
                 long deliveryId = ((DoveMQMessageImpl) messageToSend).getDeliveryId();
                 ConcurrentMap<Long, DoveMQMessage> messageMap = inFlightMessagesByConsumerId.get(consumerProxy.getId());
-                if (messageMap != null)
-                {
+                if (messageMap != null) {
                     messageMap.put(deliveryId, messageToSend);
                 }
 
@@ -163,99 +149,79 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
                 consumerProxy = null;
                 messageQueue.remove();
             }
-            catch (RuntimeException ex)
-            {
+            catch (RuntimeException ex) {
             }
         }
     }
 
     @Override
-    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface consumer)
-    {
+    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface consumer) {
         long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
         ConcurrentMap<Long, DoveMQMessage> messageMap = inFlightMessagesByConsumerId.get(consumer.getId());
-        if (messageMap != null)
-        {
-            if (messageMap.remove(deliveryId) != null)
-            {
+        if (messageMap != null) {
+            if (messageMap.remove(deliveryId) != null) {
                 acknowledgeMessageDelivered(message, deliveryId);
             }
         }
     }
 
-    private synchronized CAMQPTargetInterface getSourceSink()
-    {
+    private synchronized CAMQPTargetInterface getSourceSink() {
         return producerSink;
     }
 
-    void consumerAttached(CAMQPSourceInterface consumerProxy)
-    {
+    void consumerAttached(CAMQPSourceInterface consumerProxy) {
         CAMQPSourceInterface currentDestination = null;
-        synchronized(this)
-        {
-            if (consumerProxies.contains(consumerProxy))
-            {
+        synchronized (this) {
+            if (consumerProxies.contains(consumerProxy)) {
                 return;
             }
 
             consumerProxies.add(consumerProxy);
-            if (!sendInProgress)
-            {
+            if (!sendInProgress) {
                 sendInProgress = true;
                 currentDestination = getNextConsumerProxy();
             }
         }
         consumerProxy.registerDispositionObserver(this);
 
-        ConcurrentMap<Long, DoveMQMessage> messageMap = new  ConcurrentHashMap<Long, DoveMQMessage>();
+        ConcurrentMap<Long, DoveMQMessage> messageMap = new ConcurrentHashMap<Long, DoveMQMessage>();
         inFlightMessagesByConsumerId.put(consumerProxy.getId(), messageMap);
 
-        if (currentDestination != null)
-        {
+        if (currentDestination != null) {
             sendMessages(currentDestination);
         }
     }
 
-    void consumerDetached(CAMQPSourceInterface consumerProxy)
-    {
-        synchronized(this)
-        {
+    void consumerDetached(CAMQPSourceInterface consumerProxy) {
+        synchronized (this) {
             consumerProxies.remove(consumerProxy);
         }
         ConcurrentMap<Long, DoveMQMessage> messageMap = inFlightMessagesByConsumerId.remove(consumerProxy.getId());
         /*
-         * Since the consumer has detached, treat the following messages as having been acked
-         * and notify the producer, so its link-credit window opens up.
-         * REVISIT TODO
+         * Since the consumer has detached, treat the following messages as
+         * having been acked and notify the producer, so its link-credit window
+         * opens up. REVISIT TODO
          */
-        if (messageMap != null)
-        {
+        if (messageMap != null) {
             Set<Long> deliveryIds = messageMap.keySet();
-            for (long deliveryId : deliveryIds)
-            {
+            for (long deliveryId : deliveryIds) {
                 DoveMQMessage message = messageMap.get(deliveryId);
                 acknowledgeMessageDelivered(message, deliveryId);
             }
         }
     }
 
-    private void acknowledgeMessageDelivered(DoveMQMessage message,
-            long deliveryId)
-    {
+    private void acknowledgeMessageDelivered(DoveMQMessage message, long deliveryId) {
         long producerId = ((DoveMQMessageImpl) message).getSourceId();
         CAMQPTargetInterface sink = getSourceSink();
-        if ((sink != null) && (sink.getId() == producerId))
-        {
+        if ((sink != null) && (sink.getId() == producerId)) {
             sink.acknowledgeMessageProcessingComplete(deliveryId);
         }
     }
 
-    void producerAttached(CAMQPTargetInterface producerSink)
-    {
-        synchronized (this)
-        {
-            if (this.producerSink != null)
-            {
+    void producerAttached(CAMQPTargetInterface producerSink) {
+        synchronized (this) {
+            if (this.producerSink != null) {
                 log.warn("Producer already attached to queue: " + queueName);
                 return;
             }
@@ -264,27 +230,21 @@ final class QueueRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
         producerSink.registerMessageReceiver(this);
     }
 
-    void producerDetached(CAMQPTargetInterface producerSink)
-    {
-        synchronized (this)
-        {
-            if (this.producerSink == null)
-            {
+    void producerDetached(CAMQPTargetInterface producerSink) {
+        synchronized (this) {
+            if (this.producerSink == null) {
                 log.error("The QueueRouter: " + queueName + " is not attached to any producer");
             }
-            else if (this.producerSink != producerSink)
-            {
+            else if (this.producerSink != producerSink) {
                 log.error("The Producer: " + producerSink + " is not attached to queue: " + queueName + " . The queue is attached by: " + this.producerSink);
             }
-            else
-            {
+            else {
                 this.producerSink = null;
             }
         }
     }
 
-    synchronized boolean isCompletelyDetached()
-    {
+    synchronized boolean isCompletelyDetached() {
         return ((producerSink == null) && (consumerProxies.isEmpty()) && messageQueue.isEmpty());
     }
 }

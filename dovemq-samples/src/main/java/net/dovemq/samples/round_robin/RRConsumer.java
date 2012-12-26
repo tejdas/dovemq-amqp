@@ -12,17 +12,17 @@ import net.dovemq.api.Session;
 
 /**
  * This sample shows how to create a DoveMQ consumer that creates a transient
- * queue in the DoveMQ broker, and waits for incoming messages.
- *
- * It creates multiple consumers attached to the queue. When Producer sends
- * messages to the queue, it is routed to all the consumers in a round-robin
- * fashion.
+ * queue in the DoveMQ broker, and waits for incoming messages. It creates
+ * multiple consumers attached to the queue. When Producer sends messages to the
+ * queue, it is routed to all the consumers in a round-robin fashion.
  */
-public class RRConsumer
-{
+public class RRConsumer {
     private static final String QUEUE_NAME = "SampleQueue";
+
     private static final int NUM_CONSUMERS = 4;
+
     private static final CountDownLatch doneSignal = new CountDownLatch(1);
+
     private static final ExecutorService executor = Executors.newFixedThreadPool(NUM_CONSUMERS);
 
     private static volatile boolean doShutdown = false;
@@ -31,17 +31,14 @@ public class RRConsumer
      * Implementation of a sample MessageReceiver callback, that is registered
      * with the Consumer.
      */
-    private static class SampleMessageReceiver implements DoveMQMessageReceiver
-    {
-        public SampleMessageReceiver(int id)
-        {
+    private static class SampleMessageReceiver implements DoveMQMessageReceiver {
+        public SampleMessageReceiver(int id) {
             super();
             this.id = id;
         }
 
         @Override
-        public void messageReceived(DoveMQMessage message)
-        {
+        public void messageReceived(DoveMQMessage message) {
             byte[] body = message.getPayload();
             String payload = new String(body);
             System.out.println("Received message by consumer: " + id + " payload: " + payload);
@@ -50,28 +47,25 @@ public class RRConsumer
         private final int id;
     }
 
-    private static class SampleConsumer implements Runnable
-    {
-        public SampleConsumer(Session session, int id)
-        {
+    private static class SampleConsumer implements Runnable {
+        public SampleConsumer(Session session, int id) {
             super();
             this.session = session;
             this.id = id;
         }
 
         @Override
-        public void run()
-        {
-            try
-            {
+        public void run() {
+            try {
                 /*
-                 * Create a consumer that binds to a transient queue on the broker.
+                 * Create a consumer that binds to a transient queue on the
+                 * broker.
                  */
                 Consumer consumer = session.createConsumer(QUEUE_NAME);
 
                 /*
-                 * Register a message receiver with the consumer to asynchronously
-                 * receive messages.
+                 * Register a message receiver with the consumer to
+                 * asynchronously receive messages.
                  */
                 SampleMessageReceiver messageReceiver = new SampleMessageReceiver(id);
                 consumer.registerMessageReceiver(messageReceiver);
@@ -80,18 +74,17 @@ public class RRConsumer
                 doneSignal.await();
                 System.out.println("consumer: " + id + " done");
             }
-            catch (InterruptedException e)
-            {
+            catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
 
         private final Session session;
+
         private int id;
     }
 
-    public static void main(String[] args) throws InterruptedException
-    {
+    public static void main(String[] args) throws InterruptedException {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -103,16 +96,14 @@ public class RRConsumer
          */
         ConnectionFactory.initialize("consumer");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
             final Session session = ConnectionFactory.createSession(brokerIp);
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
-            for (int i = 0; i < NUM_CONSUMERS; i++)
-            {
+            for (int i = 0; i < NUM_CONSUMERS; i++) {
                 SampleConsumer sampleConsumer = new SampleConsumer(session, i);
                 executor.submit(sampleConsumer);
             }
@@ -122,15 +113,12 @@ public class RRConsumer
              */
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
-                public void run()
-                {
+                public void run() {
                     doneSignal.countDown();
-                    try
-                    {
+                    try {
                         Thread.sleep(2000);
                     }
-                    catch (InterruptedException e)
-                    {
+                    catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
 
@@ -149,20 +137,16 @@ public class RRConsumer
             });
 
             System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
-            while (!doShutdown)
-            {
-                try
-                {
+            while (!doShutdown) {
+                try {
                     Thread.sleep(1000);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());
             /*
              * Shutdown DoveMQ runtime.

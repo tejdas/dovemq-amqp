@@ -17,8 +17,7 @@
 
 package net.dovemq.transport.link;
 
-public class CAMQPLinkSenderFlowControlException extends RuntimeException
-{
+public final class CAMQPLinkSenderFlowControlException extends RuntimeException {
     /**
      *
      */
@@ -27,5 +26,4 @@ public class CAMQPLinkSenderFlowControlException extends RuntimeException
     CAMQPLinkSenderFlowControlException(String message) {
         super(message);
     }
-
 }

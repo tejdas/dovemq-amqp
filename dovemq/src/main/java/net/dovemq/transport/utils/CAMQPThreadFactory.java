@@ -19,17 +19,14 @@ package net.dovemq.transport.utils;
 
 import java.util.concurrent.ThreadFactory;
 
-public class CAMQPThreadFactory implements ThreadFactory
-{
-    public CAMQPThreadFactory(String threadName)
-    {
+public final class CAMQPThreadFactory implements ThreadFactory {
+    public CAMQPThreadFactory(String threadName) {
         super();
         this.threadName = threadName;
     }
 
     @Override
-    public Thread newThread(Runnable r)
-    {
+    public Thread newThread(Runnable r) {
         return new Thread(r, threadName);
     }
 

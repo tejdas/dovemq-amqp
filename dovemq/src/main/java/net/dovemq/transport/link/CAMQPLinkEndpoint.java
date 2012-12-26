@@ -48,14 +48,14 @@ import org.apache.log4j.Logger;
  *
  * @author tejdas
  */
-public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
-{
+public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
     private static final Logger log = Logger.getLogger(CAMQPLinkEndpoint.class);
 
     private final String roleAsString;
+
     private String linkName;
-    public String getLinkName()
-    {
+
+    public String getLinkName() {
         return linkName;
     }
 
@@ -64,11 +64,12 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     protected long linkHandle;
 
     private String sourceAddress;
+
     private String targetAddress;
+
     private CAMQPLinkKey linkKey;
 
-    public CAMQPLinkKey getLinkKey()
-    {
+    public CAMQPLinkKey getLinkKey() {
         return linkKey;
     }
 
@@ -76,40 +77,41 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
      * Flow-control attributes
      */
     protected long deliveryCount = 0;
+
     protected long linkCredit = 0;
+
     protected long available = 0;
 
     protected final CAMQPSessionInterface session;
 
     protected CAMQPEndpointPolicy endpointPolicy = CAMQPEndpointManager.getDefaultEndpointPolicy();
 
-    public CAMQPEndpointPolicy getEndpointPolicy()
-    {
+    public CAMQPEndpointPolicy getEndpointPolicy() {
         return endpointPolicy;
     }
 
-    public CAMQPLinkEndpoint(CAMQPSessionInterface session)
-    {
+    public CAMQPLinkEndpoint(CAMQPSessionInterface session) {
         super();
         this.session = session;
-        this.roleAsString = (getRole() == LinkRole.LinkSender)? "LinkSender" : "LinkReceiver";
+        this.roleAsString = (getRole() == LinkRole.LinkSender) ? "LinkSender" : "LinkReceiver";
         linkStateActor = new CAMQPLinkStateActor(this);
     }
 
     /**
      * Establishes an AMQP link to a remote AMQP end-point.
+     *
      * @param sourceName
      * @param targetName
      */
-    void createLink(String sourceName, String targetName, CAMQPEndpointPolicy endpointPolicy)
-    {
+    void createLink(String sourceName, String targetName, CAMQPEndpointPolicy endpointPolicy) {
         this.endpointPolicy = endpointPolicy;
         sourceAddress = sourceName;
         targetAddress = targetName;
 
         linkHandle = CAMQPLinkManager.getNextLinkHandle();
         linkName = UUID.randomUUID().toString();
-        CAMQPLinkManager.getLinkHandshakeTracker().registerOutstandingLink(linkName, this);
+        CAMQPLinkManager.getLinkHandshakeTracker()
+                .registerOutstandingLink(linkName, this);
 
         CAMQPControlAttach data = new CAMQPControlAttach();
         data.setHandle(linkHandle);
@@ -118,8 +120,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
 
         CAMQPDefinitionSource source = new CAMQPDefinitionSource();
         source.setAddress(sourceAddress);
-        if (endpointPolicy.getEndpointType() == EndpointType.TOPIC)
-        {
+        if (endpointPolicy.getEndpointType() == EndpointType.TOPIC) {
             source.setDistributionMode(CAMQPConstants.STD_DIST_MODE_COPY);
         }
         data.setSource(source);
@@ -129,8 +130,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         data.setTarget(target);
 
         source.setDynamic(false);
-        if (getRole() == LinkRole.LinkSender)
-        {
+        if (getRole() == LinkRole.LinkSender) {
             data.setInitialDeliveryCount(deliveryCount);
         }
 
@@ -144,8 +144,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         /*
          * Populate custom Endpoint properties
          */
-        if (!endpointPolicy.getCustomProperties().isEmpty())
-        {
+        if (!endpointPolicy.getCustomProperties().isEmpty()) {
             data.getProperties().putAll(endpointPolicy.getCustomProperties());
             data.setRequiredProperties(true);
         }
@@ -157,8 +156,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     /**
      * Closes an AMQP link
      */
-    void destroyLink()
-    {
+    void destroyLink() {
         CAMQPControlDetach data = new CAMQPControlDetach();
         data.setClosed(true);
         data.setHandle(linkHandle);
@@ -167,12 +165,11 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     }
 
     /**
-     * Closes an AMQP link, specifying the reason
-     * for closure.
+     * Closes an AMQP link, specifying the reason for closure.
+     *
      * @param message
      */
-    void destroyLink(String message)
-    {
+    void destroyLink(String message) {
         CAMQPControlDetach data = new CAMQPControlDetach();
         CAMQPDefinitionError error = new CAMQPDefinitionError();
         error.setCondition(message);
@@ -184,88 +181,73 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     }
 
     /**
-     * Dispatched by session layer when a Link attach
-     * frame is received from the AMQP peer.
+     * Dispatched by session layer when a Link attach frame is received from the
+     * AMQP peer.
      */
     @Override
-    public void attachReceived(CAMQPControlAttach data)
-    {
+    public void attachReceived(CAMQPControlAttach data) {
         linkKey = CAMQPLinkKey.createLinkKey(data);
         linkStateActor.attachReceived(data);
     }
 
     /**
-     * Dispatched by session layer when a Link detach
-     * frame is received from the AMQP peer.
+     * Dispatched by session layer when a Link detach frame is received from the
+     * AMQP peer.
      */
     @Override
-    public void detachReceived(CAMQPControlDetach data)
-    {
+    public void detachReceived(CAMQPControlDetach data) {
         linkStateActor.detachReceived(data);
     }
 
-    public void attached(boolean isInitiator)
-    {
-        if (linkKey != null)
-        {
-            CAMQPLinkManager.getLinkmanager().registerLinkEndpoint(linkName, linkKey, this);
+    public void attached(boolean isInitiator) {
+        if (linkKey != null) {
+            CAMQPLinkManager.getLinkmanager()
+                    .registerLinkEndpoint(linkName, linkKey, this);
 
-            if (!isInitiator)
-            {
-                if (getRole() == LinkRole.LinkSender)
-                {
+            if (!isInitiator) {
+                if (getRole() == LinkRole.LinkSender) {
                     CAMQPEndpointManager.sourceEndpointAttached(linkKey.getSource(), (CAMQPLinkSenderInterface) this, endpointPolicy);
                 }
-                else
-                {
+                else {
                     CAMQPEndpointManager.targetEndpointAttached(linkKey.getTarget(), (CAMQPLinkReceiverInterface) this, endpointPolicy);
                 }
             }
         }
-        String initiatedBy =  isInitiator? "self" : "peer";
+        String initiatedBy = isInitiator ? "self" : "peer";
         log.debug(roleAsString + " created between source: " + sourceAddress + " and target: " + targetAddress + " . Initiated by: " + initiatedBy);
     }
 
-    public void detached(boolean isInitiator)
-    {
-        if (linkKey != null)
-        {
-            CAMQPLinkManager.getLinkmanager().unregisterLinkEndpoint(linkName, linkKey);
-            if (!isInitiator)
-            {
-                if (getRole() == LinkRole.LinkSender)
-                {
+    public void detached(boolean isInitiator) {
+        if (linkKey != null) {
+            CAMQPLinkManager.getLinkmanager()
+                    .unregisterLinkEndpoint(linkName, linkKey);
+            if (!isInitiator) {
+                if (getRole() == LinkRole.LinkSender) {
                     CAMQPEndpointManager.sourceEndpointDetached(linkKey.getSource(), (CAMQPSourceInterface) getEndpoint(), endpointPolicy);
                 }
-                else
-                {
+                else {
                     CAMQPEndpointManager.targetEndpointDetached(linkKey.getTarget(), (CAMQPTargetInterface) getEndpoint(), endpointPolicy);
                 }
             }
         }
-        String initiatedBy =  isInitiator? "self" : "peer";
+        String initiatedBy = isInitiator ? "self" : "peer";
         log.debug(roleAsString + " destroyed between source: " + sourceAddress + " and target: " + targetAddress + " . Initiated by: " + initiatedBy);
     }
 
-    CAMQPSessionInterface getSession()
-    {
+    CAMQPSessionInterface getSession() {
         return session;
     }
 
     /**
-     * Process an incoming Link attach frame.
-     *
-     * For link establishment initiator, nothing needs do be done.
-     *
-     * Otherwise, set the initial delivery count
-     * and source or target address from the incoming attach frame.
-     * Send back an attach frame,
+     * Process an incoming Link attach frame. For link establishment initiator,
+     * nothing needs do be done. Otherwise, set the initial delivery count and
+     * source or target address from the incoming attach frame. Send back an
+     * attach frame,
      *
      * @param data
      * @param isInitiator
      */
-    void processAttachReceived(CAMQPControlAttach data, boolean isInitiator)
-    {
+    void processAttachReceived(CAMQPControlAttach data, boolean isInitiator) {
         if (isInitiator)
             return;
 
@@ -273,8 +255,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
 
         linkName = data.getName();
 
-        if (getRole() == LinkRole.LinkReceiver)
-        {
+        if (getRole() == LinkRole.LinkReceiver) {
             if (data.isSetInitialDeliveryCount())
                 deliveryCount = data.getInitialDeliveryCount();
         }
@@ -284,27 +265,23 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
          * peer
          */
         long maxMessageSize = CAMQPLinkConstants.DEFAULT_MAX_MESSAGE_SIZE;
-        if (data.isSetMaxMessageSize())
-        {
+        if (data.isSetMaxMessageSize()) {
             maxMessageSize = data.getMaxMessageSize().longValue();
         }
 
         int sndSettleMode = CAMQPConstants.SENDER_SETTLE_MODE_MIXED;
-        if (data.isSetSndSettleMode())
-        {
+        if (data.isSetSndSettleMode()) {
             sndSettleMode = data.getSndSettleMode();
         }
 
         int rcvSettleMode = CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND;
-        if (data.isSetRcvSettleMode())
-        {
+        if (data.isSetRcvSettleMode()) {
             rcvSettleMode = data.getRcvSettleMode();
         }
 
         endpointPolicy = new CAMQPEndpointPolicy(maxMessageSize, sndSettleMode, rcvSettleMode, endpointPolicy);
 
-        if (data.isSetProperties())
-        {
+        if (data.isSetProperties()) {
             endpointPolicy.getCustomProperties().putAll(data.getProperties());
         }
 
@@ -313,24 +290,20 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         responseData.setName(linkName);
         responseData.setRole(getRole() == LinkRole.LinkReceiver);
 
-        if (data.getSource() != null)
-        {
+        if (data.getSource() != null) {
             CAMQPDefinitionSource inSource = (CAMQPDefinitionSource) data.getSource();
             sourceAddress = (String) inSource.getAddress();
 
-            if (inSource.isSetDistributionMode())
-            {
+            if (inSource.isSetDistributionMode()) {
                 String distMode = inSource.getDistributionMode();
-                if (StringUtils.equalsIgnoreCase(distMode, CAMQPConstants.STD_DIST_MODE_COPY))
-                {
+                if (StringUtils.equalsIgnoreCase(distMode, CAMQPConstants.STD_DIST_MODE_COPY)) {
                     endpointPolicy.setEndpointType(EndpointType.TOPIC);
                     endpointPolicy.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
                 }
             }
         }
 
-        if (data.getTarget() != null)
-        {
+        if (data.getTarget() != null) {
             CAMQPDefinitionTarget inTarget = (CAMQPDefinitionTarget) data.getTarget();
             targetAddress = (String) inTarget.getAddress();
         }
@@ -351,16 +324,13 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     }
 
     /**
-     * Process an incoming Link detach frame.
-     *
-     * For link establishment initiator, nothing needs do be done.
-     * Otherwise, send back an attach frame.
+     * Process an incoming Link detach frame. For link establishment initiator,
+     * nothing needs do be done. Otherwise, send back an attach frame.
      *
      * @param data
      * @param isInitiator
      */
-    void processDetachReceived(CAMQPControlDetach data, boolean isInitiator)
-    {
+    void processDetachReceived(CAMQPControlDetach data, boolean isInitiator) {
         if (isInitiator)
             return;
 
@@ -371,8 +341,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     }
 
     @GuardedBy("this")
-    CAMQPControlFlow populateFlowFrame()
-    {
+    CAMQPControlFlow populateFlowFrame() {
         CAMQPControlFlow flow = new CAMQPControlFlow();
         flow.setHandle(linkHandle);
         flow.setAvailable(available);
@@ -382,8 +351,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     }
 
     @GuardedBy("this")
-    CAMQPControlFlow populateFlowFrameAvailableUnknown()
-    {
+    CAMQPControlFlow populateFlowFrameAvailableUnknown() {
         CAMQPControlFlow flow = new CAMQPControlFlow();
         flow.setHandle(linkHandle);
         flow.setDeliveryCount(deliveryCount);
@@ -392,22 +360,21 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     }
 
     /**
-     * Sends disposition frame to the peer.
-     * If the current role is LinkReceiver, it is sending the disposition for LinkSender, so set role to true
-     * If the current role is LinkSender, it is sending the disposition for LinkReceiver, so set role to false
+     * Sends disposition frame to the peer. If the current role is LinkReceiver,
+     * it is sending the disposition for LinkSender, so set role to true If the
+     * current role is LinkSender, it is sending the disposition for
+     * LinkReceiver, so set role to false
      *
      * @param deliveryId
      * @param settleMode
      * @param newState
      */
-    public void sendDisposition(long deliveryId, boolean settleMode, Object newState)
-    {
+    public void sendDisposition(long deliveryId, boolean settleMode, Object newState) {
         session.sendDisposition(deliveryId, settleMode, (getRole() == LinkRole.LinkReceiver), newState);
     }
 
     @Override
-    public void sessionClosed()
-    {
+    public void sessionClosed() {
         linkStateActor.sessionClosed();
         detached(false); // TODO
     }
@@ -415,18 +382,15 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
     abstract Object getEndpoint();
 
     /**
-     * Send the message on the underlying AMQP session
-     * as a transfer frame.
+     * Send the message on the underlying AMQP session as a transfer frame.
      *
      * @param message
      * @param messageSource
      */
-    void send(CAMQPMessage message, CAMQPSourceInterface messageSource)
-    {
+    void send(CAMQPMessage message, CAMQPSourceInterface messageSource) {
         /*
-         * TODO: fragment the message into multiple transfer frames
-         * if the message size is greater than the negotiated transfer
-         * frame size.
+         * TODO: fragment the message into multiple transfer frames if the
+         * message size is greater than the negotiated transfer frame size.
          */
         long deliveryId = session.getNextDeliveryId();
         CAMQPControlTransfer transferFrame = new CAMQPControlTransfer();
@@ -440,19 +404,17 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler
         /*
          * Notify the source end-point that the message is about to be sent.
          */
-        if (messageSource != null)
-        {
+        if (messageSource != null) {
             messageSource.messageSent(deliveryId, message);
         }
 
-        assert(this instanceof CAMQPLinkSenderInterface);
+        assert (this instanceof CAMQPLinkSenderInterface);
         session.sendTransfer(transferFrame, message.getPayload(), (CAMQPLinkSenderInterface) this);
     }
 
-    private static void populateTransferFrameWithDispositionPolicy(CAMQPControlTransfer transferFrame, CAMQPMessageDeliveryPolicy deliveryPolicy)
-    {
+    private static void populateTransferFrameWithDispositionPolicy(CAMQPControlTransfer transferFrame, CAMQPMessageDeliveryPolicy deliveryPolicy) {
         boolean senderSettled = (deliveryPolicy == CAMQPMessageDeliveryPolicy.AtmostOnce);
-        int receiverSettledMode = (deliveryPolicy == CAMQPMessageDeliveryPolicy.ExactlyOnce)? CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND : CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST;
+        int receiverSettledMode = (deliveryPolicy == CAMQPMessageDeliveryPolicy.ExactlyOnce) ? CAMQPConstants.RECEIVER_SETTLE_MODE_SECOND : CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST;
         transferFrame.setSettled(senderSettled);
         transferFrame.setRcvSettleMode(receiverSettledMode);
     }

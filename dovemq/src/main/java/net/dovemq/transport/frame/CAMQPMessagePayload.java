@@ -23,21 +23,17 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 
 @Immutable
-public class CAMQPMessagePayload
-{
-    public ChannelBuffer getPayload()
-    {
+public final class CAMQPMessagePayload {
+    public ChannelBuffer getPayload() {
         return payload;
     }
 
-    public CAMQPMessagePayload(ChannelBuffer payload)
-    {
+    public CAMQPMessagePayload(ChannelBuffer payload) {
         super();
         this.payload = payload;
     }
 
-    public CAMQPMessagePayload(byte[] payload)
-    {
+    public CAMQPMessagePayload(byte[] payload) {
         super();
         this.payload = ChannelBuffers.wrappedBuffer(payload);
     }

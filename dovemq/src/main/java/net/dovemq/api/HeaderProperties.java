@@ -17,14 +17,20 @@
 
 package net.dovemq.api;
 
-public interface HeaderProperties
-{
+public interface HeaderProperties {
     public boolean isDurable();
+
     public void setDurable(boolean durable);
+
     public int getPriority();
+
     public void setPriority(int val);
+
     public long getTTL();
+
     public void setTTL(long ttl);
+
     public long getDeliveryCount();
+
     public void setDeliveryCount(long deliveryCount);
 }

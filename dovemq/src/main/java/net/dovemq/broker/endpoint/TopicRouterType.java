@@ -17,9 +17,6 @@
 
 package net.dovemq.broker.endpoint;
 
-public enum TopicRouterType
-{
-    Basic,
-    MessageTagFilter,
-    Hierarchical
+public enum TopicRouterType {
+    Basic, MessageTagFilter, Hierarchical
 }

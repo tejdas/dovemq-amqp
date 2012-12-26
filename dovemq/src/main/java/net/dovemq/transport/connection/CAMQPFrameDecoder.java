@@ -33,79 +33,65 @@ import org.jboss.netty.handler.codec.frame.FrameDecoder;
  * @author tejdas
  *
  */
-class CAMQPFrameDecoder extends FrameDecoder
-{
+final class CAMQPFrameDecoder extends FrameDecoder {
     /*
-     * If only the header has been available so far, and not the body,
-     * it is stored here, and is used when the remainder of the body
-     * is available
+     * If only the header has been available so far, and not the body, it is
+     * stored here, and is used when the remainder of the body is available
      */
     private CAMQPFrameHeader header = null;
 
     private volatile CAMQPConnectionStateActor connectionStateActor = null;
 
-    void setConnectionStateActor(CAMQPConnectionStateActor connectionStateActor)
-    {
+    void setConnectionStateActor(CAMQPConnectionStateActor connectionStateActor) {
         this.connectionStateActor = connectionStateActor;
     }
 
-    private CAMQPFrameHeader getHeaderAndReset()
-    {
+    private CAMQPFrameHeader getHeaderAndReset() {
         CAMQPFrameHeader currentHeader = header;
         header = null;
         return currentHeader;
     }
 
     @Override
-    public Object decode(ChannelHandlerContext ctx, Channel channel,
-            ChannelBuffer buffer)
-    {
-        if (ctx == null || channel == null || buffer == null)
-        {
+    public Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) {
+        if (ctx == null || channel == null || buffer == null) {
             throw new IllegalArgumentException("null argument(s) to CAMQPFrameDecoder.decode()");
         }
 
-        if (!connectionStateActor.hasReceivedConnectionHeaderBytes())
-        {
-            if (buffer.readableBytes() < CAMQPConnectionConstants.HEADER_LENGTH)
-            {
+        if (!connectionStateActor.hasReceivedConnectionHeaderBytes()) {
+            if (buffer.readableBytes() < CAMQPConnectionConstants.HEADER_LENGTH) {
                 /*
-                 * Insufficient bytes available to read the frame header.
-                 * Wait until we receive more bytes.
+                 * Insufficient bytes available to read the frame header. Wait
+                 * until we receive more bytes.
                  */
                 return null;
             }
 
             ChannelBuffer handshakeHeader = buffer.readBytes(CAMQPConnectionConstants.HEADER_LENGTH);
-            return  new CAMQPHandshakeFrame(handshakeHeader);
+            return new CAMQPHandshakeFrame(handshakeHeader);
         }
 
-        if (header == null)
-        {
-            if (buffer.readableBytes() < CAMQPFrameConstants.FRAME_HEADER_SIZE)
-            {
+        if (header == null) {
+            if (buffer.readableBytes() < CAMQPFrameConstants.FRAME_HEADER_SIZE) {
                 /*
-                 * Insufficient bytes available to read the frame header.
-                 * Wait until we receive more bytes.
+                 * Insufficient bytes available to read the frame header. Wait
+                 * until we receive more bytes.
                  */
                 return null;
             }
-            ChannelBuffer headerBuffer =
-                buffer.readBytes(CAMQPFrameConstants.FRAME_HEADER_SIZE);
+            ChannelBuffer headerBuffer = buffer.readBytes(CAMQPFrameConstants.FRAME_HEADER_SIZE);
             header = CAMQPFrameHeaderCodec.decode(headerBuffer);
         }
 
         int dataOffset = header.getDataOffset();
-        int variableHeaderSize = (dataOffset-CAMQPFrameConstants.DEFAULT_DATA_OFFSET) * 4;
+        int variableHeaderSize = (dataOffset - CAMQPFrameConstants.DEFAULT_DATA_OFFSET) * 4;
 
         int frameBodySize = (int) header.getFrameSize() - (CAMQPFrameConstants.FRAME_HEADER_SIZE + variableHeaderSize);
-        if (frameBodySize > 0)
-        {
-            if (buffer.readableBytes() < frameBodySize)
-            {
+        if (frameBodySize > 0) {
+            if (buffer.readableBytes() < frameBodySize) {
                 /*
-                 * Insufficient bytes available to read the frame body.
-                 * Wait until we receive more bytes.
+                 * Insufficient bytes available to read the frame body. Wait
+                 * until we receive more bytes.
                  */
                 return null;
             }
@@ -114,8 +100,7 @@ class CAMQPFrameDecoder extends FrameDecoder
             buffer.readerIndex(readerIndex + frameBodySize);
             return new CAMQPFrame(getHeaderAndReset(), body);
         }
-        else
-        {
+        else {
             /*
              * AMQP frame without a body
              */

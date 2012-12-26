@@ -25,13 +25,10 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
  * Factory class to initiate creation of Link Sender and Link Receiver
  * @author tejdas
  */
-public final class CAMQPLinkFactory
-{
-    public static CAMQPLinkSenderInterface createLinkSender(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
-    {
+public final class CAMQPLinkFactory {
+    public static CAMQPLinkSenderInterface createLinkSender(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPSessionInterface session = CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
-        if (session != null)
-        {
+        if (session != null) {
             CAMQPLinkSender sender = new CAMQPLinkSender(session);
             sender.createLink(source, target, endpointPolicy);
             return sender;
@@ -39,18 +36,15 @@ public final class CAMQPLinkFactory
         return null;
     }
 
-    public static CAMQPLinkSenderInterface createLinkSender(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPLinkSenderInterface createLinkSender(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPLinkSender sender = new CAMQPLinkSender(session);
         sender.createLink(source, target, endpointPolicy);
         return sender;
     }
 
-    public static CAMQPLinkReceiverInterface createLinkReceiver(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPLinkReceiverInterface createLinkReceiver(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPSessionInterface session = CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
-        if (session != null)
-        {
+        if (session != null) {
             CAMQPLinkReceiver receiver = new CAMQPLinkReceiver(session);
             receiver.createLink(source, target, endpointPolicy);
             return receiver;
@@ -58,8 +52,7 @@ public final class CAMQPLinkFactory
         return null;
     }
 
-    public static CAMQPLinkReceiverInterface createLinkReceiver(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public static CAMQPLinkReceiverInterface createLinkReceiver(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPLinkReceiver receiver = new CAMQPLinkReceiver(session);
         receiver.createLink(source, target, endpointPolicy);
         return receiver;

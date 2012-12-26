@@ -17,8 +17,8 @@
 
 package net.dovemq.transport.endpoint;
 
-public class CAMQPEndpointConstants
-{
+public final class CAMQPEndpointConstants {
     protected static final long MAX_UNSETTLED_MESSAGES_AT_SOURCE = 4096;
+
     protected static final long UNSETTLED_MESSAGE_THRESHOLD_FOR_SEND_MESSAGE_RESUMPTION = 3072;
 }

@@ -26,20 +26,17 @@ import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.link.CAMQPLinkManager;
 import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
 
-public class DoveMQBrokerDriver
-{
+public final class DoveMQBrokerDriver {
     private static volatile boolean doShutdown = false;
 
-    static void shutdown()
-    {
+    static void shutdown() {
         System.out.println("DoveMQ broker shutting down");
         CAMQPLinkManager.shutdown();
         System.out.println("DoveMQ broker shut down");
         doShutdown = true;
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         final DoveMQBrokerShutdownHook sh = new DoveMQBrokerShutdownHook();
         Runtime.getRuntime().addShutdownHook(sh);
 
@@ -53,14 +50,11 @@ public class DoveMQBrokerDriver
 
         DoveMQEndpointManager doveMQEndpointManager = new DoveMQEndpointManagerImpl();
         CAMQPEndpointManager.registerDoveMQEndpointManager(doveMQEndpointManager);
-        while (!doShutdown)
-        {
-            try
-            {
+        while (!doShutdown) {
+            try {
                 Thread.sleep(1000);
             }
-            catch (InterruptedException e)
-            {
+            catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }

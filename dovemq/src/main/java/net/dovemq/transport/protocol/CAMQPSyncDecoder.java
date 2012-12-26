@@ -39,185 +39,151 @@ import org.jboss.netty.buffer.ChannelBuffers;
  * @author tejdas
  *
  */
-public final class CAMQPSyncDecoder
-{
+public final class CAMQPSyncDecoder {
     private ChannelBuffer buffer = null;
 
     private boolean enoughDataAvailable = false;
 
-    public static CAMQPSyncDecoder createCAMQPSyncDecoder()
-    {
+    public static CAMQPSyncDecoder createCAMQPSyncDecoder() {
         return new CAMQPSyncDecoder();
     }
 
-    private CAMQPSyncDecoder()
-    {
+    private CAMQPSyncDecoder() {
     }
 
-    public CAMQPMessagePayload getPayload()
-    {
+    public CAMQPMessagePayload getPayload() {
         ChannelBuffer remainingData = buffer;
         buffer = null;
         return new CAMQPMessagePayload(remainingData);
     }
 
-    public boolean isEnoughDataAvailable()
-    {
+    public boolean isEnoughDataAvailable() {
         return enoughDataAvailable;
     }
 
-    public void take(ChannelBuffer bufferReceived)
-    {
+    public void take(ChannelBuffer bufferReceived) {
         enoughDataAvailable = true;
-        if (buffer == null)
-        {
+        if (buffer == null) {
             buffer = bufferReceived;
         }
-        else
-        {
+        else {
             buffer = ChannelBuffers.wrappedBuffer(buffer, bufferReceived);
         }
     }
 
-    private void checkEnoughBytesAvailable(int width)
-    {
-        if (buffer.readableBytes() < width)
-        {
+    private void checkEnoughBytesAvailable(int width) {
+        if (buffer.readableBytes() < width) {
             enoughDataAvailable = false;
             throw new InsufficientBytesException();
         }
     }
 
-    public int readFormatCode()
-    {
+    public int readFormatCode() {
         checkEnoughBytesAvailable(1);
         return CAMQPCodecUtil.readFormatCode(buffer);
     }
 
-    public int readUByte()
-    {
+    public int readUByte() {
         checkEnoughBytesAvailable(Width.FIXED_ONE.widthOctets());
         return CAMQPCodecUtil.readUByte(buffer);
     }
 
-    public int readUShort()
-    {
+    public int readUShort() {
         checkEnoughBytesAvailable(Width.FIXED_TWO.widthOctets());
         return CAMQPCodecUtil.readUShort(buffer);
     }
 
-    public long readUInt()
-    {
+    public long readUInt() {
         checkEnoughBytesAvailable(Width.FIXED_FOUR.widthOctets());
         return CAMQPCodecUtil.readUInt(buffer);
     }
 
-    public BigInteger readULong()
-    {
+    public BigInteger readULong() {
         // TODO correct?
         long val = readLong();
         return BigInteger.valueOf(val);
     }
 
-    public byte readByte()
-    {
+    public byte readByte() {
         checkEnoughBytesAvailable(Width.FIXED_ONE.widthOctets());
         return CAMQPCodecUtil.readByte(buffer);
     }
 
-    public short readShort()
-    {
+    public short readShort() {
         checkEnoughBytesAvailable(Width.FIXED_TWO.widthOctets());
         return CAMQPCodecUtil.readShort(buffer);
     }
 
-    public int readInt()
-    {
+    public int readInt() {
         checkEnoughBytesAvailable(Width.FIXED_FOUR.widthOctets());
         return CAMQPCodecUtil.readInt(buffer);
     }
 
-    public long readLong()
-    {
+    public long readLong() {
         checkEnoughBytesAvailable(Width.FIXED_EIGHT.widthOctets());
         return CAMQPCodecUtil.readLong(buffer);
     }
 
-    public float readFloat()
-    {
+    public float readFloat() {
         checkEnoughBytesAvailable(Width.FIXED_FOUR.widthOctets());
         return CAMQPCodecUtil.readFloat(buffer);
     }
 
-    public double readDouble()
-    {
+    public double readDouble() {
         checkEnoughBytesAvailable(Width.FIXED_EIGHT.widthOctets());
         return CAMQPCodecUtil.readDouble(buffer);
     }
 
-    public Date readTimeStamp()
-    {
+    public Date readTimeStamp() {
         checkEnoughBytesAvailable(Width.FIXED_EIGHT.widthOctets());
         return CAMQPCodecUtil.readTimeStamp(buffer);
     }
 
-    public UUID readUUID()
-    {
+    public UUID readUUID() {
         checkEnoughBytesAvailable(Width.FIXED_SIXTEEN.widthOctets());
         return CAMQPCodecUtil.readUUID(buffer);
     }
 
-    public long readBinaryDataSize(int formatCode)
-    {
-        if (formatCode == CAMQPFormatCodes.VBIN8)
-        {
+    public long readBinaryDataSize(int formatCode) {
+        if (formatCode == CAMQPFormatCodes.VBIN8) {
             checkEnoughBytesAvailable(Width.VARIABLE_ONE.widthOctets());
             return CAMQPCodecUtil.readUByte(buffer);
         }
-        else if (formatCode == CAMQPFormatCodes.VBIN32)
-        {
+        else if (formatCode == CAMQPFormatCodes.VBIN32) {
             checkEnoughBytesAvailable(Width.VARIABLE_FOUR.widthOctets());
             return CAMQPCodecUtil.readUInt(buffer);
         }
-        else
-        {
+        else {
             return -1; // TODO
         }
     }
 
-    public ChannelBuffer readBinary(int formatCode, long size, boolean copyFree)
-    {
+    public ChannelBuffer readBinary(int formatCode, long size, boolean copyFree) {
         return CAMQPSyncBinaryDataParser.parseBinaryData(buffer, size, copyFree);
     }
 
-    public String readString(int formatCode)
-    {
+    public String readString(int formatCode) {
         long size = 0;
         String charSet = CAMQPProtocolConstants.CHARSET_UTF8;
-        if (Width.VARIABLE_ONE.widthOctets() == CAMQPCodecUtil.computeWidth(formatCode))
-        {
+        if (Width.VARIABLE_ONE.widthOctets() == CAMQPCodecUtil.computeWidth(formatCode)) {
             checkEnoughBytesAvailable(Width.VARIABLE_ONE.widthOctets());
             size = CAMQPCodecUtil.readUByte(buffer);
         }
-        else
-        {
+        else {
             checkEnoughBytesAvailable(Width.VARIABLE_FOUR.widthOctets());
             size = CAMQPCodecUtil.readUInt(buffer);
         }
 
         long parsedSoFar = 0;
         ChannelBuffer channelStrBuf = null;
-        while (parsedSoFar < size)
-        {
+        while (parsedSoFar < size) {
             boolean copyFree = false;
             ChannelBuffer buf = CAMQPSyncBinaryDataParser.parseBinaryData(buffer, (size - parsedSoFar), copyFree);
             parsedSoFar += buf.readableBytes();
-            if (channelStrBuf == null)
-            {
+            if (channelStrBuf == null) {
                 channelStrBuf = buf;
             }
-            else
-            {
+            else {
                 channelStrBuf = ChannelBuffers.wrappedBuffer(channelStrBuf, buf);
             }
         }
@@ -225,24 +191,20 @@ public final class CAMQPSyncDecoder
         byte[] strBytes = new byte[channelStrBuf.readableBytes()];
         channelStrBuf.getBytes(0, strBytes);
 
-        try
-        {
+        try {
             return new String(strBytes, charSet);
         }
-        catch (UnsupportedEncodingException e)
-        {
+        catch (UnsupportedEncodingException e) {
             // TODO
             throw new CAMQPCodecException(CAMQPTypes.STR8_UTF8, formatCode, e);
         }
     }
 
-    public boolean isNextDescribedConstructor()
-    {
+    public boolean isNextDescribedConstructor() {
         return (buffer.getByte(buffer.readerIndex()) == 0);
     }
 
-    public String readSymbol()
-    {
+    public String readSymbol() {
         int firstByte = CAMQPCodecUtil.readUByte(buffer);
         assert (firstByte == 0);
         int formatCode = CAMQPCodecUtil.readFormatCode(buffer);
@@ -250,13 +212,11 @@ public final class CAMQPSyncDecoder
         return readString(formatCode);
     }
 
-    public long readCompoundSize(int formatCode)
-    {
+    public long readCompoundSize(int formatCode) {
         // size of the composite structure: for now skip it:TODO
         int width = CAMQPCodecUtil.computeWidth(formatCode);
         buffer.skipBytes(width);
-        if (Width.VARIABLE_ONE.widthOctets() == width)
-        {
+        if (Width.VARIABLE_ONE.widthOctets() == width) {
             return CAMQPCodecUtil.readUByte(buffer);
         }
         else
@@ -266,21 +226,17 @@ public final class CAMQPSyncDecoder
         }
     }
 
-    public long readMapCount(int formatCode)
-    {
+    public long readMapCount(int formatCode) {
         return readCompoundSize(formatCode) / 2;
     }
 
-    public long readArrayCount(int formatCode)
-    {
+    public long readArrayCount(int formatCode) {
         return readCompoundSize(formatCode);
     }
 
-    public CAMQPCompundHeader readMultipleElementCount()
-    {
+    public CAMQPCompundHeader readMultipleElementCount() {
         int elementFormatCode;
-        if (isNextDescribedConstructor())
-        {
+        if (isNextDescribedConstructor()) {
             int firstByte = CAMQPCodecUtil.readUByte(buffer);
             assert (firstByte == 0);
             CAMQPCodecUtil.readFormatCode(buffer);
@@ -289,55 +245,45 @@ public final class CAMQPSyncDecoder
             elementFormatCode = CAMQPCodecUtil.readFormatCode(buffer);
             return new CAMQPCompundHeader(elementFormatCode, compoundCount);
         }
-        else
-        {
+        else {
             elementFormatCode = CAMQPCodecUtil.readFormatCode(buffer);
-            if (elementFormatCode == CAMQPFormatCodes.NULL)
-            {
+            if (elementFormatCode == CAMQPFormatCodes.NULL) {
                 return new CAMQPCompundHeader(CAMQPFormatCodes.NULL, 0);
             }
-            else
-            {
+            else {
                 return new CAMQPCompundHeader(elementFormatCode, 1);
             }
         }
     }
 
-    public Map<String, String> decodePropertiesMap()
-    {
+    public Map<String, String> decodePropertiesMap() {
         int formatCode = readFormatCode();
-        assert((formatCode == CAMQPFormatCodes.MAP8) || (formatCode == CAMQPFormatCodes.MAP32));
+        assert ((formatCode == CAMQPFormatCodes.MAP8) || (formatCode == CAMQPFormatCodes.MAP32));
         long mapSize = readMapCount(formatCode);
-        if (mapSize == 0)
-        {
+        if (mapSize == 0) {
             return null;
         }
 
         Map<String, String> propertiesMap = new HashMap<String, String>();
-        for (long index = 0; index < mapSize; index++)
-        {
+        for (long index = 0; index < mapSize; index++) {
             String key = null;
             formatCode = readFormatCode();
-            if (formatCode == CAMQPFormatCodes.SYM8)
-            {
+            if (formatCode == CAMQPFormatCodes.SYM8) {
                 key = readString(formatCode);
             }
             String val = null;
             formatCode = readFormatCode();
-            if (formatCode != CAMQPFormatCodes.NULL)
-            {
+            if (formatCode != CAMQPFormatCodes.NULL) {
                 val = readString(formatCode);
             }
-            if ((key != null) && (val != null))
-            {
-                propertiesMap.put(key,  val);
+            if ((key != null) && (val != null)) {
+                propertiesMap.put(key, val);
             }
         }
         return propertiesMap;
     }
 
-    public byte[] readBinaryPayload()
-    {
+    public byte[] readBinaryPayload() {
         int formatCode = readFormatCode();
         int size = (int) readBinaryDataSize(formatCode);
         ChannelBuffer buf = readBinary(formatCode, size, false);

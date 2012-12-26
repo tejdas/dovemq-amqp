@@ -19,23 +19,19 @@ package net.dovemq.api;
 
 import net.dovemq.transport.connection.CAMQPConnectionInterface;
 
-public final class Connection
-{
-    Connection(CAMQPConnectionInterface amqpConnection)
-    {
+public final class Connection {
+    Connection(CAMQPConnectionInterface amqpConnection) {
         super();
         this.amqpConnection = amqpConnection;
     }
 
-    public void close()
-    {
+    public void close() {
         amqpConnection.close();
     }
 
     private final CAMQPConnectionInterface amqpConnection;
 
-    public CAMQPConnectionInterface getAmqpConnection()
-    {
+    public CAMQPConnectionInterface getAmqpConnection() {
         return amqpConnection;
     }
 }

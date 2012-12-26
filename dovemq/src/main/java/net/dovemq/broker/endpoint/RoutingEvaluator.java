@@ -29,26 +29,22 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
  * @author tejdas
  *
  */
-public class RoutingEvaluator
-{
+class RoutingEvaluator {
     /**
      * Used to evaluate for {@link TopicRouterType#Basic}.
      *
      * @param routingEvaluationContext
      * @return true
      */
-    boolean canMessageBePublished(Object routingEvaluationContext)
-    {
+    boolean canMessageBePublished(Object routingEvaluationContext) {
         return true;
     }
 
-    CAMQPSourceInterface getSubscriberProxy()
-    {
+    CAMQPSourceInterface getSubscriberProxy() {
         return subscriberProxy;
     }
 
-    public RoutingEvaluator(CAMQPSourceInterface subscriberProxy)
-    {
+    public RoutingEvaluator(CAMQPSourceInterface subscriberProxy) {
         super();
         this.subscriberProxy = subscriberProxy;
     }

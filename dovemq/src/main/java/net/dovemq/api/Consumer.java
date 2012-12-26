@@ -29,10 +29,11 @@ import net.dovemq.transport.endpoint.DoveMQMessageImpl;
  *
  * @author tejdas
  */
-public final class Consumer implements CAMQPMessageReceiver
-{
+public final class Consumer implements CAMQPMessageReceiver {
     private final DoveMQEndpointPolicy endpointPolicy;
+
     private final CAMQPTargetInterface targetEndpoint;
+
     private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;
 
     /**
@@ -40,52 +41,47 @@ public final class Consumer implements CAMQPMessageReceiver
      * DoveMQMessageReceiver.
      */
     @Override
-    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
-    {
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target) {
         doveMQMessageReceiver.messageReceived(message);
     }
 
     /**
-     * Register a DoveMQMessageReceiver with the Consumer, so that
-     * the receiver will asynchronously receive AMQP messages.
+     * Register a DoveMQMessageReceiver with the Consumer, so that the receiver
+     * will asynchronously receive AMQP messages.
      *
      * @param messageReceiver
      */
-    public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver)
-    {
+    public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver) {
         this.doveMQMessageReceiver = messageReceiver;
         targetEndpoint.registerMessageReceiver(this);
     }
 
-    public void stop()
-    {
+    public void stop() {
     }
 
     /**
-     * Called by the message receiver to explicitly acknowledge the receipt
-     * of an AMQP message. This is relevant only when the acknowledgment policy
-     * is CONSUMER_ACKS.
+     * Called by the message receiver to explicitly acknowledge the receipt of
+     * an AMQP message. This is relevant only when the acknowledgment policy is
+     * CONSUMER_ACKS.
      *
      * @param message
      */
-    public void acknowledge(DoveMQMessage message)
-    {
-        if (endpointPolicy.getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS)
-        {
+    public void acknowledge(DoveMQMessage message) {
+        if (endpointPolicy.getAckPolicy() == MessageAcknowledgementPolicy.CONSUMER_ACKS) {
             long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
             targetEndpoint.acknowledgeMessageProcessingComplete(deliveryId);
         }
     }
 
-    Consumer(String targetName, CAMQPTargetInterface targetEndpoint)
-    {
+    Consumer(String targetName, CAMQPTargetInterface targetEndpoint) {
         super();
         this.endpointPolicy = new DoveMQEndpointPolicy();
         this.targetEndpoint = targetEndpoint;
     }
 
-    Consumer(String targetName, CAMQPTargetInterface targetEndpoint, DoveMQEndpointPolicy endpointPolicy)
-    {
+    Consumer(String targetName,
+            CAMQPTargetInterface targetEndpoint,
+            DoveMQEndpointPolicy endpointPolicy) {
         super();
         this.endpointPolicy = endpointPolicy;
         this.targetEndpoint = targetEndpoint;

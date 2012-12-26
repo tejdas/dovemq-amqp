@@ -39,33 +39,35 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
  *
  * @author tejdas
  */
-class CAMQPSource implements CAMQPSourceInterface
-{
+final class CAMQPSource implements CAMQPSourceInterface {
     private final CAMQPLinkSenderInterface linkSender;
+
     private final CAMQPEndpointPolicy endpointPolicy;
+
     private volatile CAMQPMessageDispositionObserver observer = null;
 
     /*
      * Count of unsettled messages
      */
     private AtomicLong unsettledDeliveryCount = new AtomicLong(0);
+
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
 
     /*
-     * Max unsettled messages at which the message sender waits until
-     * the unsettled delivery count falls to minUnsettledDeliveryThreshold
+     * Max unsettled messages at which the message sender waits until the
+     * unsettled delivery count falls to minUnsettledDeliveryThreshold
      */
     private final long maxUnsettledDeliveries;
+
     private final long minUnsettledDeliveryThreshold;
 
     @Override
-    public void registerDispositionObserver(CAMQPMessageDispositionObserver observer)
-    {
+    public void registerDispositionObserver(CAMQPMessageDispositionObserver observer) {
         this.observer = observer;
     }
 
-    CAMQPSource(CAMQPLinkSenderInterface linkSender, CAMQPEndpointPolicy endpointPolicy)
-    {
+    CAMQPSource(CAMQPLinkSenderInterface linkSender,
+            CAMQPEndpointPolicy endpointPolicy) {
         super();
         this.linkSender = linkSender;
         this.endpointPolicy = endpointPolicy;
@@ -74,15 +76,13 @@ class CAMQPSource implements CAMQPSourceInterface
     }
 
     @Override
-    public CAMQPMessage getMessage()
-    {
+    public CAMQPMessage getMessage() {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public long getMessageCount()
-    {
+    public long getMessageCount() {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -94,10 +94,8 @@ class CAMQPSource implements CAMQPSourceInterface
      * sending it.
      */
     @Override
-    public void messageSent(long deliveryId, CAMQPMessage message)
-    {
-        if (endpointPolicy.getDeliveryPolicy() != CAMQPMessageDeliveryPolicy.AtmostOnce)
-        {
+    public void messageSent(long deliveryId, CAMQPMessage message) {
+        if (endpointPolicy.getDeliveryPolicy() != CAMQPMessageDeliveryPolicy.AtmostOnce) {
             unsettledDeliveries.put(deliveryId, message);
             unsettledDeliveryCount.incrementAndGet();
         }
@@ -107,15 +105,13 @@ class CAMQPSource implements CAMQPSourceInterface
      * Processes the Collection of disposed transferIds.
      */
     @Override
-    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
-    {
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState) {
         /*
          * In the case of AtmostOnce delivery policy, the messages are already
          * deemed settled by the source at the point of sending, so nothing
          * needs to be done.
          */
-        if (endpointPolicy.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.AtmostOnce)
-        {
+        if (endpointPolicy.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.AtmostOnce) {
             return deliveryIds;
         }
 
@@ -125,8 +121,7 @@ class CAMQPSource implements CAMQPSourceInterface
          * is no longer in the unsettled map, if isMessageSettledByPeer. So,
          * nothing needs to be done here.
          */
-        if (isMessageSettledByPeer && (endpointPolicy.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.ExactlyOnce))
-        {
+        if (isMessageSettledByPeer && (endpointPolicy.getDeliveryPolicy() == CAMQPMessageDeliveryPolicy.ExactlyOnce)) {
             return deliveryIds;
         }
 
@@ -135,15 +130,12 @@ class CAMQPSource implements CAMQPSourceInterface
          */
         List<Long> settledDeliveryIds = new ArrayList<Long>();
         long settledCount = 0;
-        for (long deliveryId : deliveryIds)
-        {
+        for (long deliveryId : deliveryIds) {
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
-            if (message != null)
-            {
+            if (message != null) {
                 settledCount--;
                 settledDeliveryIds.add(deliveryId);
-                if (observer != null)
-                {
+                if (observer != null) {
                     observer.messageAckedByConsumer(message.getMessage(), this);
                 }
             }
@@ -155,11 +147,8 @@ class CAMQPSource implements CAMQPSourceInterface
          * minUnsettledDeliveryThreshold after processing the disposition.
          */
         long currentUnsettledDeliveryCount = unsettledDeliveryCount.getAndAdd(settledCount);
-        if ((currentUnsettledDeliveryCount > minUnsettledDeliveryThreshold) &&
-                (unsettledDeliveryCount.get() <= minUnsettledDeliveryThreshold))
-        {
-            synchronized (this)
-            {
+        if ((currentUnsettledDeliveryCount > minUnsettledDeliveryThreshold) && (unsettledDeliveryCount.get() <= minUnsettledDeliveryThreshold)) {
+            synchronized (this) {
                 notify();
             }
         }
@@ -168,16 +157,12 @@ class CAMQPSource implements CAMQPSourceInterface
          * Settle the transferIds
          */
         boolean settled = true;
-        for (long settledDeliveryId : settledDeliveryIds)
-        {
+        for (long settledDeliveryId : settledDeliveryIds) {
             CAMQPLinkEndpoint linkEndpoint = (CAMQPLinkEndpoint) linkSender;
-            linkEndpoint.sendDisposition(settledDeliveryId,
-                    settled,
-                    new CAMQPDefinitionAccepted());
+            linkEndpoint.sendDisposition(settledDeliveryId, settled, new CAMQPDefinitionAccepted());
         }
 
-        if (!settledDeliveryIds.isEmpty())
-        {
+        if (!settledDeliveryIds.isEmpty()) {
             deliveryIds.removeAll(settledDeliveryIds);
         }
         /*
@@ -188,39 +173,29 @@ class CAMQPSource implements CAMQPSourceInterface
     }
 
     /**
-     * Sends a message on the underlying CAMQPSourceInterface.
+     * Sends a message on the underlying CAMQPSourceInterface. Also throttles
+     * the message sender if the unsettledDeliveryCount is at
+     * maxUnsettledDeliveries limit.
      *
-     * Also throttles the message sender if the unsettledDeliveryCount
-     * is at maxUnsettledDeliveries limit.
      * @param message
-     *      DoveMQMessage to send.
+     *            DoveMQMessage to send.
      */
     @Override
-    public void sendMessage(DoveMQMessage message)
-    {
-        if (endpointPolicy.getDeliveryPolicy() != CAMQPMessageDeliveryPolicy.AtmostOnce)
-        {
+    public void sendMessage(DoveMQMessage message) {
+        if (endpointPolicy.getDeliveryPolicy() != CAMQPMessageDeliveryPolicy.AtmostOnce) {
             /*
-             * if unsettledDeliveryCount is at the maxUnsettledDeliveries
-             * limit, then the message sender waits until:
-             *
-             * a. unsettledDeliveryCount falls below minUnsettledDeliveryThreshold
-             * threshold.
-             * OR
-             * b. 2 seconds timeout.
+             * if unsettledDeliveryCount is at the maxUnsettledDeliveries limit,
+             * then the message sender waits until: a. unsettledDeliveryCount
+             * falls below minUnsettledDeliveryThreshold threshold. OR b. 2
+             * seconds timeout.
              */
-            if (unsettledDeliveryCount.get() >= maxUnsettledDeliveries)
-            {
-                synchronized (this)
-                {
-                    while (unsettledDeliveryCount.get() > minUnsettledDeliveryThreshold)
-                    {
-                        try
-                        {
+            if (unsettledDeliveryCount.get() >= maxUnsettledDeliveries) {
+                synchronized (this) {
+                    while (unsettledDeliveryCount.get() > minUnsettledDeliveryThreshold) {
+                        try {
                             wait(2000);
                         }
-                        catch (InterruptedException e)
-                        {
+                        catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         }
                     }
@@ -235,8 +210,7 @@ class CAMQPSource implements CAMQPSourceInterface
     }
 
     @Override
-    public long getId()
-    {
+    public long getId() {
         return linkSender.getHandle();
     }
 }

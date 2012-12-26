@@ -32,8 +32,7 @@ import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
  * @author tdas
  *
  */
-public interface CAMQPLinkMessageHandler
-{
+public interface CAMQPLinkMessageHandler {
     /**
      * Called by Session layer upon receipt of a Link attach control frame.
      *
@@ -49,28 +48,36 @@ public interface CAMQPLinkMessageHandler
     public void detachReceived(CAMQPControlDetach controlFrame);
 
     /**
-     * Called by Session layer upon receipt of a transfer frame.
-     * Only applicable to Link Receiver.
+     * Called by Session layer upon receipt of a transfer frame. Only applicable
+     * to Link Receiver.
      *
-     * @param transferId: Transfer ID.
-     * @param transferFrame: Transfer frame.
-     * @param payload: Payload performative.
+     * @param transferId
+     *            : Transfer ID.
+     * @param transferFrame
+     *            : Transfer frame.
+     * @param payload
+     *            : Payload performative.
      */
     public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload);
 
     /**
      * Called by session layer upon receipt of a flow control frame.
      *
-     * @param flow: Flow frame.
+     * @param flow
+     *            : Flow frame.
      */
     public void flowReceived(CAMQPControlFlow flow);
 
     /**
      * Called by Session layer upon receipt of disposition frame.
      *
-     * @param deliveryIds: Collection of deliveryIds of messages for batched disposition.
-     * @param isMessageSettledByPeer: true/false indicating if the message is settled by the peer.
-     * @param newState: new message state.
+     * @param deliveryIds
+     *            : Collection of deliveryIds of messages for batched
+     *            disposition.
+     * @param isMessageSettledByPeer
+     *            : true/false indicating if the message is settled by the peer.
+     * @param newState
+     *            : new message state.
      * @return
      */
     public Collection<Long> dispositionReceived(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
@@ -81,8 +88,10 @@ public interface CAMQPLinkMessageHandler
     public void sessionClosed();
 
     /**
-     * Return the role of the linkEndpoint: Sender or Receiver.
-     * Used by the Session layer to correctly dispatch the disposition frame based on the role.
+     * Return the role of the linkEndpoint: Sender or Receiver. Used by the
+     * Session layer to correctly dispatch the disposition frame based on the
+     * role.
+     *
      * @return
      */
     public LinkRole getRole();

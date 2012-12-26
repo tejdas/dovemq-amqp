@@ -28,45 +28,38 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 import org.apache.log4j.Logger;
 
-public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
-{
+public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
     private static final Logger log = Logger.getLogger(DoveMQEndpointManagerImpl.class);
-    private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<String, QueueRouter>();
-    private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap =
-            new HashMap<TopicRouterType, ConcurrentMap<String, TopicRouter>>();
 
-    public DoveMQEndpointManagerImpl()
-    {
+    private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<String, QueueRouter>();
+
+    private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap = new HashMap<TopicRouterType, ConcurrentMap<String, TopicRouter>>();
+
+    public DoveMQEndpointManagerImpl() {
         topicRoutersMap.put(TopicRouterType.Basic, new ConcurrentHashMap<String, TopicRouter>());
         topicRoutersMap.put(TopicRouterType.MessageTagFilter, new ConcurrentHashMap<String, TopicRouter>());
         topicRoutersMap.put(TopicRouterType.Hierarchical, new ConcurrentHashMap<String, TopicRouter>());
     }
 
     @Override
-    public void producerAttached(String queueName, CAMQPTargetInterface producer, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public void producerAttached(String queueName, CAMQPTargetInterface producer, CAMQPEndpointPolicy endpointPolicy) {
         QueueRouter queueRouter = new QueueRouter(queueName);
         QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
-        if (queueRouterInMap == null)
-        {
+        if (queueRouterInMap == null) {
             log.debug("creating queue: " + queueName);
             queueRouter.producerAttached(producer);
         }
-        else
-        {
+        else {
             queueRouterInMap.producerAttached(producer);
         }
     }
 
     @Override
-    public void producerDetached(String queueName, CAMQPTargetInterface producer)
-    {
+    public void producerDetached(String queueName, CAMQPTargetInterface producer) {
         QueueRouter queueRouter = queueRouters.get(queueName);
-        if (queueRouter != null)
-        {
+        if (queueRouter != null) {
             queueRouter.producerDetached(producer);
-            if (queueRouter.isCompletelyDetached())
-            {
+            if (queueRouter.isCompletelyDetached()) {
                 log.debug("Removing queue: " + queueName);
                 queueRouters.remove(queueName);
             }
@@ -75,29 +68,23 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     }
 
     @Override
-    public void consumerAttached(String queueName, CAMQPSourceInterface consumer, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public void consumerAttached(String queueName, CAMQPSourceInterface consumer, CAMQPEndpointPolicy endpointPolicy) {
         QueueRouter queueRouter = new QueueRouter(queueName);
         QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
-        if (queueRouterInMap == null)
-        {
+        if (queueRouterInMap == null) {
             queueRouter.consumerAttached(consumer);
         }
-        else
-        {
+        else {
             queueRouterInMap.consumerAttached(consumer);
         }
     }
 
     @Override
-    public void consumerDetached(String queueName, CAMQPSourceInterface consumer)
-    {
+    public void consumerDetached(String queueName, CAMQPSourceInterface consumer) {
         QueueRouter queueRouter = queueRouters.get(queueName);
-        if (queueRouter != null)
-        {
+        if (queueRouter != null) {
             queueRouter.consumerDetached(consumer);
-            if (queueRouter.isCompletelyDetached())
-            {
+            if (queueRouter.isCompletelyDetached()) {
                 log.debug("Removing queue: " + queueName);
                 queueRouters.remove(queueName);
             }
@@ -106,36 +93,30 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     }
 
     @Override
-    public void publisherAttached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public void publisherAttached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
         TopicRouter topicRouter = new TopicRouter(topicName, routerType);
 
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
         TopicRouter topicRouterInMap = topicRouters.putIfAbsent(topicName, topicRouter);
-        if (topicRouterInMap == null)
-        {
+        if (topicRouterInMap == null) {
             topicRouter.publisherAttached(publisher);
         }
-        else
-        {
+        else {
             topicRouterInMap.publisherAttached(publisher);
         }
         log.debug("publisher attached to topic: " + topicName);
     }
 
     @Override
-    public void publisherDetached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public void publisherDetached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
 
         TopicRouter topicRouter = topicRouters.get(topicName);
-        if (topicRouter != null)
-        {
+        if (topicRouter != null) {
             topicRouter.publisherDetached(publisher);
-            if (topicRouter.isCompletelyDetached())
-            {
+            if (topicRouter.isCompletelyDetached()) {
                 log.debug("Removing topic: " + topicName);
                 topicRouters.remove(topicName);
             }
@@ -144,16 +125,13 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     }
 
     @Override
-    public void subscriberAttached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public void subscriberAttached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
 
         String rootTopicName = topicName;
-        if (routerType == TopicRouterType.Hierarchical)
-        {
+        if (routerType == TopicRouterType.Hierarchical) {
             int pos = topicName.indexOf('.');
-            if (pos != -1)
-            {
+            if (pos != -1) {
                 rootTopicName = topicName.substring(0, pos);
             }
             endpointPolicy.setSubscriptionTopicHierarchy(topicName);
@@ -162,28 +140,23 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
         TopicRouter topicRouter = new TopicRouter(rootTopicName, routerType);
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
         TopicRouter topicRouterInMap = topicRouters.putIfAbsent(rootTopicName, topicRouter);
-        if (topicRouterInMap == null)
-        {
+        if (topicRouterInMap == null) {
             topicRouter.subscriberAttached(subscriber, endpointPolicy);
         }
-        else
-        {
+        else {
             topicRouterInMap.subscriberAttached(subscriber, endpointPolicy);
         }
         log.debug("subscriber attached to topic: " + topicName);
     }
 
     @Override
-    public void subscriberDetached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy)
-    {
+    public void subscriberDetached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
         TopicRouter topicRouter = topicRouters.get(topicName);
-        if (topicRouter != null)
-        {
+        if (topicRouter != null) {
             topicRouter.subscriberDetached(subscriber);
-            if (topicRouter.isCompletelyDetached())
-            {
+            if (topicRouter.isCompletelyDetached()) {
                 log.debug("Removing topic: " + topicName);
                 topicRouters.remove(topicName);
             }
@@ -194,8 +167,7 @@ public class DoveMQEndpointManagerImpl implements DoveMQEndpointManager
     /*
      * For junit test only
      */
-    TopicRouter getTopicRouter(String topicName, TopicRouterType routerType)
-    {
+    TopicRouter getTopicRouter(String topicName, TopicRouterType routerType) {
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
         return topicRouters.get(topicName);
     }

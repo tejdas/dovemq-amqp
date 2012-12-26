@@ -25,137 +25,114 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionProperties;
 
 import org.apache.commons.lang.StringUtils;
 
-public final class MessagePropertiesImpl implements MessageProperties
-{
-    public MessagePropertiesImpl(CAMQPDefinitionProperties properties)
-    {
+final class MessagePropertiesImpl implements MessageProperties {
+    public MessagePropertiesImpl(CAMQPDefinitionProperties properties) {
         super();
         this.properties = properties;
     }
 
-    public MessagePropertiesImpl()
-    {
+    public MessagePropertiesImpl() {
         super();
         this.properties = new CAMQPDefinitionProperties();
     }
 
     @Override
-    public String getMessageId()
-    {
+    public String getMessageId() {
         return (String) properties.getMessageId();
     }
 
     @Override
-    public void setMessageId(String messageId)
-    {
+    public void setMessageId(String messageId) {
         properties.setMessageId(messageId);
     }
 
     @Override
-    public String getCorrlelationId()
-    {
+    public String getCorrlelationId() {
         return (String) properties.getCorrelationId();
     }
 
     @Override
-    public void setCorrlelationId(String corrlelationId)
-    {
+    public void setCorrlelationId(String corrlelationId) {
         properties.setCorrelationId(corrlelationId);
     }
 
     @Override
-    public String getUserId()
-    {
+    public String getUserId() {
         return new String(properties.getUserId());
     }
 
     @Override
-    public void setUserId(String userId)
-    {
+    public void setUserId(String userId) {
         properties.setUserId(userId.getBytes());
     }
 
     @Override
-    public String getToAddress()
-    {
+    public String getToAddress() {
         return (String) properties.getTo();
     }
 
     @Override
-    public void setToAddress(String toAddress)
-    {
+    public void setToAddress(String toAddress) {
         properties.setTo(toAddress);
     }
 
     @Override
-    public String getReplyToAddress()
-    {
+    public String getReplyToAddress() {
         return (String) properties.getReplyTo();
     }
 
     @Override
-    public void setReplyToAddress(String replyToAddress)
-    {
+    public void setReplyToAddress(String replyToAddress) {
         properties.setReplyTo(replyToAddress);
     }
 
     @Override
-    public String getSubject()
-    {
+    public String getSubject() {
         return properties.getSubject();
     }
 
     @Override
-    public void setSubject(String subject)
-    {
+    public void setSubject(String subject) {
         properties.setSubject(subject);
     }
 
     @Override
-    public String getContentType()
-    {
+    public String getContentType() {
         return properties.getContentType();
     }
 
     @Override
-    public void setContentType(String contentType)
-    {
+    public void setContentType(String contentType) {
         properties.setContentType(contentType);
     }
 
     @Override
-    public Date getCreationTime()
-    {
+    public Date getCreationTime() {
         return properties.getCreationTime();
     }
 
     @Override
-    public void setCreationTime(Date creationTime)
-    {
+    public void setCreationTime(Date creationTime) {
         properties.setCreationTime(creationTime);
     }
 
     @Override
-    public Date getExpiryTime()
-    {
+    public Date getExpiryTime() {
         return properties.getAbsoluteExpiryTime();
     }
 
     @Override
-    public void setExpiryTime(Date expiryTime)
-    {
+    public void setExpiryTime(Date expiryTime) {
         properties.setAbsoluteExpiryTime(expiryTime);
     }
 
-    public void encode(CAMQPEncoder encoder)
-    {
+    public void encode(CAMQPEncoder encoder) {
         CAMQPDefinitionProperties.encode(encoder, properties);
     }
 
-    static MessagePropertiesImpl decode(CAMQPSyncDecoder decoder)
-    {
+    static MessagePropertiesImpl decode(CAMQPSyncDecoder decoder) {
         String symbolRead = decoder.readSymbol();
-        assert(StringUtils.equals(symbolRead, CAMQPDefinitionProperties.descriptor));
+        assert (StringUtils.equals(symbolRead, CAMQPDefinitionProperties.descriptor));
         CAMQPDefinitionProperties properties = CAMQPDefinitionProperties.decode(decoder);
         return new MessagePropertiesImpl(properties);
     }

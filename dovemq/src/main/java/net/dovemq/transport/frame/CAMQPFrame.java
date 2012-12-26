@@ -18,6 +18,7 @@
 package net.dovemq.transport.frame;
 
 import net.jcip.annotations.Immutable;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 
 /**
@@ -26,24 +27,23 @@ import org.jboss.netty.buffer.ChannelBuffer;
  *
  */
 @Immutable
-public class CAMQPFrame
-{
-    public CAMQPFrame(CAMQPFrameHeader header, ChannelBuffer body)
-    {
+public final class CAMQPFrame {
+    public CAMQPFrame(CAMQPFrameHeader header, ChannelBuffer body) {
         super();
         this.header = header;
         this.body = body;
     }
-    
-    public CAMQPFrameHeader getHeader()
-    {
+
+    public CAMQPFrameHeader getHeader() {
         return header;
     }
-    public ChannelBuffer getBody()
-    {
+
+    public ChannelBuffer getBody() {
         return body;
     }
+
     private final CAMQPFrameHeader header;
+
     private final ChannelBuffer body;
 }
 

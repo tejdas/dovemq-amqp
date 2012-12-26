@@ -42,36 +42,25 @@ import org.jboss.netty.buffer.ChannelBuffer;
  *
  * @author tejdas
  */
-class CAMQPDispositionSender implements Runnable
-{
-    static class DispositionRange
-    {
+final class CAMQPDispositionSender implements Runnable {
+    static class DispositionRange {
         @Override
-        public String toString()
-        {
+        public String toString() {
             String outcomeStr = "null";
             if (outcome instanceof CAMQPDefinitionAccepted)
                 outcomeStr = CAMQPDefinitionAccepted.class.getSimpleName();
             else if (outcome instanceof CAMQPDefinitionModified)
                 outcomeStr = CAMQPDefinitionModified.class.getSimpleName();
             else if (outcome instanceof CAMQPDefinitionRejected)
-                outcomeStr =CAMQPDefinitionRejected.class.getSimpleName();
+                outcomeStr = CAMQPDefinitionRejected.class.getSimpleName();
 
-            return "DispositionRange [min=" + min
-                    + ", max="
-                    + max
-                    + ", settled="
-                    + settled
-                    + ", outcome="
-                    + outcomeStr
-                    + "]";
+            return "DispositionRange [min=" + min + ", max=" + max + ", settled=" + settled + ", outcome=" + outcomeStr + "]";
         }
 
         public DispositionRange(long min,
                 long max,
                 boolean settled,
-                Object state)
-        {
+                Object state) {
             super();
             this.min = min;
             this.max = max;
@@ -79,48 +68,39 @@ class CAMQPDispositionSender implements Runnable
             this.outcome = state;
         }
 
-        public boolean isSettled()
-        {
+        public boolean isSettled() {
             return settled;
         }
 
-        public void setSettled(boolean settled)
-        {
+        public void setSettled(boolean settled) {
             this.settled = settled;
         }
 
-        public Object getOutcome()
-        {
+        public Object getOutcome() {
             return outcome;
         }
 
-        public void setOutcome(Object outcome)
-        {
+        public void setOutcome(Object outcome) {
             this.outcome = outcome;
         }
 
-        public void setMin(long min)
-        {
+        public void setMin(long min) {
             this.min = min;
         }
 
-        public void setMax(long max)
-        {
+        public void setMax(long max) {
             this.max = max;
         }
 
-        public long getMin()
-        {
+        public long getMin() {
             return min;
         }
 
-        public long getMax()
-        {
+        public long getMax() {
             return max;
         }
 
-        boolean isCompatible(boolean settled, Object newOutcome)
-        {
+        boolean isCompatible(boolean settled, Object newOutcome) {
             if (this.settled != settled)
                 return false;
 
@@ -138,8 +118,11 @@ class CAMQPDispositionSender implements Runnable
         }
 
         private long min;
+
         private long max;
+
         private boolean settled;
+
         private Object outcome;
     }
 
@@ -152,29 +135,28 @@ class CAMQPDispositionSender implements Runnable
 
     @GuardedBy("this")
     private List<DispositionRange> receiverDispositionRanges = null;
+
     private final CAMQPSession session;
 
     private ScheduledFuture<?> scheduledFuture = null;
 
-    void start()
-    {
-        scheduledFuture = CAMQPSessionManager.getSessionSendDispositionScheduler().scheduleWithFixedDelay(this,
-                CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL,
-                CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL,
-                TimeUnit.MILLISECONDS);
+    void start() {
+        scheduledFuture = CAMQPSessionManager.getSessionSendDispositionScheduler()
+                .scheduleWithFixedDelay(
+                        this,
+                        CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL,
+                        CAMQPSessionConstants.BATCHED_DISPOSITION_SEND_INTERVAL,
+                        TimeUnit.MILLISECONDS);
     }
 
-    void stop()
-    {
-        if ((scheduledFuture != null) && !scheduledFuture.isCancelled())
-        {
+    void stop() {
+        if ((scheduledFuture != null) && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
         }
         scheduledFuture = null;
     }
 
-    CAMQPDispositionSender(CAMQPSession session)
-    {
+    CAMQPDispositionSender(CAMQPSession session) {
         super();
         this.session = session;
     }
@@ -188,21 +170,16 @@ class CAMQPDispositionSender implements Runnable
      * @param settled
      * @param newOutcome
      */
-    synchronized void insertDispositionRange(long transferId, boolean role, boolean settled, Object newOutcome)
-    {
+    synchronized void insertDispositionRange(long transferId, boolean role, boolean settled, Object newOutcome) {
         List<DispositionRange> dispositionRanges;
-        if (role)
-        {
-            if (senderDispositionRanges == null)
-            {
+        if (role) {
+            if (senderDispositionRanges == null) {
                 senderDispositionRanges = new LinkedList<DispositionRange>();
             }
             dispositionRanges = senderDispositionRanges;
         }
-        else
-        {
-            if (receiverDispositionRanges == null)
-            {
+        else {
+            if (receiverDispositionRanges == null) {
                 receiverDispositionRanges = new LinkedList<DispositionRange>();
             }
             dispositionRanges = receiverDispositionRanges;
@@ -211,12 +188,10 @@ class CAMQPDispositionSender implements Runnable
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         List<DispositionRange> localSenderDispositionRanges = null;
         List<DispositionRange> localReceiverDispositionRanges = null;
-        synchronized (this)
-        {
+        synchronized (this) {
             localSenderDispositionRanges = senderDispositionRanges;
             localReceiverDispositionRanges = receiverDispositionRanges;
             senderDispositionRanges = null;
@@ -224,8 +199,7 @@ class CAMQPDispositionSender implements Runnable
         }
 
         CAMQPChannel channel = session.getChannel();
-        if (channel == null)
-        {
+        if (channel == null) {
             return;
         }
 
@@ -233,20 +207,16 @@ class CAMQPDispositionSender implements Runnable
         sendDispositions(localReceiverDispositionRanges, false, channel);
     }
 
-    private static void sendDispositions(List<DispositionRange> dispositionRanges, boolean role, CAMQPChannel channel)
-    {
-        if (dispositionRanges != null)
-        {
-            for (DispositionRange range : dispositionRanges)
-            {
+    private static void sendDispositions(List<DispositionRange> dispositionRanges, boolean role, CAMQPChannel channel) {
+        if (dispositionRanges != null) {
+            for (DispositionRange range : dispositionRanges) {
                 CAMQPControlDisposition disposition = new CAMQPControlDisposition();
                 disposition.setBatchable(false);
                 disposition.setFirst(range.getMin());
                 disposition.setLast(range.getMax());
                 disposition.setRole(role);
                 disposition.setSettled(range.isSettled());
-                if (range.getOutcome() != null)
-                {
+                if (range.getOutcome() != null) {
                     CAMQPDefinitionDeliveryState deliveryState = new CAMQPDefinitionDeliveryState();
                     deliveryState.setOutcome(range.getOutcome());
                     disposition.setState(deliveryState);
@@ -254,7 +224,8 @@ class CAMQPDispositionSender implements Runnable
                 CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
                 CAMQPControlDisposition.encode(encoder, disposition);
                 ChannelBuffer encodedTransfer = encoder.getEncodedBuffer();
-                channel.getAmqpConnection().sendFrame(encodedTransfer, channel.getChannelId());
+                channel.getAmqpConnection()
+                        .sendFrame(encodedTransfer, channel.getChannelId());
             }
         }
     }
@@ -268,10 +239,8 @@ class CAMQPDispositionSender implements Runnable
      * @param newOutcome
      * @param dispositionRanges
      */
-    static void addDisposition(long transferId, boolean settled, Object newOutcome, List<DispositionRange> dispositionRanges)
-    {
-        if (dispositionRanges.isEmpty())
-        {
+    static void addDisposition(long transferId, boolean settled, Object newOutcome, List<DispositionRange> dispositionRanges) {
+        if (dispositionRanges.isEmpty()) {
             dispositionRanges.add(new DispositionRange(transferId, transferId, settled, newOutcome));
             return;
         }
@@ -284,10 +253,8 @@ class CAMQPDispositionSender implements Runnable
         DispositionRange nextRange = null;
 
         int indexToInsert = 0;
-        while (range != null)
-        {
-            if (transferId < range.getMin()-1)
-            {
+        while (range != null) {
+            if (transferId < range.getMin() - 1) {
                 dispositionRanges.add(indexToInsert, new DispositionRange(transferId, transferId, settled, newOutcome));
                 return;
             }
@@ -296,70 +263,57 @@ class CAMQPDispositionSender implements Runnable
                 nextRange = iter.next();
             }
 
-            if (nextRange != null)
-            {
-                if (transferId == range.getMax() + 1 && transferId == nextRange.getMin() - 1)
-                {
-                    if (range.isCompatible(settled, newOutcome) && nextRange.isCompatible(settled, newOutcome))
-                    {
+            if (nextRange != null) {
+                if (transferId == range.getMax() + 1 && transferId == nextRange.getMin() - 1) {
+                    if (range.isCompatible(settled, newOutcome) && nextRange.isCompatible(settled, newOutcome)) {
                         range.setMax(nextRange.getMax());
                         dispositionRanges.remove(nextRange);
                         return;
                     }
-                    else if (nextRange.isCompatible(settled, newOutcome))
-                    {
+                    else if (nextRange.isCompatible(settled, newOutcome)) {
                         nextRange.setMin(transferId);
                         return;
                     }
-                    else if (range.isCompatible(settled, newOutcome))
-                    {
+                    else if (range.isCompatible(settled, newOutcome)) {
                         range.setMax(transferId);
                         return;
                     }
-                    else
-                    {
-                        dispositionRanges.add(indexToInsert+1, new DispositionRange(transferId, transferId, settled, newOutcome));
+                    else {
+                        dispositionRanges.add(indexToInsert + 1, new DispositionRange(transferId, transferId, settled, newOutcome));
                         return;
                     }
                 }
             }
 
-            if (transferId == range.getMax()+1)
-            {
-                if (range.isCompatible(settled, newOutcome))
-                {
+            if (transferId == range.getMax() + 1) {
+                if (range.isCompatible(settled, newOutcome)) {
                     range.setMax(transferId);
                     return;
                 }
-                else
-                {
-                    dispositionRanges.add(indexToInsert+1, new DispositionRange(transferId, transferId, settled, newOutcome));
+                else {
+                    dispositionRanges.add(indexToInsert + 1, new DispositionRange(transferId, transferId, settled, newOutcome));
                     return;
                 }
             }
-            if (transferId == range.getMin()-1)
-            {
-                if (range.isCompatible(settled, newOutcome))
-                {
+            if (transferId == range.getMin() - 1) {
+                if (range.isCompatible(settled, newOutcome)) {
                     range.setMin(transferId);
                     return;
                 }
-                else
-                {
+                else {
                     dispositionRanges.add(indexToInsert, new DispositionRange(transferId, transferId, settled, newOutcome));
                     return;
                 }
             }
 
-            if (transferId > range.getMax()+1)
-            {
+            if (transferId > range.getMax() + 1) {
                 range = nextRange;
                 nextRange = null;
                 indexToInsert++;
                 continue;
             }
 
-            assert(false);
+            assert (false);
         }
         dispositionRanges.add(new DispositionRange(transferId, transferId, settled, newOutcome));
     }
@@ -375,8 +329,7 @@ class CAMQPDispositionSender implements Runnable
      * @param dispositionRanges
      * @return
      */
-    private static boolean isUpdate(long transferId, boolean settled, Object newOutcome, List<DispositionRange> dispositionRanges)
-    {
+    private static boolean isUpdate(long transferId, boolean settled, Object newOutcome, List<DispositionRange> dispositionRanges) {
         Iterator<DispositionRange> iter = dispositionRanges.iterator();
         DispositionRange range = iter.next();
         DispositionRange nextRange = null;
@@ -384,8 +337,7 @@ class CAMQPDispositionSender implements Runnable
         boolean updated = false;
 
         int index = 0;
-        while (range != null)
-        {
+        while (range != null) {
             if (transferId < range.getMin())
                 return false;
 
@@ -393,10 +345,8 @@ class CAMQPDispositionSender implements Runnable
                 nextRange = iter.next();
             }
 
-            if (transferId>=range.getMin() && transferId<=range.getMax())
-            {
-                if (range.isCompatible(settled, newOutcome))
-                {
+            if (transferId >= range.getMin() && transferId <= range.getMax()) {
+                if (range.isCompatible(settled, newOutcome)) {
                     return true;
                 }
                 updated = true;
@@ -411,17 +361,13 @@ class CAMQPDispositionSender implements Runnable
         if (!updated)
             return false;
 
-        if (range.getMin()==range.getMax() && transferId==range.getMax())
-        {
+        if (range.getMin() == range.getMax() && transferId == range.getMax()) {
             range.setSettled(settled);
             range.setOutcome(newOutcome);
 
-            if (prevRange!=null && nextRange!= null)
-            {
-                if (prevRange.getMax()+1 == nextRange.getMin()-1)
-                {
-                    if (prevRange.isCompatible(settled, newOutcome) && nextRange.isCompatible(settled, newOutcome))
-                    {
+            if (prevRange != null && nextRange != null) {
+                if (prevRange.getMax() + 1 == nextRange.getMin() - 1) {
+                    if (prevRange.isCompatible(settled, newOutcome) && nextRange.isCompatible(settled, newOutcome)) {
                         prevRange.setMax(nextRange.getMax());
                         dispositionRanges.remove(range);
                         dispositionRanges.remove(nextRange);
@@ -429,19 +375,15 @@ class CAMQPDispositionSender implements Runnable
                     }
                 }
             }
-            if (prevRange!=null && (prevRange.getMax()+1 == transferId))
-            {
-                if (prevRange.isCompatible(settled, newOutcome))
-                {
+            if (prevRange != null && (prevRange.getMax() + 1 == transferId)) {
+                if (prevRange.isCompatible(settled, newOutcome)) {
                     prevRange.setMax(transferId);
                     dispositionRanges.remove(range);
                     return true;
                 }
             }
-            if (nextRange!=null && (nextRange.getMin()-1 == transferId))
-            {
-                if (nextRange.isCompatible(settled, newOutcome))
-                {
+            if (nextRange != null && (nextRange.getMin() - 1 == transferId)) {
+                if (nextRange.isCompatible(settled, newOutcome)) {
                     nextRange.setMin(transferId);
                     dispositionRanges.remove(range);
                     return true;
@@ -452,14 +394,11 @@ class CAMQPDispositionSender implements Runnable
 
         DispositionRange newRange = new DispositionRange(transferId, transferId, settled, newOutcome);
 
-        if (range.getMin() == transferId)
-        {
+        if (range.getMin() == transferId) {
             range.setMin(range.getMin() + 1);
 
-            if (prevRange!=null && (prevRange.getMax()+1 == transferId))
-            {
-                if (prevRange.isCompatible(settled, newOutcome))
-                {
+            if (prevRange != null && (prevRange.getMax() + 1 == transferId)) {
+                if (prevRange.isCompatible(settled, newOutcome)) {
                     prevRange.setMax(transferId);
                     return true;
                 }
@@ -467,28 +406,24 @@ class CAMQPDispositionSender implements Runnable
             dispositionRanges.add(index, newRange);
             return true;
         }
-        else if (range.getMax() == transferId)
-        {
+        else if (range.getMax() == transferId) {
             range.setMax(range.getMax() - 1);
 
-            if (nextRange!=null && (nextRange.getMin()-1 == transferId))
-            {
-                if (nextRange.isCompatible(settled, newOutcome))
-                {
+            if (nextRange != null && (nextRange.getMin() - 1 == transferId)) {
+                if (nextRange.isCompatible(settled, newOutcome)) {
                     nextRange.setMin(transferId);
                     return true;
                 }
             }
 
             if (nextRange != null)
-                dispositionRanges.add(index+1, newRange);
+                dispositionRanges.add(index + 1, newRange);
             else
                 dispositionRanges.add(newRange);
             return true;
         }
-        else if (transferId>range.getMin() && transferId <range.getMax())
-        {
-            DispositionRange splitRange = new DispositionRange(range.getMin(), transferId-1, range.isSettled(), range.getOutcome());
+        else if (transferId > range.getMin() && transferId < range.getMax()) {
+            DispositionRange splitRange = new DispositionRange(range.getMin(), transferId - 1, range.isSettled(), range.getOutcome());
             range.setMin(transferId + 1);
 
             dispositionRanges.add(index, newRange);

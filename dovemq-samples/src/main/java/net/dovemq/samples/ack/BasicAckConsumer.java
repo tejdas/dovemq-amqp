@@ -14,26 +14,23 @@ import net.dovemq.api.Session;
  * created with a CONSUMER_ACKS mode, which means the receiver needs to
  * explicitly acknowledge receipt of the message.
  */
-public class BasicAckConsumer
-{
+public class BasicAckConsumer {
     private static final String QUEUE_NAME = "SampleQueue";
+
     private static volatile boolean doShutdown = false;
 
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
      * with the Consumer.
      */
-    private static class SampleMessageReceiver implements DoveMQMessageReceiver
-    {
-        public SampleMessageReceiver(Consumer consumer)
-        {
+    private static class SampleMessageReceiver implements DoveMQMessageReceiver {
+        public SampleMessageReceiver(Consumer consumer) {
             super();
             this.consumer = consumer;
         }
 
         @Override
-        public void messageReceived(DoveMQMessage message)
-        {
+        public void messageReceived(DoveMQMessage message) {
             byte[] body = message.getPayload();
             String payload = new String(body);
             System.out.println("Received message: " + payload);
@@ -47,8 +44,7 @@ public class BasicAckConsumer
         private final Consumer consumer;
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -60,8 +56,7 @@ public class BasicAckConsumer
          */
         ConnectionFactory.initialize("ackConsumer");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -87,8 +82,7 @@ public class BasicAckConsumer
              */
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
-                public void run()
-                {
+                public void run() {
                     /*
                      * Close the AMQP session
                      */
@@ -103,20 +97,16 @@ public class BasicAckConsumer
             });
 
             System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
-            while (!doShutdown)
-            {
-                try
-                {
+            while (!doShutdown) {
+                try {
                     Thread.sleep(1000);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());
             /*
              * Shutdown DoveMQ runtime.

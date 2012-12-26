@@ -34,61 +34,60 @@ import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
 import org.apache.commons.lang.StringUtils;
 
-final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDispositionObserver, Runnable
-{
-    private static class MessageContext
-    {
-        boolean hasExpired(long currentTime)
-        {
-            return (currentTime-contextCreationTime > 60000);
+final class TopicRouter implements
+        CAMQPMessageReceiver,
+        CAMQPMessageDispositionObserver,
+        Runnable {
+    private static class MessageContext {
+        boolean hasExpired(long currentTime) {
+            return (currentTime - contextCreationTime > 60000);
         }
-        MessageContext(int numSubscribers, CAMQPTargetInterface sourceSink)
-        {
+
+        MessageContext(int numSubscribers, CAMQPTargetInterface sourceSink) {
             super();
             this.numSubscribers = new AtomicInteger(numSubscribers);
             this.sourceSink = sourceSink;
             contextCreationTime = System.currentTimeMillis();
         }
+
         final AtomicInteger numSubscribers;
+
         final long contextCreationTime;
+
         final CAMQPTargetInterface sourceSink;
     }
 
     private final String topicName;
+
     private final TopicRouterType routerType;
+
     private final Set<RoutingEvaluator> subscriberProxies = new CopyOnWriteArraySet<RoutingEvaluator>();
+
     private final Set<CAMQPTargetInterface> publisherSinks = new CopyOnWriteArraySet<CAMQPTargetInterface>();
 
-    private final ConcurrentMap<Long, ConcurrentMap<Long, MessageContext>> inFlightMessagesByPublisherId =
-            new ConcurrentHashMap<Long, ConcurrentMap<Long, MessageContext>>();
+    private final ConcurrentMap<Long, ConcurrentMap<Long, MessageContext>> inFlightMessagesByPublisherId = new ConcurrentHashMap<Long, ConcurrentMap<Long, MessageContext>>();
 
-    TopicRouter(String topicName, TopicRouterType routerType)
-    {
+    TopicRouter(String topicName, TopicRouterType routerType) {
         super();
         this.topicName = topicName;
         this.routerType = routerType;
     }
 
     /**
-     * Acknowledge the completion of a message processing to a Publisher
-     * only when all the subscribers have acked the message receipt.
+     * Acknowledge the completion of a message processing to a Publisher only
+     * when all the subscribers have acked the message receipt.
      */
     @Override
-    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source)
-    {
+    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source) {
         long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
         long sourceId = ((DoveMQMessageImpl) message).getSourceId();
         ConcurrentMap<Long, MessageContext> unackedMap = inFlightMessagesByPublisherId.get(sourceId);
-        if (unackedMap != null)
-        {
+        if (unackedMap != null) {
             MessageContext msgContext = unackedMap.get(deliveryId);
-            if (msgContext != null)
-            {
+            if (msgContext != null) {
                 int numSubscribersLeftToAck = msgContext.numSubscribers.decrementAndGet();
-                if (0 == numSubscribersLeftToAck)
-                {
-                    if (null != unackedMap.remove(deliveryId))
-                    {
+                if (0 == numSubscribersLeftToAck) {
+                    if (null != unackedMap.remove(deliveryId)) {
                         msgContext.sourceSink.acknowledgeMessageProcessingComplete(deliveryId);
                     }
                 }
@@ -97,8 +96,7 @@ final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
     }
 
     @Override
-    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
-    {
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target) {
         long publisherId = target.getId();
         ((DoveMQMessageImpl) message).setSourceId(publisherId);
 
@@ -107,130 +105,102 @@ final class TopicRouter implements CAMQPMessageReceiver, CAMQPMessageDisposition
         inFlightMsgMap.put(deliveryId, new MessageContext(subscriberProxies.size(), target));
 
         Object routingEvaluationContext = null;
-        if (routerType == TopicRouterType.MessageTagFilter)
-        {
+        if (routerType == TopicRouterType.MessageTagFilter) {
             routingEvaluationContext = message.getApplicationProperty(DoveMQMessageImpl.ROUTING_TAG_KEY);
         }
-        else if (routerType == TopicRouterType.Hierarchical)
-        {
+        else if (routerType == TopicRouterType.Hierarchical) {
             routingEvaluationContext = message.getApplicationProperty(DoveMQMessageImpl.TOPIC_PUBLISH_HIERARCHY_KEY);
         }
 
-        for (RoutingEvaluator subscriberProxy : subscriberProxies)
-        {
-            if (subscriberProxy.canMessageBePublished(routingEvaluationContext))
-            {
+        for (RoutingEvaluator subscriberProxy : subscriberProxies) {
+            if (subscriberProxy.canMessageBePublished(routingEvaluationContext)) {
                 subscriberProxy.getSubscriberProxy().sendMessage(message);
             }
         }
     }
 
-    void subscriberAttached(CAMQPSourceInterface destination, CAMQPEndpointPolicy endpointPolicy)
-    {
-        if (routerType == TopicRouterType.MessageTagFilter)
-        {
+    void subscriberAttached(CAMQPSourceInterface destination, CAMQPEndpointPolicy endpointPolicy) {
+        if (routerType == TopicRouterType.MessageTagFilter) {
             Pattern messageFilterPattern = null;
             String messageFilterPatternString = endpointPolicy.getMessageFilterPattern();
-            if (!StringUtils.isEmpty(messageFilterPatternString))
-            {
-                try
-                {
+            if (!StringUtils.isEmpty(messageFilterPatternString)) {
+                try {
                     messageFilterPattern = Pattern.compile(messageFilterPatternString);
                 }
-                catch (PatternSyntaxException ex)
-                {
+                catch (PatternSyntaxException ex) {
                     messageFilterPattern = null;
                 }
             }
             subscriberProxies.add(new RoutingMessageTagFilterEvaluator(messageFilterPattern, destination));
         }
-        else if (routerType == TopicRouterType.Hierarchical)
-        {
+        else if (routerType == TopicRouterType.Hierarchical) {
             String subscriptionTopicHierarchy = endpointPolicy.getSubscriptionTopicHierarchy();
-            if (!StringUtils.isEmpty(subscriptionTopicHierarchy))
-            {
+            if (!StringUtils.isEmpty(subscriptionTopicHierarchy)) {
                 subscriberProxies.add(new RoutingTopicHeirarchyMatcher(subscriptionTopicHierarchy, destination));
             }
-            else
-            {
+            else {
                 subscriberProxies.add(new RoutingTopicHeirarchyMatcher(topicName, destination));
             }
 
         }
-        else
-        {
+        else {
             subscriberProxies.add(new RoutingEvaluator(destination));
         }
 
         destination.registerDispositionObserver(this);
     }
 
-    void subscriberDetached(CAMQPSourceInterface targetProxy)
-    {
-        for (RoutingEvaluator subscriberContext: subscriberProxies)
-        {
-            if (subscriberContext.getSubscriberProxy() == targetProxy)
-            {
+    void subscriberDetached(CAMQPSourceInterface targetProxy) {
+        for (RoutingEvaluator subscriberContext : subscriberProxies) {
+            if (subscriberContext.getSubscriberProxy() == targetProxy) {
                 subscriberProxies.remove(subscriberContext);
             }
         }
     }
 
-    void publisherAttached(CAMQPTargetInterface sourceSink)
-    {
+    void publisherAttached(CAMQPTargetInterface sourceSink) {
         publisherSinks.add(sourceSink);
         inFlightMessagesByPublisherId.put(sourceSink.getId(), new ConcurrentHashMap<Long, MessageContext>());
         sourceSink.registerMessageReceiver(this);
     }
 
-    void publisherDetached(CAMQPTargetInterface source)
-    {
+    void publisherDetached(CAMQPTargetInterface source) {
         publisherSinks.remove(source);
         inFlightMessagesByPublisherId.remove(source.getId());
     }
 
-    boolean isCompletelyDetached()
-    {
+    boolean isCompletelyDetached() {
         return (publisherSinks.isEmpty() && subscriberProxies.isEmpty());
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         long currentTime = System.currentTimeMillis();
 
-        try
-        {
+        try {
             Set<Long> publisherIds = inFlightMessagesByPublisherId.keySet();
-            for (long id : publisherIds)
-            {
+            for (long id : publisherIds) {
                 ConcurrentMap<Long, MessageContext> inFlightMessages = inFlightMessagesByPublisherId.get(id);
                 Set<Long> inflightMessageIDs = inFlightMessages.keySet();
-                for (Long messageId : inflightMessageIDs)
-                {
+                for (Long messageId : inflightMessageIDs) {
                     MessageContext messageContext = inFlightMessages.get(messageId);
-                    if ((messageContext != null) && messageContext.hasExpired(currentTime))
-                    {
-                        if (null != inFlightMessages.remove(messageId))
-                        {
+                    if ((messageContext != null) && messageContext.hasExpired(currentTime)) {
+                        if (null != inFlightMessages.remove(messageId)) {
                             messageContext.sourceSink.acknowledgeMessageProcessingComplete(messageId);
                         }
                     }
                 }
             }
         }
-        finally
-        {
+        finally {
         }
     }
 
-    String getTopicName()
-    {
+    String getTopicName() {
         return topicName;
     }
 
-    TopicRouterType getRouterType()
-    {
+    TopicRouterType getRouterType() {
         return routerType;
     }
 }

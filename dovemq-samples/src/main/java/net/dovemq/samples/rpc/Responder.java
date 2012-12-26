@@ -22,8 +22,7 @@ import net.dovemq.api.Session;
  * the messageId. The requester uses the correlationId to match the incoming
  * response for the outgoing request.
  */
-public class Responder
-{
+public class Responder {
     private static final String LISTEN_TO_ADDRESS = "requestQueue";
 
     private static volatile boolean doShutdown = false;
@@ -46,31 +45,24 @@ public class Responder
      * same as the messageId of the incoming message, and sends the response
      * back on the Producer.
      */
-    private static final class RequestProcessor implements Runnable
-    {
-        public RequestProcessor(Session session)
-        {
+    private static final class RequestProcessor implements Runnable {
+        public RequestProcessor(Session session) {
             super();
             this.session = session;
         }
 
         @Override
-        public void run()
-        {
-            while (!shutdown)
-            {
+        public void run() {
+            while (!shutdown) {
                 DoveMQMessage request = null;
-                try
-                {
+                try {
                     request = incomingRequests.poll(1000, TimeUnit.MILLISECONDS);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
 
-                if (request != null)
-                {
+                if (request != null) {
                     byte[] body = request.getPayload();
                     String payload = new String(body);
                     String replyToAddress = request.getMessageProperties()
@@ -80,15 +72,13 @@ public class Responder
                     System.out.println("Received request: " + payload);
 
                     Producer producer = null;
-                    synchronized (messageProducers)
-                    {
+                    synchronized (messageProducers) {
                         /*
                          * Get the corresponding Producer, create one if not
                          * already in the map.
                          */
                         producer = messageProducers.get(replyToAddress);
-                        if (producer == null)
-                        {
+                        if (producer == null) {
                             producer = session.createProducer(replyToAddress);
                             messageProducers.put(replyToAddress, producer);
                         }
@@ -108,8 +98,7 @@ public class Responder
             }
         }
 
-        void doShutdown()
-        {
+        void doShutdown() {
             shutdown = true;
         }
 
@@ -121,17 +110,14 @@ public class Responder
     /**
      * Receive the request message and hand it off to RequestProcessor.
      */
-    private static class SampleMessageReceiver implements DoveMQMessageReceiver
-    {
+    private static class SampleMessageReceiver implements DoveMQMessageReceiver {
         @Override
-        public void messageReceived(DoveMQMessage message)
-        {
+        public void messageReceived(DoveMQMessage message) {
             incomingRequests.add(message);
         }
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         /*
          * Read the broker IP address passed in as -Ddovemq.broker Defaults to
          * localhost
@@ -143,8 +129,7 @@ public class Responder
          */
         ConnectionFactory.initialize("rpcResponder");
 
-        try
-        {
+        try {
             /*
              * Create an AMQP session.
              */
@@ -169,8 +154,7 @@ public class Responder
              */
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
-                public void run()
-                {
+                public void run() {
                     requestProcessor.doShutdown();
                     /*
                      * Close the AMQP session
@@ -186,20 +170,16 @@ public class Responder
             });
 
             System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
-            while (!doShutdown)
-            {
-                try
-                {
+            while (!doShutdown) {
+                try {
                     Thread.sleep(1000);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());
             /*
              * Shutdown DoveMQ runtime.

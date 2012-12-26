@@ -23,17 +23,15 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 
 @Immutable
-public class CAMQPHandshakeFrame
-{
-    public CAMQPHandshakeFrame(ChannelBuffer body)
-    {
+public final class CAMQPHandshakeFrame {
+    public CAMQPHandshakeFrame(ChannelBuffer body) {
         super();
         this.body = body;
     }
 
-    public ChannelBuffer getBody()
-    {
+    public ChannelBuffer getBody() {
         return body;
     }
+
     private final ChannelBuffer body;
 }

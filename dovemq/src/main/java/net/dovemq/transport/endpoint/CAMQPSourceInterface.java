@@ -29,11 +29,10 @@ import net.dovemq.transport.link.CAMQPMessage;
  * @author tdas
  *
  */
-public interface CAMQPSourceInterface
-{
+public interface CAMQPSourceInterface {
     /**
-     * Called by Broker and (optionally) Producer/Publisher to register an observer,
-     * to be notified when a message transitions to a terminal state.
+     * Called by Broker and (optionally) Producer/Publisher to register an
+     * observer, to be notified when a message transitions to a terminal state.
      *
      * @param observer
      */
@@ -41,46 +40,51 @@ public interface CAMQPSourceInterface
 
     /**
      * Sends a message on the underlying CAMQPSourceInterface.
+     *
      * @param message
-     *      DoveMQMessage to send.
+     *            DoveMQMessage to send.
      */
     public void sendMessage(DoveMQMessage message);
 
     /**
      * Called by Link Sender to asynchronously pull a message for sending.
-     * @return
-     *      CAMQPMessage to send.
+     *
+     * @return CAMQPMessage to send.
      */
     public CAMQPMessage getMessage();
 
     /**
-     * Called by Link Sender to find out the number of messages waiting to be sent.
-     * @return
-     *      count of messages at Source.
+     * Called by Link Sender to find out the number of messages waiting to be
+     * sent.
+     *
+     * @return count of messages at Source.
      */
     public long getMessageCount();
 
     /**
-     * Called by Link Sender just before the message is sent. Puts the message in the
-     * unsettledDeliveries map if the message delivery policy is ExactlyOnce or
-     * AtleastOnce. For, AtmostOnce, it just forgets about the message after
-     * sending it.
+     * Called by Link Sender just before the message is sent. Puts the message
+     * in the unsettledDeliveries map if the message delivery policy is
+     * ExactlyOnce or AtleastOnce. For, AtmostOnce, it just forgets about the
+     * message after sending it.
      */
     public void messageSent(long deliveryId, CAMQPMessage message);
 
     /**
-     * Called by Link Sender upon receipt of disposition control frame.
-     * Receives a collection of deliveryIds corresponding to messages being disposed.
-     * Processes the messages that are sent by this end-point, and returns back a collection
-     * of unprocessed messages. The reason this happens is that, for a session attached to
-     * multiple links, a batched disposition frame may contain messages sent from different
-     * link end-points.
+     * Called by Link Sender upon receipt of disposition control frame. Receives
+     * a collection of deliveryIds corresponding to messages being disposed.
+     * Processes the messages that are sent by this end-point, and returns back
+     * a collection of unprocessed messages. The reason this happens is that,
+     * for a session attached to multiple links, a batched disposition frame may
+     * contain messages sent from different link end-points.
      *
-     * @param deliveryIds: collection of deliveryIds for batched disposition of messages.
-     * @param isMessageSettledByPeer: true/false.
+     * @param deliveryIds
+     *            : collection of deliveryIds for batched disposition of
+     *            messages.
+     * @param isMessageSettledByPeer
+     *            : true/false.
      * @param newState
-     * @return
-     *      A Collection of deliveryIds for messages that are not sent from this end-point.
+     * @return A Collection of deliveryIds for messages that are not sent from
+     *         this end-point.
      */
     public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
 
