@@ -84,7 +84,7 @@ public class LinkTestMultipleSources
             boolean generateRandomString = false;
             for (int i = 0; i < numMessagesToSend; i++)
             {
-                DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator, generateRandomString);
+                DoveMQMessage message = EndpointTestUtils.createSmallEncodedMessage(randomGenerator, generateRandomString);
                 sender.sendMessage(message);
             }
             doneSignal.countDown();

@@ -34,113 +34,101 @@ import net.dovemq.transport.link.CAMQPMessage;
 
 import org.junit.Test;
 
-public class TopicRouterTest extends TestCase
-{
+public class TopicRouterTest extends TestCase {
     private static final AtomicLong linkIds = new AtomicLong(0L);
+
     private static DoveMQEndpointManagerImpl endpointManager = null;
 
-    private static class MockSubscriberProxy implements CAMQPSourceInterface
-    {
+    private static class MockSubscriberProxy implements CAMQPSourceInterface {
         private final long id = linkIds.getAndIncrement();
+
         private final AtomicInteger messageCount = new AtomicInteger(0);
+
         private volatile String lastReceivedMessageId = null;
 
-        String getLastReceivedMessageId()
-        {
+        String getLastReceivedMessageId() {
             String msgId = lastReceivedMessageId;
             lastReceivedMessageId = null;
             return msgId;
         }
 
         @Override
-        public void registerDispositionObserver(CAMQPMessageDispositionObserver observer)
-        {
+        public void registerDispositionObserver(CAMQPMessageDispositionObserver observer) {
             // TODO Auto-generated method stub
         }
 
         @Override
-        public void sendMessage(DoveMQMessage message)
-        {
+        public void sendMessage(DoveMQMessage message) {
             messageCount.incrementAndGet();
-            lastReceivedMessageId = message.getMessageProperties().getMessageId();
+            lastReceivedMessageId = message.getMessageProperties()
+                    .getMessageId();
         }
 
         @Override
-        public CAMQPMessage getMessage()
-        {
+        public CAMQPMessage getMessage() {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public long getMessageCount()
-        {
+        public long getMessageCount() {
             // TODO Auto-generated method stub
             return 0;
         }
 
         @Override
-        public void messageSent(long deliveryId, CAMQPMessage message)
-        {
+        public void messageSent(long deliveryId, CAMQPMessage message) {
             // TODO Auto-generated method stub
 
         }
 
         @Override
-        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
-        {
+        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState) {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public long getId()
-        {
+        public long getId() {
             // TODO Auto-generated method stub
             return id;
         }
 
-        public int getCount()
-        {
+        public int getCount() {
             return messageCount.get();
         }
 
     }
 
-    private static class MockPublisherSink implements CAMQPTargetInterface
-    {
+    private static class MockPublisherSink implements CAMQPTargetInterface {
         private final long id = linkIds.getAndIncrement();
+
         @Override
-        public void registerMessageReceiver(CAMQPMessageReceiver messageReceiver)
-        {
+        public void registerMessageReceiver(CAMQPMessageReceiver messageReceiver) {
             // TODO Auto-generated method stub
 
         }
 
         @Override
-        public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode)
-        {
+        public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode) {
             // TODO Auto-generated method stub
 
         }
 
         @Override
-        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
-        {
+        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState) {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public void acknowledgeMessageProcessingComplete(long deliveryId)
-        {
+        public void acknowledgeMessageProcessingComplete(long deliveryId) {
             // TODO Auto-generated method stub
 
         }
 
         @Override
-        public long getId()
-        {
+        public long getId() {
             // TODO Auto-generated method stub
             return id;
         }
@@ -148,22 +136,19 @@ public class TopicRouterTest extends TestCase
     }
 
     @Override
-    protected void setUp() throws Exception
-    {
+    protected void setUp() throws Exception {
         super.setUp();
         endpointManager = new DoveMQEndpointManagerImpl();
     }
 
     @Override
-    protected void tearDown() throws Exception
-    {
+    protected void tearDown() throws Exception {
         super.tearDown();
         endpointManager = null;
     }
 
     @Test
-    public void testTopicPublishersSameNameDifferentType()
-    {
+    public void testTopicPublishersSameNameDifferentType() {
         CAMQPEndpointPolicy endpointPolicy1 = createPolicy(TopicRouterType.Hierarchical);
         endpointManager.publisherAttached("root", new MockPublisherSink(), endpointPolicy1);
         TopicRouter topicRouter1 = endpointManager.getTopicRouter("root", TopicRouterType.Hierarchical);
@@ -190,15 +175,15 @@ public class TopicRouterTest extends TestCase
     }
 
     @Test
-    public void testTopicSubscribersSameNameDifferentType()
-    {
+    public void testTopicSubscribersSameNameDifferentType() {
         CAMQPEndpointPolicy endpointPolicy1 = createPolicy(TopicRouterType.Hierarchical);
         endpointManager.subscriberAttached("root2.foo.bar", new MockSubscriberProxy(), endpointPolicy1);
         TopicRouter topicRouter1 = endpointManager.getTopicRouter("root2", TopicRouterType.Hierarchical);
         assertNotNull(topicRouter1);
         assertTrue(topicRouter1.getRouterType() == TopicRouterType.Hierarchical);
         assertTrue(topicRouter1.getTopicName().equalsIgnoreCase("root2"));
-        assertTrue(endpointPolicy1.getSubscriptionTopicHierarchy().equalsIgnoreCase("root2.foo.bar"));
+        assertTrue(endpointPolicy1.getSubscriptionTopicHierarchy()
+                .equalsIgnoreCase("root2.foo.bar"));
 
         CAMQPEndpointPolicy endpointPolicy2 = createPolicy(TopicRouterType.MessageTagFilter);
         endpointManager.subscriberAttached("root2", new MockSubscriberProxy(), endpointPolicy2);
@@ -219,8 +204,7 @@ public class TopicRouterTest extends TestCase
     }
 
     @Test
-    public void testTopicHierarchySubscription()
-    {
+    public void testTopicHierarchySubscription() {
         CAMQPEndpointPolicy endpointPolicy = createPolicy(TopicRouterType.Hierarchical);
         CAMQPTargetInterface publisher = new MockPublisherSink();
         endpointManager.publisherAttached("root", publisher, endpointPolicy);
@@ -247,24 +231,46 @@ public class TopicRouterTest extends TestCase
         MockSubscriberProxy subscriber5 = new MockSubscriberProxy();
         endpointManager.subscriberAttached("root", subscriber5, endpointPolicy5);
 
+        /*
+         * Message created with topic root hierarchy tag. All subscribers should get the message.
+         */
         DoveMQMessage message = createMessageWithHierarchicalTag("root");
         topicRouter.messageReceived(message, publisher);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
 
+        /*
+         * Message created with no hierarchy tag. All subscribers should get the message.
+         */
+        message = createMessage();
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+
+        /*
+         * Subscribers with subscription to root.foo.bar and root.foo.bar.nook should get it.
+         */
         message = createMessageWithHierarchicalTag("root.foo.bar");
         topicRouter.messageReceived(message, publisher);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
         assertEquals(null, subscriber3.getLastReceivedMessageId());
 
+        /*
+         * Subscribers with subscription to root.foo.bar and root.foo.bar.nook should get it.
+         */
         message = createMessageWithHierarchicalTag("root.foo");
         topicRouter.messageReceived(message, publisher);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
         assertEquals(null, subscriber3.getLastReceivedMessageId());
 
+        /*
+         * No subscribers have subscribed to topic hierarchy at or under roo.foo.b
+         * Should not be routed at all.
+         */
         message = createMessageWithHierarchicalTag("root.foo.b");
         topicRouter.messageReceived(message, publisher);
         assertEquals(null, subscriber1.getLastReceivedMessageId());
@@ -295,6 +301,9 @@ public class TopicRouterTest extends TestCase
         assertEquals(null, subscriber2.getLastReceivedMessageId());
         assertEquals(null, subscriber3.getLastReceivedMessageId());
 
+        /*
+         * Subscriber with subscription to root.foo.bar.nook should get it.
+         */
         message = createMessageWithHierarchicalTag("root.foo.bar.nook");
         topicRouter.messageReceived(message, publisher);
         assertEquals(null, subscriber1.getLastReceivedMessageId());
@@ -307,16 +316,15 @@ public class TopicRouterTest extends TestCase
         assertEquals(null, subscriber2.getLastReceivedMessageId());
         assertEquals(null, subscriber3.getLastReceivedMessageId());
 
-        assertTrue(subscriber1.getCount() == 3);
-        assertTrue(subscriber2.getCount() == 4);
-        assertTrue(subscriber3.getCount() == 1);
+        assertTrue(subscriber1.getCount() == 4);
+        assertTrue(subscriber2.getCount() == 5);
+        assertTrue(subscriber3.getCount() == 2);
         assertTrue(subscriber4.getCount() == 0);
         assertTrue(subscriber5.getCount() == 0);
     }
 
     @Test
-    public void testTopicMessageTagFilterSubscription()
-    {
+    public void testTopicMessageTagFilterSubscription() {
         CAMQPEndpointPolicy endpointPolicy = createPolicy(TopicRouterType.MessageTagFilter);
         CAMQPTargetInterface publisher = new MockPublisherSink();
         endpointManager.publisherAttached("FilterTopic", publisher, endpointPolicy);
@@ -349,29 +357,26 @@ public class TopicRouterTest extends TestCase
         assertTrue(subscriber2.getCount() == 2);
     }
 
-    private static DoveMQMessage createMessageWithHierarchicalTag(String topicHierarchy)
-    {
+    private static DoveMQMessage createMessageWithHierarchicalTag(String topicHierarchy) {
         DoveMQMessage message = createMessage();
         message.setTopicPublishHierarchy(topicHierarchy);
         return message;
     }
 
-    private static DoveMQMessage createMessageWithMessageFilterTag(String filterTag)
-    {
+    private static DoveMQMessage createMessageWithMessageFilterTag(String filterTag) {
         DoveMQMessage message = createMessage();
         message.setRoutingTag(filterTag);
         return message;
     }
 
-    private static DoveMQMessage createMessage()
-    {
+    private static DoveMQMessage createMessage() {
         DoveMQMessage message = MessageFactory.createMessage();
-        message.getMessageProperties().setMessageId(UUID.randomUUID().toString());
+        message.getMessageProperties().setMessageId(UUID.randomUUID()
+                .toString());
         return message;
     }
 
-    private static CAMQPEndpointPolicy createPolicy(TopicRouterType topicRouterType)
-    {
+    private static CAMQPEndpointPolicy createPolicy(TopicRouterType topicRouterType) {
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setTopicRouterType(topicRouterType);
         return endpointPolicy;

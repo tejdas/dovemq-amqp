@@ -128,18 +128,14 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
     public void subscriberAttached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
 
-        String rootTopicName = topicName;
         if (routerType == TopicRouterType.Hierarchical) {
-            int pos = topicName.indexOf('.');
-            if (pos != -1) {
-                rootTopicName = topicName.substring(0, pos);
-            }
             endpointPolicy.setSubscriptionTopicHierarchy(topicName);
+            topicName = getRootTopicName(topicName);
         }
 
-        TopicRouter topicRouter = new TopicRouter(rootTopicName, routerType);
+        TopicRouter topicRouter = new TopicRouter(topicName, routerType);
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
-        TopicRouter topicRouterInMap = topicRouters.putIfAbsent(rootTopicName, topicRouter);
+        TopicRouter topicRouterInMap = topicRouters.putIfAbsent(topicName, topicRouter);
         if (topicRouterInMap == null) {
             topicRouter.subscriberAttached(subscriber, endpointPolicy);
         }
@@ -153,6 +149,11 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
     public void subscriberDetached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
+
+        if (routerType == TopicRouterType.Hierarchical) {
+            topicName = getRootTopicName(topicName);
+        }
+
         TopicRouter topicRouter = topicRouters.get(topicName);
         if (topicRouter != null) {
             topicRouter.subscriberDetached(subscriber);
@@ -162,6 +163,15 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
             }
         }
         log.debug("Subscriber detached from topic: " + topicName);
+    }
+
+    private String getRootTopicName(String topicName) {
+        int pos = topicName.indexOf('.');
+        if (pos != -1) {
+            return topicName.substring(0, pos);
+        } else {
+            return topicName;
+        }
     }
 
     /*

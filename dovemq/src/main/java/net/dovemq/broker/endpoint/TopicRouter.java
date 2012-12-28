@@ -86,15 +86,40 @@ final class TopicRouter implements
             MessageContext msgContext = unackedMap.get(deliveryId);
             if (msgContext != null) {
                 int numSubscribersLeftToAck = msgContext.numSubscribers.decrementAndGet();
+
+                /*
+                 * All subscribers have acknowledged; Notify the publisher of
+                 * message processing completion
+                 */
                 if (0 == numSubscribersLeftToAck) {
-                    if (null != unackedMap.remove(deliveryId)) {
-                        msgContext.sourceSink.acknowledgeMessageProcessingComplete(deliveryId);
-                    }
+                    notifyPublisherOfMessageProcessingCompletion(deliveryId, unackedMap, msgContext);
                 }
             }
         }
     }
 
+    /**
+     * Remove the message from the unacknowledged map, and notify Publisher of
+     * message processing completion.
+     *
+     * @param deliveryId
+     * @param unackedMap
+     * @param msgContext
+     */
+    private void notifyPublisherOfMessageProcessingCompletion(long deliveryId, ConcurrentMap<Long, MessageContext> unackedMap,
+            MessageContext msgContext) {
+        if (null != unackedMap.remove(deliveryId)) {
+            msgContext.sourceSink.acknowledgeMessageProcessingComplete(deliveryId);
+        }
+    }
+
+    /**
+     * Processes a message received from the attached publisher(s).
+     * First, put the message in the publisher-specific inFlightMessages map.
+     * Then, get the message's routingEvaluationContext and call
+     * {@link RoutingEvaluator#canMessageBePublished(Object)} to evaluate
+     * the message to determine whether it can be routed to the subscriber.
+     */
     @Override
     public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target) {
         long publisherId = target.getId();
@@ -102,19 +127,37 @@ final class TopicRouter implements
 
         long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
         ConcurrentMap<Long, MessageContext> inFlightMsgMap = inFlightMessagesByPublisherId.get(publisherId);
-        inFlightMsgMap.put(deliveryId, new MessageContext(subscriberProxies.size(), target));
+        MessageContext msgContext = new MessageContext(subscriberProxies.size(), target);
+        inFlightMsgMap.put(deliveryId, msgContext);
 
         Object routingEvaluationContext = null;
         if (routerType == TopicRouterType.MessageTagFilter) {
             routingEvaluationContext = message.getApplicationProperty(DoveMQMessageImpl.ROUTING_TAG_KEY);
-        }
-        else if (routerType == TopicRouterType.Hierarchical) {
+        } else if (routerType == TopicRouterType.Hierarchical) {
             routingEvaluationContext = message.getApplicationProperty(DoveMQMessageImpl.TOPIC_PUBLISH_HIERARCHY_KEY);
         }
 
+        /**
+         * Keep track of a count of how many subscribers the message could not be routed
+         * to. Then, update the MessageContext accordingly, and notify the publisher if
+         * there are no subscribers left to acknowledge.
+         *
+         * P.S: unroutedSubscriberCount is kept as a negative count (hence decremented) because it is
+         * later used as delta in {@link AtomicInteger }
+         */
+        int unroutedSubscriberCount = 0;
         for (RoutingEvaluator subscriberProxy : subscriberProxies) {
             if (subscriberProxy.canMessageBePublished(routingEvaluationContext)) {
                 subscriberProxy.getSubscriberProxy().sendMessage(message);
+            } else {
+                unroutedSubscriberCount--;
+            }
+        }
+
+        if (unroutedSubscriberCount < 0) {
+            int numSubscribersLeftToAck = msgContext.numSubscribers.addAndGet(unroutedSubscriberCount);
+            if (0 == numSubscribersLeftToAck) {
+                notifyPublisherOfMessageProcessingCompletion(deliveryId, inFlightMsgMap, msgContext);
             }
         }
     }
@@ -154,6 +197,7 @@ final class TopicRouter implements
         for (RoutingEvaluator subscriberContext : subscriberProxies) {
             if (subscriberContext.getSubscriberProxy() == targetProxy) {
                 subscriberProxies.remove(subscriberContext);
+                return;
             }
         }
     }
