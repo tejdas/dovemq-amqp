@@ -63,6 +63,8 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
 
     protected long linkHandle;
 
+    private long remoteLinkHandle = -1;
+
     private String sourceAddress;
 
     private String targetAddress;
@@ -218,6 +220,9 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
     }
 
     public void detached(boolean isInitiator) {
+        if (remoteLinkHandle != -1) {
+            session.unregisterLinkReceiver(remoteLinkHandle);
+        }
         if (linkKey != null) {
             CAMQPLinkManager.getLinkmanager()
                     .unregisterLinkEndpoint(linkName, linkKey);
@@ -248,6 +253,8 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
      * @param isInitiator
      */
     void processAttachReceived(CAMQPControlAttach data, boolean isInitiator) {
+        remoteLinkHandle = data.getHandle();
+
         if (isInitiator)
             return;
 

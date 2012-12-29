@@ -112,6 +112,9 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
     @GuardedBy("this")
     private boolean isFlowSendScheduled = false;
 
+    /*
+     * Map of LinkReceivers keyed by remote Link Handle, i.e, Link Handle of the remote endpoint.
+     */
     private final Map<Long, CAMQPLinkMessageHandler> linkReceivers = new ConcurrentHashMap<Long, CAMQPLinkMessageHandler>();
 
     private final CAMQPSessionStateActor stateActor;
@@ -360,7 +363,7 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
         }
 
         for (Long linkHandle : linkReceivers.keySet()) {
-            CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(linkHandle);
+            CAMQPLinkMessageHandler linkReceiver = linkReceivers.remove(linkHandle);
             if (linkReceiver != null)
                 linkReceiver.sessionClosed();
         }
@@ -920,8 +923,8 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
     }
 
     @Override
-    public void registerLinkReceiver(Long linkHandle, CAMQPLinkMessageHandler linkReceiver) {
-        linkReceivers.put(linkHandle, linkReceiver);
+    public void unregisterLinkReceiver(Long remoteLinkHandle) {
+        linkReceivers.remove(remoteLinkHandle);
     }
 
     /**

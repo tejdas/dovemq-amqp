@@ -472,6 +472,17 @@
 		</java>
 	</target>
 	
+	<target name="TopicRoutingTagTest">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.TopicTagFilterTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
+			<arg value="${broker.ip}" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>
+				
 	<target name="TopicSimpleTest" description="running topic test">
 		<delete>
 			<fileset dir="." includes="**/sub*.txt" />
@@ -677,6 +688,7 @@
 			<antcall target="TopicMTTest"/>
 			<antcall target="TopicMTSharedSessionTest"/>
 			<antcall target="TopicHierarchyTest"/>
+			<antcall target="TopicRoutingTagTest"/>			
 		</sequential>
 	</target>
 	

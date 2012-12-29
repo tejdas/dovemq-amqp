@@ -157,7 +157,7 @@ public class CAMQPLinkSenderTest
         }
 
         @Override
-        public void registerLinkReceiver(Long linkHandle, CAMQPLinkMessageHandler linkReceiver)
+        public void unregisterLinkReceiver(Long linkHandle)
         {
         }
 

@@ -18,7 +18,6 @@
 package net.dovemq.transport.session;
 
 import net.dovemq.transport.frame.CAMQPMessagePayload;
-import net.dovemq.transport.link.CAMQPLinkMessageHandler;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
@@ -42,14 +41,13 @@ public interface CAMQPSessionInterface {
     public void sendLinkControlFrame(ChannelBuffer encodedLinkControlFrame);
 
     /**
-     * Called by Link layer to register a LinkReceiver to receive transfer
+     * Called by Link layer to unregister a LinkReceiver to receive transfer
      * frames and Link Control frames. Incoming transfer and control frames are
-     * dispatched to the LinkReceiver based on the linkHandle.
+     * dispatched to the LinkReceiver based on the remote linkHandle.
      *
-     * @param linkHandle
-     * @param linkReceiver
+     * @param remoteLinkHandle : link handle of remote link endpoint.
      */
-    public void registerLinkReceiver(Long linkHandle, CAMQPLinkMessageHandler linkReceiver);
+    public void unregisterLinkReceiver(Long remoteLinkHandle);
 
     /**
      * Called by LinkSender to get the next session-scoped delivery Id, to be
