@@ -223,103 +223,152 @@ public class TopicRouterTest extends TestCase {
         MockSubscriberProxy subscriber3 = new MockSubscriberProxy();
         endpointManager.subscriberAttached("root", subscriber3, endpointPolicy3);
 
-        CAMQPEndpointPolicy endpointPolicy4 = createPolicy(TopicRouterType.MessageTagFilter);
+        CAMQPEndpointPolicy endpointPolicy4 = createPolicy(TopicRouterType.Hierarchical);
         MockSubscriberProxy subscriber4 = new MockSubscriberProxy();
-        endpointManager.subscriberAttached("root", subscriber4, endpointPolicy4);
+        endpointManager.subscriberAttached("root.foo", subscriber4, endpointPolicy4);
 
         CAMQPEndpointPolicy endpointPolicy5 = createPolicy(TopicRouterType.Basic);
         MockSubscriberProxy subscriber5 = new MockSubscriberProxy();
         endpointManager.subscriberAttached("root", subscriber5, endpointPolicy5);
 
-        /*
-         * Message created with topic root hierarchy tag. All subscribers should get the message.
-         */
-        DoveMQMessage message = createMessageWithHierarchicalTag("root");
-        topicRouter.messageReceived(message, publisher);
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        CAMQPEndpointPolicy endpointPolicy6 = createPolicy(TopicRouterType.MessageTagFilter);
+        MockSubscriberProxy subscriber6 = new MockSubscriberProxy();
+        endpointManager.subscriberAttached("root", subscriber6, endpointPolicy6);
 
         /*
-         * Message created with no hierarchy tag. All subscribers should get the message.
+         * Message created with no hierarchy tag. No subscribers should get the message.
+         */
+        DoveMQMessage message = createMessageWithHierarchicalTag("other.bar.foo");
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(null, subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
+        assertEquals(null, subscriber3.getLastReceivedMessageId());
+        assertEquals(null, subscriber4.getLastReceivedMessageId());
+
+        /*
+         * Message created with topic root hierarchy tag. Only subscriber3 should get the message.
+         */
+        message = createMessageWithHierarchicalTag("root");
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(null, subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(null, subscriber4.getLastReceivedMessageId());
+
+        /*
+         * Message created with no hierarchy tag. No subscribers should get the message.
          */
         message = createMessage();
         topicRouter.messageReceived(message, publisher);
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(null, subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
+        assertEquals(null, subscriber3.getLastReceivedMessageId());
+        assertEquals(null, subscriber4.getLastReceivedMessageId());
 
         /*
-         * Subscribers with subscription to root.foo.bar and root.foo.bar.nook should get it.
+         * Subscribers with subscription to root.foo.bar and root.foo and root should get it.
          */
         message = createMessageWithHierarchicalTag("root.foo.bar");
         topicRouter.messageReceived(message, publisher);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
 
         /*
-         * Subscribers with subscription to root.foo.bar and root.foo.bar.nook should get it.
+         * Subscribers with subscription to root.foo and root should get it.
          */
         message = createMessageWithHierarchicalTag("root.foo");
         topicRouter.messageReceived(message, publisher);
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
-        assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
+        assertEquals(null, subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
 
         /*
-         * No subscribers have subscribed to topic hierarchy at or under roo.foo.b
-         * Should not be routed at all.
-         */
-        message = createMessageWithHierarchicalTag("root.foo.b");
-        topicRouter.messageReceived(message, publisher);
-        assertEquals(null, subscriber1.getLastReceivedMessageId());
-        assertEquals(null, subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
-
-        message = createMessageWithHierarchicalTag("root.bar");
-        topicRouter.messageReceived(message, publisher);
-        assertEquals(null, subscriber1.getLastReceivedMessageId());
-        assertEquals(null, subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
-
-        message = createMessageWithHierarchicalTag("root.bar.foo");
-        topicRouter.messageReceived(message, publisher);
-        assertEquals(null, subscriber1.getLastReceivedMessageId());
-        assertEquals(null, subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
-
-        message = createMessageWithHierarchicalTag("root.nook.bar.foo");
-        topicRouter.messageReceived(message, publisher);
-        assertEquals(null, subscriber1.getLastReceivedMessageId());
-        assertEquals(null, subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
-
-        message = createMessageWithHierarchicalTag("root.foo.bar.noo");
-        topicRouter.messageReceived(message, publisher);
-        assertEquals(null, subscriber1.getLastReceivedMessageId());
-        assertEquals(null, subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
-
-        /*
-         * Subscriber with subscription to root.foo.bar.nook should get it.
+         * All subscribers should get it.
          */
         message = createMessageWithHierarchicalTag("root.foo.bar.nook");
         topicRouter.messageReceived(message, publisher);
-        assertEquals(null, subscriber1.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
 
-        message = createMessageWithHierarchicalTag("root.foo.bar.nook.bunny");
+        /*
+         * All subscribers should get it.
+         */
+        message = createMessageWithHierarchicalTag("root.foo.bar.nook.candy");
         topicRouter.messageReceived(message, publisher);
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
+
+        /*
+         * Subscribers with subscription to root.foo and root should get it.
+         */
+        message = createMessageWithHierarchicalTag("root.foo.b");
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
         assertEquals(null, subscriber1.getLastReceivedMessageId());
         assertEquals(null, subscriber2.getLastReceivedMessageId());
-        assertEquals(null, subscriber3.getLastReceivedMessageId());
 
-        assertTrue(subscriber1.getCount() == 4);
-        assertTrue(subscriber2.getCount() == 5);
-        assertTrue(subscriber3.getCount() == 2);
-        assertTrue(subscriber4.getCount() == 0);
+        /*
+         * Subscribers with subscription to root should get it.
+         */
+        message = createMessageWithHierarchicalTag("root.bar");
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(null, subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
+        assertEquals(null, subscriber4.getLastReceivedMessageId());
+
+        /*
+         * Subscribers with subscription to root.foo and root should get it.
+         */
+        message = createMessageWithHierarchicalTag("root.foo.nook");
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
+        assertEquals(null, subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
+
+        /*
+         * Subscribers with subscription to root.foo.bar, root.foo and root should get it.
+         */
+        message = createMessageWithHierarchicalTag("root.foo.bar.candy");
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
+
+        /*
+         * Subscribers with subscription to root.foo.bar, root.foo and root should get it.
+         */
+        message = createMessageWithHierarchicalTag("root.foo.bar.can");
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
+
+        /*
+         * Subscribers with subscription to root.foo.bar, root.foo and root should get it.
+         */
+        message = createMessageWithHierarchicalTag("root.foo.bar.bunny.daddy");
+        topicRouter.messageReceived(message, publisher);
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
+        assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
+        assertEquals(null, subscriber2.getLastReceivedMessageId());
+
+        assertTrue(subscriber1.getCount() == 6);
+        assertTrue(subscriber2.getCount() == 2);
+        assertTrue(subscriber3.getCount() == 11);
+        assertTrue(subscriber6.getCount() == 0);
         assertTrue(subscriber5.getCount() == 0);
     }
 

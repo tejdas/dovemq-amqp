@@ -46,21 +46,33 @@ public class SubscriberTopicHierarchyTest {
       "root.def.pqr.vwxyz"
     };
 
+    private static final String[] shutdownMessageHierarchies = new String[] {
+        "root.abc.ghi.stu",
+        "root.abc.jkl",
+        "root.def.mno",
+        "root.def.pqr.vwxyz"
+      };
+
     private static final String[] publishTopicHierarchies = new String[] {
         "root.abc.ghi.stu",
         "root.abc.jkl",
-        "root.abc.gh", // should not match
-        "root.def.pqrs", // should not match
+        "other.abc.gh", // should not match
+        "bar.def.pqrs", // should not match
         "root.def.pqr",
         "root.def.pqr.vwxyz",
-        "root.def.pqr.vwx", // should not match
+        "mock.def.pqr.vwx", // should not match
         "root.def",
         "root.def.mno",
-        "root.def.pqrst", // should not match
+        "can.def.pqrst", // should not match
         "root.abc",
         "root.abc.ghi",
-        "root.abc.stu.ghi", // should not match
-        "root"
+        "nook.abc.stu.ghi", // should not match
+        "root",
+        "root.abc.ghi.klmn",
+        "root.def.xyz",
+        "root.abc.ghi.stu.defghhk",
+        "root.abc.jkl.mnop",
+        "root.def.mno.pqr.stuv.wxy",
     };
 
     private static class TestMessageReceiver implements DoveMQMessageReceiver {
@@ -183,8 +195,13 @@ public class SubscriberTopicHierarchyTest {
             }
         }
 
-        publisher.publishMessage("TOPIC_TEST_DONE".getBytes());
-        messagesSent++;
+        for (String hierarchy : shutdownMessageHierarchies) {
+            DoveMQMessage message = MessageFactory.createMessage();
+            message.addPayload("TOPIC_TEST_DONE".getBytes());
+            message.setTopicPublishHierarchy(hierarchy);
+            publisher.publishMessage(message);
+            messagesSent++;
+        }
 
         while (messageAckCount.get() < messagesSent)
         {
@@ -201,15 +218,15 @@ public class SubscriberTopicHierarchyTest {
 
         doneSignal.await();
 
-        assertTrue(subscribers[0].numMessagesReceived() == numIterations);
-        assertTrue(subscribers[1].numMessagesReceived() == 2*numIterations);
-        assertTrue(subscribers[2].numMessagesReceived() == 3*numIterations);
-        assertTrue(subscribers[3].numMessagesReceived() == 4*numIterations);
-        assertTrue(subscribers[4].numMessagesReceived() == 3*numIterations);
-        assertTrue(subscribers[5].numMessagesReceived() == 2*numIterations);
-        assertTrue(subscribers[6].numMessagesReceived() == 3*numIterations);
-        assertTrue(subscribers[7].numMessagesReceived() == 3*numIterations);
-        assertTrue(subscribers[8].numMessagesReceived() == 4*numIterations);
+        assertTrue(subscribers[0].numMessagesReceived() == 14*numIterations);
+        assertTrue(subscribers[1].numMessagesReceived() == 7*numIterations);
+        assertTrue(subscribers[2].numMessagesReceived() == 4*numIterations);
+        assertTrue(subscribers[3].numMessagesReceived() == 2*numIterations);
+        assertTrue(subscribers[4].numMessagesReceived() == 2*numIterations);
+        assertTrue(subscribers[5].numMessagesReceived() == 6*numIterations);
+        assertTrue(subscribers[6].numMessagesReceived() == 2*numIterations);
+        assertTrue(subscribers[7].numMessagesReceived() == 2*numIterations);
+        assertTrue(subscribers[8].numMessagesReceived() == 1*numIterations);
 
         Thread.sleep(2000);
         executor.shutdown();

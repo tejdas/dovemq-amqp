@@ -41,15 +41,15 @@ class RoutingTopicHeirarchyMatcher extends RoutingEvaluator {
     boolean canMessageBePublished(Object routingEvaluationContext) {
         String publisherTopicHierarchy = (String) routingEvaluationContext;
         if (StringUtils.isEmpty(publisherTopicHierarchy)) {
-            return true;
+            return false;
         }
 
         if (subscriberTopicHierarchy.equalsIgnoreCase(publisherTopicHierarchy)) {
             return true;
         }
 
-        String dotSuffixedPublisherTopicHierarchy = String.format("%s.", publisherTopicHierarchy);
-        return (subscriberTopicHierarchy.startsWith(dotSuffixedPublisherTopicHierarchy));
+        String dotSuffixedSubscriberTopicHierarchy = String.format("%s.", subscriberTopicHierarchy);
+        return (publisherTopicHierarchy.startsWith(dotSuffixedSubscriberTopicHierarchy));
     }
 
     public RoutingTopicHeirarchyMatcher(String subscriberTopicHierarchy,

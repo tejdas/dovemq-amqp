@@ -40,7 +40,7 @@ public class TopicPublisher {
 
             /*
              * Create and publish a message, without a topic publisher
-             * hierarchy, so the subscriber should get it.
+             * hierarchy, so the subscriber should not get it.
              */
             DoveMQMessage message = MessageFactory.createMessage();
             String msg = "Hello from Publisher, first message, published at hierarchy: " + ROOT_TOPIC_NAME;
@@ -50,7 +50,7 @@ public class TopicPublisher {
 
             /*
              * Create and publish a message, with a topic publisher hierarchy,
-             * that the subscriber is scoped under, and hence should get it.
+             * that is not under the subscriber's scope, hence should not get it.
              */
             DoveMQMessage message1 = MessageFactory.createMessage();
             String topicPublisherHierarchy1 = ROOT_TOPIC_NAME + ".foo";
@@ -61,12 +61,12 @@ public class TopicPublisher {
             publisher.publishMessage(message1);
 
             /*
-             * Create and publish a message a topic publisher hierarchy, that
-             * the subscriber is scoped under, and therefore should get it.
+             * Create and publish a message a topic publisher hierarchy, that is under the subscriber's scope
+             * and therefore should get it.
              */
             DoveMQMessage message2 = MessageFactory.createMessage();
             String topicPublisherHierarchy2 = ROOT_TOPIC_NAME + ".foo.bar";
-            String msg2 = "Hello from Publisher, third message: published at hierarchy: " + topicPublisherHierarchy2;
+            String msg2 = "Hello from Publisher, third message: published at hierarchy: " + topicPublisherHierarchy2 + " the subscriber should get this message";
             System.out.println("publishing message: " + msg2);
             message2.addPayload(msg2.getBytes());
             message2.setTopicPublishHierarchy(topicPublisherHierarchy2);
@@ -79,7 +79,7 @@ public class TopicPublisher {
              */
             DoveMQMessage message3 = MessageFactory.createMessage();
             String topicPublisherHierarchy3 = ROOT_TOPIC_NAME + ".bar";
-            String msg3 = "Hello from Publisher, fourth message: published at hierarchy: " + topicPublisherHierarchy3 + " the subscriber should not get this message";
+            String msg3 = "Hello from Publisher, fourth message: published at hierarchy: " + topicPublisherHierarchy3 + " the subscriber should get this message";
             System.out.println("publishing message: " + msg3);
             message3.addPayload(msg3.getBytes());
             message3.setTopicPublishHierarchy(topicPublisherHierarchy3);
@@ -97,6 +97,19 @@ public class TopicPublisher {
             message4.addPayload(msg4.getBytes());
             message4.setTopicPublishHierarchy(topicPublisherHierarchy4);
             publisher.publishMessage(message4);
+
+            /*
+             * Create and publish a message a topic publisher hierarchy, that
+             * the subscriber is not scoped under, and therefore should  get
+             * it.
+             */
+            DoveMQMessage message5 = MessageFactory.createMessage();
+            String topicPublisherHierarchy5 = ROOT_TOPIC_NAME + ".foo.bar.nook";
+            String msg5 = "Hello from Publisher, fifth message: published at hierarchy: " + topicPublisherHierarchy5 + " the subscriber should not get this message";
+            System.out.println("publishing message: " + msg5);
+            message5.addPayload(msg5.getBytes());
+            message5.setTopicPublishHierarchy(topicPublisherHierarchy5);
+            publisher.publishMessage(message5);
 
             /*
              * Close the AMQP session
