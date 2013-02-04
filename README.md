@@ -1,10 +1,13 @@
 DoveMQ
 ======
 
-DoveMQ is an AMQP 1.0 based messaging framework, written in Java.
+DoveMQ is an [AMQP 1.0](http://www.amqp.org) based messaging framework, written in Java.
 It constitutes a standalone AMQP Broker and an API to write messaging applications.
 
-[DoveMQ wiki](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ)
+DoveMQ wiki
+===========
+
+[Check out DoveMQ wiki](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ)
 
 Organization of the code
 ------------------------
