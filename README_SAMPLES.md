@@ -1,10 +1,9 @@
 How to build DoveMQ samples
 ===========================
 
-You need JDK 1.6+ and Maven 3.x to build the code.
+You need JDK 1.7 and Maven 3.x to build the code.
 
-Under dovemq-samples directory, run:
-
+    cd dovemq-samples
     mvn clean install
 
 This creates the following uber jar containing all the dependent jars, under the target directory:
