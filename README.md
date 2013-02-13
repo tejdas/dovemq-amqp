@@ -18,7 +18,7 @@ Organization of the code
 Build the source
 ----------------
 
-You need JDK 1.6+ and Maven 3.x to build the code.
+You need JDK 1.7 and Maven 3.x to build the code.
 
 Under dovemq directory, run:
 
