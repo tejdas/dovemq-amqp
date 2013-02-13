@@ -12,7 +12,7 @@ DoveMQ wiki
 Organization of the code
 ------------------------
 
-[Code organization](https://github.com/tejdas/dovemq-amqp/blob/master/CODE_ORGANIZATION.md)
+[Code organization](https://github.com/tejdas/dovemq-amqp/blob/master/code_org.md)
 
 
 Build the source
