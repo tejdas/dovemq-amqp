@@ -50,7 +50,7 @@ public final class CAMQPConnectionManager {
     private static volatile boolean shutdownInProgress = false;
 
     private static final ConcurrentMap<CAMQPConnectionKey, CAMQPConnection> openConnections =
-            new ConcurrentHashMap<CAMQPConnectionKey, CAMQPConnection>();
+            new ConcurrentHashMap<>();
 
     private static final Object shutdownLock = new Object();
 
@@ -106,7 +106,7 @@ public final class CAMQPConnectionManager {
     }
 
     static Collection<String> listConnections() {
-        Collection<String> connectionList = new ArrayList<String>();
+        Collection<String> connectionList = new ArrayList<>();
         Set<CAMQPConnectionKey> keys = openConnections.keySet();
         for (CAMQPConnectionKey k : keys) {
             connectionList.add(k.toString());

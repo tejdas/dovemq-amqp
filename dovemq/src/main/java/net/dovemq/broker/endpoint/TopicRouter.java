@@ -61,11 +61,11 @@ final class TopicRouter implements
 
     private final TopicRouterType routerType;
 
-    private final Set<RoutingEvaluator> subscriberProxies = new CopyOnWriteArraySet<RoutingEvaluator>();
+    private final Set<RoutingEvaluator> subscriberProxies = new CopyOnWriteArraySet<>();
 
-    private final Set<CAMQPTargetInterface> publisherSinks = new CopyOnWriteArraySet<CAMQPTargetInterface>();
+    private final Set<CAMQPTargetInterface> publisherSinks = new CopyOnWriteArraySet<>();
 
-    private final ConcurrentMap<Long, ConcurrentMap<Long, MessageContext>> inFlightMessagesByPublisherId = new ConcurrentHashMap<Long, ConcurrentMap<Long, MessageContext>>();
+    private final ConcurrentMap<Long, ConcurrentMap<Long, MessageContext>> inFlightMessagesByPublisherId = new ConcurrentHashMap<>();
 
     TopicRouter(String topicName, TopicRouterType routerType) {
         super();

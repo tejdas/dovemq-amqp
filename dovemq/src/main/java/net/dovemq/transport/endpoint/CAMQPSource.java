@@ -51,7 +51,7 @@ final class CAMQPSource implements CAMQPSourceInterface {
      */
     private AtomicLong unsettledDeliveryCount = new AtomicLong(0);
 
-    private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
+    private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<>();
 
     /*
      * Max unsettled messages at which the message sender waits until the
@@ -128,7 +128,7 @@ final class CAMQPSource implements CAMQPSourceInterface {
         /*
          * Process the unsettled messages
          */
-        List<Long> settledDeliveryIds = new ArrayList<Long>();
+        List<Long> settledDeliveryIds = new ArrayList<>();
         long settledCount = 0;
         for (long deliveryId : deliveryIds) {
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);

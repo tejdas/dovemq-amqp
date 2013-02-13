@@ -139,7 +139,7 @@ public final class CAMQPSessionManager {
     }
 
     private final ConcurrentMap<CAMQPConnectionKey, List<CAMQPSession>> mappedSessions =
-            new ConcurrentHashMap<CAMQPConnectionKey, List<CAMQPSession>>();
+            new ConcurrentHashMap<>();
 
     public static void connectionClosed(CAMQPConnectionKey remoteContainerId) {
         CAMQPSessionManager sessionManager = _sessionManager;
@@ -197,7 +197,7 @@ public final class CAMQPSessionManager {
      * Used only by CAMQP functional tests
      */
     protected static Collection<Integer> getAllAttachedChannels(String amqpContainerId) {
-        Collection<Integer> sessionList = new ArrayList<Integer>();
+        Collection<Integer> sessionList = new ArrayList<>();
         Set<CAMQPConnectionKey> amqpRemoteConnectionKeys = _sessionManager.mappedSessions.keySet();
         for (CAMQPConnectionKey key : amqpRemoteConnectionKeys) {
             if (StringUtils.equalsIgnoreCase(key.getRemoteContainerId(), amqpContainerId)) {
@@ -215,7 +215,7 @@ public final class CAMQPSessionManager {
     }
 
     private static List<CAMQPSession> getAllSessions(CAMQPConnectionKey amqpRemoteConnectionKey) {
-        List<CAMQPSession> sessionList = new ArrayList<CAMQPSession>();
+        List<CAMQPSession> sessionList = new ArrayList<>();
 
         List<CAMQPSession> sessions = _sessionManager.mappedSessions.get(amqpRemoteConnectionKey);
         if (sessions != null) {
@@ -227,7 +227,7 @@ public final class CAMQPSessionManager {
     }
 
     protected static List<CAMQPSession> getAllSessions(String amqpContainerId) {
-        List<CAMQPSession> sessionList = new ArrayList<CAMQPSession>();
+        List<CAMQPSession> sessionList = new ArrayList<>();
         Set<CAMQPConnectionKey> amqpRemoteConnectionKeys = _sessionManager.mappedSessions.keySet();
         for (CAMQPConnectionKey key : amqpRemoteConnectionKeys) {
             if (StringUtils.equalsIgnoreCase(key.getRemoteContainerId(), amqpContainerId)) {

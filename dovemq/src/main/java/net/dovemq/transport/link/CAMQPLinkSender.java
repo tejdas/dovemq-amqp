@@ -52,7 +52,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
      * Messages that are waiting to be sent because no link credit is available,
      * or there is a send in progress.
      */
-    private final ConcurrentLinkedQueue<CAMQPMessage> unsentMessages = new ConcurrentLinkedQueue<CAMQPMessage>();
+    private final ConcurrentLinkedQueue<CAMQPMessage> unsentMessages = new ConcurrentLinkedQueue<>();
 
     /**
      * Used to keep track of how many unsent messages are outstanding at session

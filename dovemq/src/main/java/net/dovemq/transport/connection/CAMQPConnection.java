@@ -50,7 +50,7 @@ final class CAMQPConnection implements CAMQPConnectionInterface {
     private CAMQPSender sender = null;
 
     @GuardedBy("stateActor")
-    private final Map<Integer, CAMQPIncomingChannelHandler> incomingChannels = new HashMap<Integer, CAMQPIncomingChannelHandler>();
+    private final Map<Integer, CAMQPIncomingChannelHandler> incomingChannels = new HashMap<>();
 
     @GuardedBy("stateActor")
     private final boolean[] outgoingChannelsInUse = new boolean[CAMQPConnectionConstants.MAX_CHANNELS_SUPPORTED];
@@ -226,7 +226,7 @@ final class CAMQPConnection implements CAMQPConnectionInterface {
     }
 
     void aborted() {
-        Collection<CAMQPIncomingChannelHandler> channelsToDetach = new ArrayList<CAMQPIncomingChannelHandler>();
+        Collection<CAMQPIncomingChannelHandler> channelsToDetach = new ArrayList<>();
 
         synchronized (stateActor) {
             if (incomingChannels.size() > 0)

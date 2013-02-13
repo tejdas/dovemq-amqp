@@ -50,7 +50,7 @@ final class CAMQPSessionSendFlowScheduler implements Runnable {
         }
     }
 
-    private final ConcurrentMap<String, CAMQPSession> sessions = new ConcurrentHashMap<String, CAMQPSession>();
+    private final ConcurrentMap<String, CAMQPSession> sessions = new ConcurrentHashMap<>();
 
     void registerSession(String sessionId, CAMQPSession session) {
         sessions.put(sessionId, session);

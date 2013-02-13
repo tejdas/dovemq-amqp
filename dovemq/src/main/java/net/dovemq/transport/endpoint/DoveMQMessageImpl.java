@@ -74,7 +74,7 @@ public final class DoveMQMessageImpl implements DoveMQMessage {
     @Override
     public void addDeliveryAnnotation(String key, String val) {
         if (deliveryAnnotations == null) {
-            deliveryAnnotations = new HashMap<String, String>();
+            deliveryAnnotations = new HashMap<>();
         }
         deliveryAnnotations.put(key, val);
     }
@@ -82,7 +82,7 @@ public final class DoveMQMessageImpl implements DoveMQMessage {
     @Override
     public void addMessageAnnotation(String key, String val) {
         if (messageAnnotations == null) {
-            messageAnnotations = new HashMap<String, String>();
+            messageAnnotations = new HashMap<>();
         }
         messageAnnotations.put(key, val);
     }
@@ -95,7 +95,7 @@ public final class DoveMQMessageImpl implements DoveMQMessage {
     @Override
     public void addApplicationProperty(String key, String val) {
         if (applicationProperties == null) {
-            applicationProperties = new HashMap<String, String>();
+            applicationProperties = new HashMap<>();
         }
         applicationProperties.put(key, val);
     }
@@ -106,7 +106,7 @@ public final class DoveMQMessageImpl implements DoveMQMessage {
             payloads.add(new DoveMQPayload(body));
         }
         else if (payload != null) {
-            payloads = new ArrayList<DoveMQPayload>();
+            payloads = new ArrayList<>();
             payloads.add(new DoveMQPayload(body));
         }
         else {
@@ -117,7 +117,7 @@ public final class DoveMQMessageImpl implements DoveMQMessage {
     @Override
     public void addFooter(String key, String val) {
         if (footers == null) {
-            footers = new HashMap<String, String>();
+            footers = new HashMap<>();
         }
         footers.put(key, val);
     }
@@ -219,7 +219,7 @@ public final class DoveMQMessageImpl implements DoveMQMessage {
     public Collection<byte[]> getPayloads() {
         Collection<byte[]> payloadCollection = null;
         if (payload != null) {
-            payloadCollection = new ArrayList<byte[]>();
+            payloadCollection = new ArrayList<>();
             payloadCollection.add(payload.getPayload());
         }
         if (payloads != null) {
@@ -311,7 +311,7 @@ public final class DoveMQMessageImpl implements DoveMQMessage {
             }
             else {
                 if (message.payloads == null) {
-                    message.payloads = new ArrayList<DoveMQPayload>();
+                    message.payloads = new ArrayList<>();
                 }
                 message.payloads.add(new DoveMQPayload(payloadBytes));
             }

@@ -174,13 +174,13 @@ final class CAMQPDispositionSender implements Runnable {
         List<DispositionRange> dispositionRanges;
         if (role) {
             if (senderDispositionRanges == null) {
-                senderDispositionRanges = new LinkedList<DispositionRange>();
+                senderDispositionRanges = new LinkedList<>();
             }
             dispositionRanges = senderDispositionRanges;
         }
         else {
             if (receiverDispositionRanges == null) {
-                receiverDispositionRanges = new LinkedList<DispositionRange>();
+                receiverDispositionRanges = new LinkedList<>();
             }
             dispositionRanges = receiverDispositionRanges;
         }

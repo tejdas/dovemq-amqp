@@ -115,7 +115,7 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
     /*
      * Map of LinkReceivers keyed by remote Link Handle, i.e, Link Handle of the remote endpoint.
      */
-    private final Map<Long, CAMQPLinkMessageHandler> linkReceivers = new ConcurrentHashMap<Long, CAMQPLinkMessageHandler>();
+    private final Map<Long, CAMQPLinkMessageHandler> linkReceivers = new ConcurrentHashMap<>();
 
     private final CAMQPSessionStateActor stateActor;
 
@@ -154,7 +154,7 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
     private boolean sendInProgress = false;
 
     @GuardedBy("this")
-    private ConcurrentLinkedQueue<Transfer> unsentTransfers = new ConcurrentLinkedQueue<Transfer>();
+    private ConcurrentLinkedQueue<Transfer> unsentTransfers = new ConcurrentLinkedQueue<>();
 
     /*
      * Flow control state
@@ -876,7 +876,7 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
      */
     private void dispatchDispositionFrame(CAMQPSyncDecoder decoder) {
         CAMQPControlDisposition data = CAMQPControlDisposition.decode(decoder);
-        Collection<Long> disposedIds = new LinkedList<Long>();
+        Collection<Long> disposedIds = new LinkedList<>();
 
         /*
          * Read the role, outcome, range and settled flag from the disposition

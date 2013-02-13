@@ -49,7 +49,7 @@ public final class CAMQPEncoder {
 
     private boolean isComposite = false;
 
-    private final Stack<Integer> compoundSizePosition = new Stack<Integer>();
+    private final Stack<Integer> compoundSizePosition = new Stack<>();
 
     public static CAMQPEncoder createCAMQPEncoder() {
         return new CAMQPEncoder();

@@ -44,7 +44,7 @@ import org.apache.log4j.Logger;
  */
 public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
     static final class LinkHandshakeTracker {
-        private final Map<String, CAMQPLinkMessageHandler> outstandingLinks = new ConcurrentHashMap<String, CAMQPLinkMessageHandler>();
+        private final Map<String, CAMQPLinkMessageHandler> outstandingLinks = new ConcurrentHashMap<>();
 
         /**
          * If we are the initiators of the Link establishment handshake, we
@@ -93,9 +93,9 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
 
     private final LinkHandshakeTracker linkHandshakeTracker = new LinkHandshakeTracker();
 
-    private final ConcurrentMap<String, CAMQPLinkEndpoint> openLinks = new ConcurrentHashMap<String, CAMQPLinkEndpoint>();
+    private final ConcurrentMap<String, CAMQPLinkEndpoint> openLinks = new ConcurrentHashMap<>();
 
-    private final ConcurrentMap<CAMQPLinkKey, Set<String>> keyToLinkSets = new ConcurrentHashMap<CAMQPLinkKey, Set<String>>();
+    private final ConcurrentMap<CAMQPLinkKey, Set<String>> keyToLinkSets = new ConcurrentHashMap<>();
 
     static LinkHandshakeTracker getLinkHandshakeTracker() {
         return linkManager.linkHandshakeTracker;
@@ -225,7 +225,7 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
         synchronized (this) {
             Set<String> linkSetByKey = keyToLinkSets.get(linkKey);
             if (linkSetByKey == null) {
-                linkSetByKey = new LinkedHashSet<String>();
+                linkSetByKey = new LinkedHashSet<>();
                 keyToLinkSets.put(linkKey, linkSetByKey);
             }
             linkSetByKey.add(linkName);

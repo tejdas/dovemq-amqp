@@ -58,7 +58,7 @@ final class CAMQPLinkSendFlowScheduler implements Runnable {
         scheduledExecutor.shutdown();
     }
 
-    private final ConcurrentMap<Long, CAMQPLinkSender> linkSenders = new ConcurrentHashMap<Long, CAMQPLinkSender>();
+    private final ConcurrentMap<Long, CAMQPLinkSender> linkSenders = new ConcurrentHashMap<>();
 
     void registerLinkSender(long linkHandle, CAMQPLinkSender linkSender) {
         linkSenders.put(linkHandle, linkSender);

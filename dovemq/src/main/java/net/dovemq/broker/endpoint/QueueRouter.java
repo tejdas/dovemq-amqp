@@ -49,11 +49,11 @@ final class QueueRouter implements
         CAMQPMessageDispositionObserver {
     private static final Logger log = Logger.getLogger(QueueRouter.class);
 
-    private final Queue<DoveMQMessage> messageQueue = new ConcurrentLinkedQueue<DoveMQMessage>();
+    private final Queue<DoveMQMessage> messageQueue = new ConcurrentLinkedQueue<>();
 
-    private final Queue<CAMQPSourceInterface> consumerProxies = new LinkedList<CAMQPSourceInterface>();
+    private final Queue<CAMQPSourceInterface> consumerProxies = new LinkedList<>();
 
-    private final ConcurrentMap<Long, ConcurrentMap<Long, DoveMQMessage>> inFlightMessagesByConsumerId = new ConcurrentHashMap<Long, ConcurrentMap<Long, DoveMQMessage>>();
+    private final ConcurrentMap<Long, ConcurrentMap<Long, DoveMQMessage>> inFlightMessagesByConsumerId = new ConcurrentHashMap<>();
 
     private CAMQPTargetInterface producerSink = null;
 
@@ -186,7 +186,7 @@ final class QueueRouter implements
         }
         consumerProxy.registerDispositionObserver(this);
 
-        ConcurrentMap<Long, DoveMQMessage> messageMap = new ConcurrentHashMap<Long, DoveMQMessage>();
+        ConcurrentMap<Long, DoveMQMessage> messageMap = new ConcurrentHashMap<>();
         inFlightMessagesByConsumerId.put(consumerProxy.getId(), messageMap);
 
         if (currentDestination != null) {
@@ -253,7 +253,8 @@ final class QueueRouter implements
                 log.error("The QueueRouter: " + queueName + " is not attached to any producer");
             }
             else if (this.producerSink != producerSink) {
-                log.error("The Producer: " + producerSink + " is not attached to queue: " + queueName + " . The queue is attached by: " + this.producerSink);
+                log.error("The Producer: " + producerSink + " is not attached to queue: " + queueName +
+                        " . The queue is attached by: " + this.producerSink);
             }
             else {
                 this.producerSink = null;

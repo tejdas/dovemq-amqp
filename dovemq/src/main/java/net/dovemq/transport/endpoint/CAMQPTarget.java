@@ -40,9 +40,9 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
  * @author tejdas
  */
 final class CAMQPTarget implements CAMQPTargetInterface {
-    private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<Long, CAMQPMessage>();
+    private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<>();
 
-    private final Map<Long, Boolean> deliveriesWaitingExplicitAck = new ConcurrentHashMap<Long, Boolean>();
+    private final Map<Long, Boolean> deliveriesWaitingExplicitAck = new ConcurrentHashMap<>();
 
     private final CAMQPLinkReceiverInterface linkReceiver;
 
@@ -113,7 +113,7 @@ final class CAMQPTarget implements CAMQPTargetInterface {
         if (!isMessageSettledByPeer) {
             return deliveryIds;
         }
-        List<Long> settledDeliveryIds = new ArrayList<Long>();
+        List<Long> settledDeliveryIds = new ArrayList<>();
         for (long deliveryId : deliveryIds) {
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null) {

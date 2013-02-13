@@ -76,7 +76,7 @@ class CAMQPSessionStateActor {
 
     private boolean processingQueuedEvents = false;
 
-    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<QueuedContext>();
+    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<>();
 
     private State currentState = State.UNMAPPED;
 

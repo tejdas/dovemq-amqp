@@ -31,9 +31,9 @@ import org.apache.log4j.Logger;
 public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
     private static final Logger log = Logger.getLogger(DoveMQEndpointManagerImpl.class);
 
-    private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<String, QueueRouter>();
+    private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<>();
 
-    private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap = new HashMap<TopicRouterType, ConcurrentMap<String, TopicRouter>>();
+    private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap = new HashMap<>();
 
     public DoveMQEndpointManagerImpl() {
         topicRoutersMap.put(TopicRouterType.Basic, new ConcurrentHashMap<String, TopicRouter>());

@@ -120,9 +120,9 @@ class CAMQPConnectionStateActor {
         return receivedConnectionHeaderBytes;
     }
 
-    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<QueuedContext>();
+    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<>();
 
-    private final Queue<QueuedContext> queuedGeneratedEvents = new ConcurrentLinkedQueue<QueuedContext>();
+    private final Queue<QueuedContext> queuedGeneratedEvents = new ConcurrentLinkedQueue<>();
 
     @GuardedBy("this")
     private State currentState = State.START;

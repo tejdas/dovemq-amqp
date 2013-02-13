@@ -85,7 +85,7 @@ final class CAMQPLinkStateActor {
 
     private boolean processingQueuedEvents = false;
 
-    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<QueuedContext>();
+    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<>();
 
     private volatile State currentState = State.DETACHED;
 

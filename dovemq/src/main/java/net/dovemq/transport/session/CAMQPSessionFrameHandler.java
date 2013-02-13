@@ -31,7 +31,7 @@ import org.apache.log4j.Logger;
 public final class CAMQPSessionFrameHandler {
     private static final Logger log = Logger.getLogger(CAMQPSessionFrameHandler.class);
 
-    private final ConcurrentMap<Integer, CAMQPSession> sessionsHandshakeInProgress = new ConcurrentHashMap<Integer, CAMQPSession>();
+    private final ConcurrentMap<Integer, CAMQPSession> sessionsHandshakeInProgress = new ConcurrentHashMap<>();
 
     public static CAMQPSessionFrameHandler createInstance() {
         return new CAMQPSessionFrameHandler();
