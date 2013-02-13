@@ -1,51 +1,19 @@
 DoveMQ
 ======
 
-AMQP 1.0 protocol based messaging framework.
+DoveMQ is an [AMQP 1.0](http://www.amqp.org) based messaging framework, written in Java.
+It constitutes a standalone AMQP Broker and an API to write messaging applications.
+
+DoveMQ wiki
+-----------
+
+[Check out DoveMQ wiki](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ)
 
 Organization of the code
 ------------------------
 
-Consists of three maven projects:
+[Code organization](https://github.com/tejdas/dovemq-amqp/blob/master/CODE_ORGANIZATION.md)
 
-**dovemq**
-----------
-
-Source for the framework.
-
-  a. The package *net.dovemq.transport* contains the AMQP protocol implementation:
-
-        protocol
-        framing
-        connection
-        session
-        link
-        endpoint
-
-  b. The package *net.dovemq.api* contains API classes:
-
-        Connection
-        Session
-        Publisher
-        Subscriber
-        Producer
-        Consumer
-        DoveMQMessage
-        DoveMQMessageReceiver
-        DoveMQMessageAckReceiver
-
-**functional-test**
--------------------
-
-Functional tests for the framework.
-
-  You need ant to run the functional tests.
-  (see *src/main/resources/build.xml*)
-
-**dovemq-samples**
-------------------
-
-Samples that illustrate how to use the framework.
 
 Build the source
 ----------------
@@ -78,3 +46,22 @@ DoveMQ samples
 --------------
 
 [Check out DoveMQ samples for specific examples on how to build and run the samples](https://github.com/tejdas/dovemq-amqp/blob/master/README_SAMPLES.md)
+
+License
+-------
+
+This software is licensed under the Apache 2 license, quoted below.
+
+Copyright 2012 Tejeswar Das
+
+Licensed under the Apache License, Version 2.0 (the "License");
+You may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
