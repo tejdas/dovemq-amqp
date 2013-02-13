@@ -550,7 +550,11 @@ public class CAMQPLinkSenderTest
         final MySession localSession = new MySession();
 
         linkHandle = 1;
-        final CAMQPLinkSender linkSender = new CAMQPLinkSender(localSession);
+        final CAMQPLinkSender linkSender = new CAMQPLinkSender(localSession) {
+            @Override
+            void checkLinkAttached() {
+            }
+        };
         linkSender.setMaxAvailableLimit(4096);
         factory.setLinkSender(linkSender);
 

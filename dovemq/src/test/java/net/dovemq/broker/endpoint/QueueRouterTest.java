@@ -34,149 +34,126 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPMessage;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 
 import org.junit.Test;
 
-public class QueueRouterTest  extends TestCase
-{
+public class QueueRouterTest extends TestCase {
     private static final AtomicLong linkIds = new AtomicLong(0L);
+
     private static final AtomicLong deliveryIds = new AtomicLong(0L);
 
-    enum TaskAction
-    {
-        ATTACH,
-        DETACH,
-        SEND_MESSAGE,
-        ACK_MESSAGE,
-        CHECK_RECEIVED_MESSAGE_COUNT,
-        CHECK_RECEIVED_ACK_COUNT,
-        SHUTDOWN
+    enum TaskAction {
+        ATTACH, DETACH, SEND_MESSAGE, ACK_MESSAGE, CHECK_RECEIVED_MESSAGE_COUNT, CHECK_RECEIVED_ACK_COUNT, SHUTDOWN
     }
 
-    private static class Task
-    {
-        public Task(TaskAction action, int count)
-        {
+    private static class Task {
+        public Task(TaskAction action, int count) {
             super();
             this.action = action;
             this.count = count;
         }
 
-        public Task(TaskAction action)
-        {
+        public Task(TaskAction action) {
             super();
             this.action = action;
             this.count = 0;
         }
+
         public final TaskAction action;
+
         public final int count;
     }
 
-    private static class MockConsumerProxy implements CAMQPSourceInterface
-    {
+    private static class MockConsumerProxy implements CAMQPSourceInterface {
         private final long id = linkIds.getAndIncrement();
-        public MockConsumerProxy(boolean delayedAck)
-        {
+
+        public MockConsumerProxy(boolean delayedAck) {
             super();
             this.delayedAck = delayedAck;
         }
 
-        public MockConsumerProxy()
-        {
+        public MockConsumerProxy() {
             super();
             this.delayedAck = false;
         }
 
         private final AtomicInteger messageCount = new AtomicInteger(0);
+
         private final AtomicInteger registrationCount = new AtomicInteger(0);
+
         private volatile CAMQPMessageDispositionObserver observer = null;
+
         private final BlockingQueue<DoveMQMessage> receivedMessages = new LinkedBlockingQueue<DoveMQMessage>();
 
         private final boolean delayedAck;
 
-        public int getCount()
-        {
+        public int getCount() {
             return messageCount.get();
         }
 
-        public void waitForMessages(int count)
-        {
-            while (messageCount.get() < count)
-            {
-                try
-                {
+        public void waitForMessages(int count) {
+            while (messageCount.get() < count) {
+                try {
                     Thread.sleep(1000);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
                 }
             }
         }
 
-        public int getRegistrationCount()
-        {
+        public int getRegistrationCount() {
             return registrationCount.get();
         }
 
         @Override
-        public void registerDispositionObserver(CAMQPMessageDispositionObserver observer)
-        {
+        public void registerDispositionObserver(CAMQPMessageDispositionObserver observer) {
             this.observer = observer;
             registrationCount.incrementAndGet();
         }
 
         @Override
-        public void sendMessage(DoveMQMessage message)
-        {
+        public void sendMessage(DoveMQMessage message) {
             messageCount.incrementAndGet();
-            if (delayedAck)
-            {
+            if (delayedAck) {
                 receivedMessages.add(message);
             }
-            else
-            {
+            else {
                 observer.messageAckedByConsumer(message, this);
             }
         }
 
         @Override
-        public CAMQPMessage getMessage()
-        {
+        public CAMQPMessage getMessage() {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public long getMessageCount()
-        {
+        public long getMessageCount() {
             // TODO Auto-generated method stub
             return 0;
         }
 
         @Override
-        public void messageSent(long deliveryId, CAMQPMessage message)
-        {
+        public void messageSent(long deliveryId, CAMQPMessage message) {
             // TODO Auto-generated method stub
 
         }
 
         @Override
-        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
-        {
+        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState) {
             // TODO Auto-generated method stub
             return null;
         }
 
-        public void ackMessages(int count)
-        {
+        public void ackMessages(int count) {
             int ackedCount = 0;
-            for (int i = 0; i < count; i++)
-            {
+            for (int i = 0; i < count; i++) {
                 DoveMQMessage message = receivedMessages.poll();
-                if (message != null)
-                {
+                if (message != null) {
                     observer.messageAckedByConsumer(message, this);
                     ackedCount++;
                 }
@@ -184,45 +161,38 @@ public class QueueRouterTest  extends TestCase
                     break;
             }
 
-            if (ackedCount < count)
-            {
+            if (ackedCount < count) {
                 assertFalse("wanted to ack " + count + " messages, but found only " + ackedCount + " messages", true);
             }
         }
 
         @Override
-        public long getId()
-        {
+        public long getId() {
             return id;
         }
     }
 
-    private static class MockProducerSink implements CAMQPTargetInterface
-    {
+    private static class MockProducerSink implements CAMQPTargetInterface {
         private final long id = linkIds.getAndIncrement();
+
         private final AtomicInteger registrationCount = new AtomicInteger(0);
+
         private final AtomicInteger ackedMessageCount = new AtomicInteger(0);
 
-        public int getRegistrationCount()
-        {
+        public int getRegistrationCount() {
             return registrationCount.get();
         }
 
-        public int getAckedMessageCount()
-        {
+        public int getAckedMessageCount() {
             return ackedMessageCount.get();
         }
 
-        public void waitForAcks(int count)
-        {
-            while (ackedMessageCount.get() < count)
-            {
-                try
-                {
+        public void waitForAcks(int count) {
+            while (ackedMessageCount.get() < count) {
+                try {
                     Thread.sleep(1000);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
                 }
@@ -230,72 +200,66 @@ public class QueueRouterTest  extends TestCase
         }
 
         @Override
-        public void registerMessageReceiver(CAMQPMessageReceiver messageReceiver)
-        {
+        public void registerMessageReceiver(CAMQPMessageReceiver messageReceiver) {
             registrationCount.incrementAndGet();
         }
 
         @Override
-        public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode)
-        {
+        public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode) {
             // TODO Auto-generated method stub
 
         }
 
         @Override
-        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
-        {
+        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState) {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public void acknowledgeMessageProcessingComplete(long deliveryId)
-        {
+        public void acknowledgeMessageProcessingComplete(long deliveryId) {
             ackedMessageCount.incrementAndGet();
         }
 
         @Override
-        public long getId()
-        {
+        public long getId() {
             return id;
+        }
+
+        @Override
+        public void closeUnderlyingLink(CAMQPDefinitionError errorDetails) {
+            // TODO Auto-generated method stub
         }
     }
 
-    private abstract static class TaskRunner implements Runnable
-    {
+    private abstract static class TaskRunner implements Runnable {
         private volatile boolean isDone = false;
+
         private final BlockingQueue<Task> taskQueue = new LinkedBlockingQueue<Task>();
+
         protected final QueueRouter queueRouter;
 
-        public void submitTask(TaskAction taskAction)
-        {
+        public void submitTask(TaskAction taskAction) {
             taskQueue.add(new Task(taskAction));
         }
 
-        public void submitTask(TaskAction taskAction, int messageCount)
-        {
+        public void submitTask(TaskAction taskAction, int messageCount) {
             taskQueue.add(new Task(taskAction, messageCount));
         }
 
-        public void waitUntilDone()
-        {
-            while (!isDone)
-            {
-                try
-                {
+        public void waitUntilDone() {
+            while (!isDone) {
+                try {
                     Thread.sleep(200);
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
         }
 
-        public TaskRunner(QueueRouter queueRouter)
-        {
+        public TaskRunner(QueueRouter queueRouter) {
             super();
             this.queueRouter = queueRouter;
         }
@@ -303,26 +267,20 @@ public class QueueRouterTest  extends TestCase
         public abstract void executeTask(Task task);
 
         @Override
-        public void run()
-        {
-            while (true)
-            {
-                try
-                {
+        public void run() {
+            while (true) {
+                try {
                     Task task = taskQueue.take();
-                    if (task.action == TaskAction.SHUTDOWN)
-                    {
+                    if (task.action == TaskAction.SHUTDOWN) {
                         isDone = true;
                         break;
                     }
-                    else
-                    {
+                    else {
                         executeTask(task);
                     }
 
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
                 }
@@ -330,19 +288,17 @@ public class QueueRouterTest  extends TestCase
             }
         }
     }
-    private static class TestProducer extends TaskRunner
-    {
+
+    private static class TestProducer extends TaskRunner {
         private final MockProducerSink producerSink = new MockProducerSink();
-        public TestProducer(QueueRouter queueRouter)
-        {
+
+        public TestProducer(QueueRouter queueRouter) {
             super(queueRouter);
         }
 
         @Override
-        public void executeTask(Task task)
-        {
-            switch (task.action)
-            {
+        public void executeTask(Task task) {
+            switch (task.action) {
             case ATTACH:
                 queueRouter.producerAttached(producerSink);
                 break;
@@ -361,25 +317,21 @@ public class QueueRouterTest  extends TestCase
             }
         }
 
-        void waitForAcks(int count)
-        {
+        void waitForAcks(int count) {
             producerSink.waitForAcks(count);
         }
     }
 
-    private static class TestConsumer extends TaskRunner
-    {
+    private static class TestConsumer extends TaskRunner {
         private final MockConsumerProxy consumerProxy = new MockConsumerProxy(true);
-        public TestConsumer(QueueRouter queueRouter)
-        {
+
+        public TestConsumer(QueueRouter queueRouter) {
             super(queueRouter);
         }
 
         @Override
-        public void executeTask(Task task)
-        {
-            switch (task.action)
-            {
+        public void executeTask(Task task) {
+            switch (task.action) {
             case ATTACH:
                 queueRouter.consumerAttached(consumerProxy);
                 break;
@@ -400,20 +352,17 @@ public class QueueRouterTest  extends TestCase
     }
 
     @Override
-    protected void setUp() throws Exception
-    {
+    protected void setUp() throws Exception {
         super.setUp();
     }
 
     @Override
-    protected void tearDown() throws Exception
-    {
+    protected void tearDown() throws Exception {
         super.tearDown();
     }
 
     @Test
-    public void testBasic()
-    {
+    public void testBasic() {
         QueueRouter queueRouter = new QueueRouter("test");
 
         MockConsumerProxy consumer1 = new MockConsumerProxy();
@@ -428,8 +377,8 @@ public class QueueRouterTest  extends TestCase
         queueRouter.producerAttached(producer);
 
         /*
-         * Register one more time, and assert that it doesn't
-         * get registered again.
+         * Register one more time, and assert that it doesn't get registered
+         * again.
          */
         queueRouter.consumerAttached(consumer2);
         queueRouter.consumerAttached(consumer3);
@@ -439,8 +388,8 @@ public class QueueRouterTest  extends TestCase
         assertTrue(1 == producer.getRegistrationCount());
 
         /*
-         * Assert that a second producer is not attached
-         * until the first producer is detached.
+         * Assert that a second producer is not attached until the first
+         * producer is detached.
          */
         MockProducerSink producer2 = new MockProducerSink();
         queueRouter.producerAttached(producer2);
@@ -451,8 +400,7 @@ public class QueueRouterTest  extends TestCase
         assertTrue(1 == producer2.getRegistrationCount());
 
         int messagesPerConsumer = 100;
-        for (int i = 0; i < 3*messagesPerConsumer; i++)
-        {
+        for (int i = 0; i < 3 * messagesPerConsumer; i++) {
             DoveMQMessage message = MessageFactory.createMessage();
             DoveMQMessageImpl messageImpl = ((DoveMQMessageImpl) message);
             messageImpl.setDeliveryId(i);
@@ -462,7 +410,7 @@ public class QueueRouterTest  extends TestCase
         assertTrue(consumer1.getCount() == messagesPerConsumer);
         assertTrue(consumer2.getCount() == messagesPerConsumer);
         assertTrue(consumer3.getCount() == messagesPerConsumer);
-        assertTrue(producer2.getAckedMessageCount() == 3*messagesPerConsumer);
+        assertTrue(producer2.getAckedMessageCount() == 3 * messagesPerConsumer);
 
         queueRouter.producerDetached(producer2);
         queueRouter.consumerDetached(consumer1);
@@ -472,16 +420,14 @@ public class QueueRouterTest  extends TestCase
     }
 
     @Test
-    public void testProducerAttachedBeforeConsumer()
-    {
+    public void testProducerAttachedBeforeConsumer() {
         QueueRouter queueRouter = new QueueRouter("test");
 
         MockProducerSink producer = new MockProducerSink();
         queueRouter.producerAttached(producer);
 
         int messagesPerConsumer = 100;
-        for (int i = 0; i < messagesPerConsumer; i++)
-        {
+        for (int i = 0; i < messagesPerConsumer; i++) {
             DoveMQMessage message = MessageFactory.createMessage();
             queueRouter.messageReceived(message, producer);
         }
@@ -493,16 +439,14 @@ public class QueueRouterTest  extends TestCase
     }
 
     @Test
-    public void testProducerAttachedAndDetachedBeforeConsumer()
-    {
+    public void testProducerAttachedAndDetachedBeforeConsumer() {
         QueueRouter queueRouter = new QueueRouter("test");
 
         MockProducerSink producer = new MockProducerSink();
         queueRouter.producerAttached(producer);
 
         int messagesPerConsumer = 100;
-        for (int i = 0; i < messagesPerConsumer; i++)
-        {
+        for (int i = 0; i < messagesPerConsumer; i++) {
             DoveMQMessage message = MessageFactory.createMessage();
             queueRouter.messageReceived(message, producer);
         }
@@ -515,8 +459,7 @@ public class QueueRouterTest  extends TestCase
     }
 
     @Test
-    public void testProducerConsumer() throws InterruptedException
-    {
+    public void testProducerConsumer() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(32);
         QueueRouter queueRouter = new QueueRouter("test");
 
@@ -553,8 +496,7 @@ public class QueueRouterTest  extends TestCase
     }
 
     @Test
-    public void testProducerMultipleConsumers() throws InterruptedException
-    {
+    public void testProducerMultipleConsumers() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(32);
         QueueRouter queueRouter = new QueueRouter("test");
 
@@ -598,10 +540,8 @@ public class QueueRouterTest  extends TestCase
         executor.shutdown();
     }
 
-    static void sendMessages(int messageCount, QueueRouter queueRouter, MockProducerSink producer)
-    {
-        for (int i = 0; i < messageCount; i++)
-        {
+    static void sendMessages(int messageCount, QueueRouter queueRouter, MockProducerSink producer) {
+        for (int i = 0; i < messageCount; i++) {
             DoveMQMessage message = MessageFactory.createMessage();
             DoveMQMessageImpl messageImpl = ((DoveMQMessageImpl) message);
             messageImpl.setDeliveryId(deliveryIds.getAndIncrement());

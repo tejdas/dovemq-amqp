@@ -87,6 +87,11 @@ public class CAMQPLinkSenderRequestCreditTest
             {
                 flowScheduler.unregisterLinkSender(1);
             }
+
+            @Override
+            void checkLinkAttached() {
+
+            }
         };
         linkSender.setMaxAvailableLimit(4096);
     }

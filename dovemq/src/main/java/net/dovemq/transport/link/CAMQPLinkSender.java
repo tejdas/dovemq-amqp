@@ -237,6 +237,9 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     @Override
     public void sendMessage(CAMQPMessage message) {
         CAMQPControlFlow flow = null;
+
+        checkLinkAttached();
+
         synchronized (this) {
             if (available >= maxAvailableLimit) {
                 log.warn("Reached available limit threshold: " + maxAvailableLimit);
@@ -277,6 +280,19 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
 
         if (parkedMessages) {
             CAMQPSessionManager.getExecutor().execute(this);
+        }
+    }
+
+    void checkLinkAttached() {
+        if (!linkStateActor.isLinkAttached()) {
+            String warnMessage = "Cannot send message as Link is not attached anymore.";
+            log.warn(warnMessage);
+            if (linkClosedError != null) {
+                String errorDetails = errorToString(linkClosedError);
+                log.warn(errorDetails);
+                warnMessage += errorDetails;
+            }
+            throw new RuntimeException(warnMessage);
         }
     }
 

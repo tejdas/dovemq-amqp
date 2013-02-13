@@ -87,10 +87,10 @@ final class CAMQPLinkStateActor {
 
     private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<QueuedContext>();
 
-    private State currentState = State.DETACHED;
+    private volatile State currentState = State.DETACHED;
 
-    State getCurrentState() {
-        return currentState;
+    boolean isLinkAttached() {
+        return (currentState == State.ATTACHED);
     }
 
     CAMQPLinkStateActor(CAMQPLinkEndpoint linkEndpoint) {

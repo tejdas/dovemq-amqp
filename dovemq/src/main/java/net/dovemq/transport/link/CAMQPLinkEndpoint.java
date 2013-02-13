@@ -59,7 +59,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
         return linkName;
     }
 
-    private final CAMQPLinkStateActor linkStateActor;
+    protected final CAMQPLinkStateActor linkStateActor;
 
     protected long linkHandle;
 
@@ -71,10 +71,6 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
 
     private CAMQPLinkKey linkKey;
 
-    public CAMQPLinkKey getLinkKey() {
-        return linkKey;
-    }
-
     /*
      * Flow-control attributes
      */
@@ -85,6 +81,8 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
     protected long available = 0;
 
     protected final CAMQPSessionInterface session;
+
+    protected volatile CAMQPDefinitionError linkClosedError = null;
 
     protected CAMQPEndpointPolicy endpointPolicy = CAMQPEndpointManager.getDefaultEndpointPolicy();
 
@@ -169,17 +167,17 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
     /**
      * Closes an AMQP link, specifying the reason for closure.
      *
-     * @param message
+     * @param error
      */
-    void destroyLink(String message) {
+    public void destroyLink(CAMQPDefinitionError error, boolean waitForLinkClosure) {
         CAMQPControlDetach data = new CAMQPControlDetach();
-        CAMQPDefinitionError error = new CAMQPDefinitionError();
-        error.setCondition(message);
         data.setError(error);
         data.setClosed(true);
         data.setHandle(linkHandle);
         linkStateActor.sendDetach(data);
-        linkStateActor.waitForDetached();
+        if (waitForLinkClosure) {
+            linkStateActor.waitForDetached();
+        }
     }
 
     /**
@@ -198,7 +196,24 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
      */
     @Override
     public void detachReceived(CAMQPControlDetach data) {
+        CAMQPDefinitionError error = data.getError();
+        if (error != null) {
+            linkClosedError = error;
+            String errorDetails = errorToString(error);
+            log.warn(errorDetails);
+        }
         linkStateActor.detachReceived(data);
+    }
+
+    protected static String errorToString(CAMQPDefinitionError error) {
+        StringBuilder errorDetails = new StringBuilder("Link detached by remote peer;");
+        if (!StringUtils.isEmpty(error.getCondition())) {
+            errorDetails.append(" Error condition:" + error.getCondition());
+        }
+        if (!StringUtils.isEmpty(error.getDescription())) {
+            errorDetails.append(" Error description:" + error.getDescription());
+        }
+        return errorDetails.toString();
     }
 
     public void attached(boolean isInitiator) {

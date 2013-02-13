@@ -398,6 +398,17 @@
 		<sonar:sonar key="net.dovemq" version="1.0-SNAPSHOT" xmlns:sonar="antlib:org.sonar.ant" />
 	</target>
 
+	<target name="RunProducerFailTest">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.ProducerAlreadyConnectedTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
+			<arg value="${broker.ip}" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>
+
 	<target name="RunProducer">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.ProducerTest" maxmemory="2048M" failonerror="true">
@@ -694,6 +705,7 @@
 	
 	<target name="QueueTest" description="running queue tests">
 		<sequential>
+			<antcall target="RunProducerFailTest"/>
 			<antcall target="QueueMTTest"/>
 			<antcall target="QueueMTRoundRobinTest"/>
 			<antcall target="QueueMTAckExplicitTest"/>

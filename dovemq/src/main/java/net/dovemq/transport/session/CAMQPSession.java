@@ -751,8 +751,11 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
          */
         if (flowFrame.isSetHandle()) {
             CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(flowFrame.getHandle());
-            if (linkReceiver != null)
+            if (linkReceiver != null) {
                 linkReceiver.flowReceived(flowFrame);
+            } else {
+                log.warn("Unable to process link control frame received for Link with remote handle: " + flowFrame.getHandle());
+            }
         }
 
         if (unsentTransferFramesPending) {
@@ -815,8 +818,11 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
          * dispatch the transfer frame to a LinkReceiver
          */
         CAMQPLinkMessageHandler linkReceiver = linkReceivers.get(transferFrame.getHandle());
-        if (linkReceiver != null)
+        if (linkReceiver != null) {
             linkReceiver.transferReceived(transferFrame.getDeliveryId(), transferFrame, payload);
+        } else {
+            log.warn("Unable to process Link Transfer frame received for non-existant Link with remote link handle: " + transferFrame.getHandle());
+        }
 
         return;
     }
@@ -848,6 +854,8 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
             linkReceiver = linkReceivers.get(data.getHandle());
             if (linkReceiver != null) {
                 linkReceiver.detachReceived(data);
+            } else {
+                log.warn("Unable to process Link detach control received for non-existant Link with remote link handle: " + data.getHandle());
             }
         }
         else if (controlName.equalsIgnoreCase(CAMQPControlDisposition.descriptor)) {
@@ -911,6 +919,7 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
         ChannelBuffer body = frame.getBody();
 
         if (body == null) {
+            log.warn("Unable to process session control frame with empty body");
             return;
         }
         incomingChannelNumber = frameHeader.getChannelNumber();

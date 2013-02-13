@@ -29,6 +29,8 @@ import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
+import net.dovemq.transport.protocol.data.CAMQPConstants;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
@@ -220,14 +222,29 @@ final class QueueRouter implements
     }
 
     void producerAttached(CAMQPTargetInterface producerSink) {
+        boolean alreadyAttached = false;
         synchronized (this) {
             if (this.producerSink != null) {
-                log.warn("Producer already attached to queue: " + queueName);
-                return;
+                if (this.producerSink == producerSink) {
+                    log.warn("This Producer is already attached to queue: " + queueName);
+                    return;
+                } else {
+                    log.error("Another Producer is already attached to queue: " + queueName);
+                    alreadyAttached = true;
+                }
+            } else {
+                this.producerSink = producerSink;
             }
-            this.producerSink = producerSink;
         }
-        producerSink.registerMessageReceiver(this);
+
+        if (alreadyAttached) {
+            CAMQPDefinitionError error = new CAMQPDefinitionError();
+            error.setCondition(CAMQPConstants.AMQP_ERROR_RESOURCE_LOCKED);
+            error.setDescription("Another Producer is already attached to queue: " + queueName);
+            producerSink.closeUnderlyingLink(error);
+        } else {
+            producerSink.registerMessageReceiver(this);
+        }
     }
 
     void producerDetached(CAMQPTargetInterface producerSink) {

@@ -24,6 +24,7 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
@@ -141,7 +142,9 @@ final class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRece
         }
 
         if (violatedLinkCredit) {
-            destroyLink(CAMQPConstants.LINK_ERROR_TRANSFER_LIMIT_EXCEEDED);
+            CAMQPDefinitionError error = new CAMQPDefinitionError();
+            error.setCondition(CAMQPConstants.LINK_ERROR_TRANSFER_LIMIT_EXCEEDED);
+            destroyLink(error, true);
             return;
         }
 

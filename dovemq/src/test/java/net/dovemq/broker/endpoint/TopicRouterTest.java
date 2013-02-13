@@ -31,6 +31,7 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPMessage;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 
 import org.junit.Test;
 
@@ -133,6 +134,11 @@ public class TopicRouterTest extends TestCase {
             return id;
         }
 
+        @Override
+        public void closeUnderlyingLink(CAMQPDefinitionError errorDetails) {
+            // TODO Auto-generated method stub
+
+        }
     }
 
     @Override

@@ -21,6 +21,7 @@ import java.util.Collection;
 
 import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 
 /**
  * This interface represents a Target end-point, that is used by
@@ -76,4 +77,12 @@ public interface CAMQPTargetInterface {
     public void acknowledgeMessageProcessingComplete(long deliveryId);
 
     public long getId();
+
+    /**
+     * Closes the underlying AMQP link with the error message
+     * communicated to the peer link end-point.
+     *
+     * @param errorDetails
+     */
+    public void closeUnderlyingLink(CAMQPDefinitionError errorDetails);
 }

@@ -23,53 +23,49 @@ import java.util.concurrent.atomic.AtomicLong;
 import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 
-public class LinkTestTarget implements CAMQPTargetInterface
-{
+public class LinkTestTarget implements CAMQPTargetInterface {
     private final AtomicLong messageCount = new AtomicLong(0);
 
     @Override
-    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode)
-    {
+    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode) {
         messageCount.incrementAndGet();
     }
 
-    public long getNumberOfMessagesReceived()
-    {
+    public long getNumberOfMessagesReceived() {
         return messageCount.longValue();
     }
 
-    public void resetNumberOfMessagesReceived()
-    {
-       messageCount.set(0);
+    public void resetNumberOfMessagesReceived() {
+        messageCount.set(0);
     }
 
     @Override
-    public Collection<Long> processDisposition(Collection<Long> deliveryIds,
-            boolean settleMode,
-            Object newState)
-    {
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean settleMode, Object newState) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver)
-    {
+    public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void acknowledgeMessageProcessingComplete(long deliveryId)
-    {
+    public void acknowledgeMessageProcessingComplete(long deliveryId) {
         // TODO Auto-generated method stub
     }
 
     @Override
-    public long getId()
-    {
+    public long getId() {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    @Override
+    public void closeUnderlyingLink(CAMQPDefinitionError errorDetails) {
+        // TODO Auto-generated method stub
     }
 }

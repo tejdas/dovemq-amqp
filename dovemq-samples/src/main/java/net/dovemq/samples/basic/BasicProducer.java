@@ -55,6 +55,15 @@ public class BasicProducer {
             System.out.println("sending another message: " + secondmsg);
             producer.sendMessage(secondmsg.getBytes());
 
+            System.out.println("sleeping for a min");
+            try {
+                Thread.sleep(60000);
+            }
+            catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
             /*
              * Close the AMQP session
              */

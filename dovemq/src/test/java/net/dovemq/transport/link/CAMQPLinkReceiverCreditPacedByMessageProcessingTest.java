@@ -50,6 +50,7 @@ import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 import net.dovemq.transport.session.CAMQPSessionManager;
 import net.dovemq.transport.session.CAMQPSessionSenderTest;
@@ -67,8 +68,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
-{
+public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest {
     private boolean runWithSendFlow;
     private int numMessages;
     private int linkCreditBoost;
@@ -79,8 +79,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
             int numMessages,
             int linkCreditBoost,
             int minLinkCreditThreshold,
-            int msgProcessingAvgTime)
-    {
+            int msgProcessingAvgTime) {
         super();
         this.runWithSendFlow = runWithSendFlow;
         this.numMessages = numMessages;
@@ -90,10 +89,8 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     }
 
     @Parameters
-    public static Collection<Object[]> configs()
-    {
-        return Arrays.asList(new Object[][]
-            {
+    public static Collection<Object[]> configs() {
+        return Arrays.asList(new Object[][] {
                 {true, 2000, 400, 15, 200},
                 {false, 2000, 400, 15, 200},
                 {true, 1000, 45, 15, 20},
@@ -107,42 +104,35 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     }
 
     private static class MockLinkReceiverFactory implements
-            CAMQPLinkMessageHandlerFactory
-    {
+            CAMQPLinkMessageHandlerFactory {
         private CAMQPLinkReceiver linkReceiver = null;
 
-        synchronized void setLinkReceiver(CAMQPLinkReceiver linkReceiver)
-        {
+        synchronized void setLinkReceiver(CAMQPLinkReceiver linkReceiver) {
             this.linkReceiver = linkReceiver;
         }
 
         @Override
-        public CAMQPLinkMessageHandler linkAccepted(CAMQPSessionInterface session, CAMQPControlAttach attach)
-        {
-            synchronized (this)
-            {
+        public CAMQPLinkMessageHandler linkAccepted(CAMQPSessionInterface session, CAMQPControlAttach attach) {
+            synchronized (this) {
                 return linkReceiver;
             }
         }
     }
 
-    private static class TestTarget implements CAMQPTargetInterface
-    {
+    private static class TestTarget implements CAMQPTargetInterface {
         private final int msgProcessingTime;
+
         public AtomicInteger numMessagesReceived = new AtomicInteger(0);
 
         public TestTarget(CAMQPLinkReceiverInterface linkReceiver,
-                int msgProcessingTime)
-        {
+                int msgProcessingTime) {
             super();
             this.linkReceiver = linkReceiver;
             this.msgProcessingTime = msgProcessingTime;
         }
 
-        private static class MsgDetails
-        {
-            public MsgDetails(long receivedTime, int messageProcessingTime)
-            {
+        private static class MsgDetails {
+            public MsgDetails(long receivedTime, int messageProcessingTime) {
                 super();
                 this.receivedTime = receivedTime;
                 this.messageProcessingTime = messageProcessingTime;
@@ -152,8 +142,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
 
             public int messageProcessingTime;
 
-            public boolean hasExpired(long newTime)
-            {
+            public boolean hasExpired(long newTime) {
                 return (newTime - receivedTime > messageProcessingTime);
             }
         }
@@ -166,18 +155,14 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
 
         private static final Random r = new Random();
 
-        private class MsgProcessor implements Runnable
-        {
+        private class MsgProcessor implements Runnable {
             @Override
-            public void run()
-            {
+            public void run() {
                 Set<Long> msgs = messagesBeingProcessed.keySet();
                 long currentTime = System.currentTimeMillis();
-                for (Long msg : msgs)
-                {
+                for (Long msg : msgs) {
                     MsgDetails msgDetail = messagesBeingProcessed.get(msg);
-                    if ((msgDetail != null) && msgDetail.hasExpired(currentTime))
-                    {
+                    if ((msgDetail != null) && msgDetail.hasExpired(currentTime)) {
                         messagesBeingProcessed.remove(msg);
                         linkReceiver.acknowledgeMessageProcessingComplete();
                     }
@@ -186,53 +171,51 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         }
 
         @Override
-        public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode)
-        {
+        public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode) {
             numMessagesReceived.incrementAndGet();
 
             int msgProcessingTimeDelay = r.nextInt(msgProcessingTime) + 10;
             messagesBeingProcessed.put(deliveryId, new MsgDetails(System.currentTimeMillis(), msgProcessingTimeDelay));
         }
 
-        public void startProcessing()
-        {
+        public void startProcessing() {
             _scheduledExecutor.scheduleWithFixedDelay(new MsgProcessor(), 300, 300, TimeUnit.MILLISECONDS);
         }
 
-        public void stopProcessing()
-        {
+        public void stopProcessing() {
             _scheduledExecutor.shutdown();
         }
 
-        public boolean isDone()
-        {
+        public boolean isDone() {
             return messagesBeingProcessed.isEmpty();
         }
 
         @Override
-        public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver)
-        {
+        public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver) {
             // TODO Auto-generated method stub
 
         }
 
         @Override
-        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState)
-        {
+        public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState) {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public void acknowledgeMessageProcessingComplete(long deliveryId)
-        {
+        public void acknowledgeMessageProcessingComplete(long deliveryId) {
         }
 
         @Override
-        public long getId()
-        {
+        public long getId() {
             // TODO Auto-generated method stub
             return 0;
+        }
+
+        @Override
+        public void closeUnderlyingLink(CAMQPDefinitionError errorDetails) {
+            // TODO Auto-generated method stub
+
         }
     }
 
@@ -240,61 +223,54 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
      * Sends messages on a CAMQPLinkSender. If pauseBetweenSends is true, sleeps
      * for 0-25 milliseconds between each send.
      */
-    private class MessageSender extends BaseMessageSender
-    {
-        public MessageSender(int numMessagesToSend, boolean pauseBetweenSends)
-        {
+    private class MessageSender extends BaseMessageSender {
+        public MessageSender(int numMessagesToSend, boolean pauseBetweenSends) {
             super(numMessagesToSend, pauseBetweenSends);
         }
 
         int linkCreditBoost;
+
         int minLinkCreditThreshold;
+
         volatile long gotLinkCredit = 0;
 
         @Override
-        public void run()
-        {
+        public void run() {
             gotLinkCredit = linkCreditBoost;
             super.run();
         }
 
         @Override
-        void doSend()
-        {
+        void doSend() {
             Random r = new Random();
             createAndSendMessage(r);
             gotLinkCredit--;
 
-            if (gotLinkCredit < minLinkCreditThreshold)
-            {
+            if (gotLinkCredit < minLinkCreditThreshold) {
                 long linkCredit = getLinkCreditWaitIfNecessary();
                 gotLinkCredit = (int) linkCredit;
             }
         }
     }
 
-    private class MessageAndFlowSender extends MessageSender
-    {
-        public MessageAndFlowSender(int numMessagesToSend, boolean pauseBetweenSends)
-        {
+    private class MessageAndFlowSender extends MessageSender {
+        public MessageAndFlowSender(int numMessagesToSend,
+                boolean pauseBetweenSends) {
             super(numMessagesToSend, pauseBetweenSends);
         }
 
         @Override
-        void doSend()
-        {
+        void doSend() {
             CAMQPControlFlow control = peekForLinkCredit();
             if (control != null)
                 gotLinkCredit = control.getLinkCredit();
-            if (gotLinkCredit > 0)
-            {
+            if (gotLinkCredit > 0) {
                 Random r = new Random();
                 createAndSendMessage(r);
                 gotLinkCredit--;
             }
 
-            while (gotLinkCredit <= 0)
-            {
+            while (gotLinkCredit <= 0) {
                 CAMQPControlFlow flow = new CAMQPControlFlow();
                 flow.setEcho(true);
                 flow.setAvailable(10L);
@@ -303,14 +279,11 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
                 long linkCredit = getLinkCreditWaitIfNecessary();
                 gotLinkCredit = linkCredit;
 
-                if (gotLinkCredit <= 0)
-                {
-                    try
-                    {
+                if (gotLinkCredit <= 0) {
+                    try {
                         Thread.sleep(1000);
                     }
-                    catch (InterruptedException e)
-                    {
+                    catch (InterruptedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
@@ -356,15 +329,13 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     private FramesProcessor framesProcessor = null;
 
     @BeforeClass
-    public static void setupBeforeClass()
-    {
+    public static void setupBeforeClass() {
         CAMQPSessionManager.initialize();
         CAMQPSessionManager.registerLinkReceiverFactory(factory);
     }
 
     @Before
-    public void setup()
-    {
+    public void setup() {
         mockContext = new Mockery() {
             {
                 setImposteriser(ClassImposteriser.INSTANCE);
@@ -388,8 +359,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     }
 
     @After
-    public void tearDown()
-    {
+    public void tearDown() {
         mockContext.assertIsSatisfied();
         transferFramesQueue.clear();
         controlFramesQueue.clear();
@@ -403,14 +373,12 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
     }
 
     @AfterClass
-    public static void teardownAfterClass()
-    {
+    public static void teardownAfterClass() {
         CAMQPSessionManager.shutdown();
     }
 
     @Test
-    public void testMessageProcessingLinkCredit() throws InterruptedException
-    {
+    public void testMessageProcessingLinkCredit() throws InterruptedException {
         target = new TestTarget(linkReceiver, msgProcessingAvgTime);
         linkReceiver.registerTarget(target);
 
@@ -429,8 +397,7 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         sender.minLinkCreditThreshold = minLinkCreditThreshold;
         executor.submit(sender);
 
-        while (true)
-        {
+        while (true) {
             if ((target.numMessagesReceived.get() == numMessages) && target.isDone())
                 break;
 
@@ -442,46 +409,39 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         detachHandshakeAndVerify(linkHandle);
     }
 
-    private void attachHandshakeAndVerify(long linkHandle)
-    {
+    private void attachHandshakeAndVerify(long linkHandle) {
         ChannelBuffer attachBuf = CAMQPSessionSenderTest.createAttachFrame(linkHandle);
         CAMQPFrameHeader frameHeader = CAMQPFrameHeader.createFrameHeader(sessionIncomingChannelId, attachBuf.readableBytes());
         frameHandler.frameReceived(new CAMQPFrame(frameHeader, attachBuf));
 
         Object control = null;
-        try
-        {
+        try {
             control = controlFramesQueue.poll(3500, TimeUnit.MILLISECONDS);
         }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             assertFalse(true);
         }
         assertTrue(control != null);
         assertTrue(control instanceof CAMQPControlAttach);
     }
 
-    private void detachHandshakeAndVerify(long linkHandle)
-    {
+    private void detachHandshakeAndVerify(long linkHandle) {
         ChannelBuffer detachBuf = CAMQPSessionSenderTest.createDetachFrame(linkHandle);
         CAMQPFrameHeader frameHeader = CAMQPFrameHeader.createFrameHeader(sessionIncomingChannelId, detachBuf.readableBytes());
         frameHandler.frameReceived(new CAMQPFrame(frameHeader, detachBuf));
 
         Object control = null;
-        try
-        {
+        try {
             control = controlFramesQueue.poll(3500, TimeUnit.MILLISECONDS);
         }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             assertFalse(true);
         }
         assertTrue(control != null);
         assertTrue(control instanceof CAMQPControlDetach);
     }
 
-    private void createAndSendMessage(Random r)
-    {
+    private void createAndSendMessage(Random r) {
         String deliveryTag = UUID.randomUUID().toString();
         long deliveryId = globalDeliveryId.getAndIncrement();
         CAMQPControlTransfer transferFrame = new CAMQPControlTransfer();
@@ -499,22 +459,18 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         frameHandler.frameReceived(new CAMQPFrame(frameHeader, messageBuf));
     }
 
-    private void getAndAssertLinkCredit(long expectedLinkCredit)
-    {
+    private void getAndAssertLinkCredit(long expectedLinkCredit) {
         long timeout = 2000L;
         long gotCredit = getLinkCredit(timeout);
         assertTrue(expectedLinkCredit == gotCredit);
     }
 
-    private long getLinkCredit(long timeout)
-    {
+    private long getLinkCredit(long timeout) {
         Object control = null;
-        try
-        {
+        try {
             control = controlFramesQueue.poll(timeout, TimeUnit.MILLISECONDS);
         }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             assertFalse(true);
         }
         assertTrue(control != null);
@@ -525,11 +481,9 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         return flowFrame.getLinkCredit();
     }
 
-    private CAMQPControlFlow peekForLinkCredit()
-    {
+    private CAMQPControlFlow peekForLinkCredit() {
         Object control = controlFramesQueue.poll();
-        if (control != null)
-        {
+        if (control != null) {
             assertTrue(control instanceof CAMQPControlFlow);
             CAMQPControlFlow flowFrame = (CAMQPControlFlow) control;
             assertTrue(flowFrame.isSetHandle());
@@ -539,19 +493,15 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest
         return null;
     }
 
-    private long getLinkCreditWaitIfNecessary()
-    {
+    private long getLinkCreditWaitIfNecessary() {
         Object control = null;
-        while (true)
-        {
-            try
-            {
+        while (true) {
+            try {
                 control = controlFramesQueue.poll(5000L, TimeUnit.MILLISECONDS);
                 if (control != null)
                     break;
             }
-            catch (InterruptedException e)
-            {
+            catch (InterruptedException e) {
                 assertFalse(true);
             }
         }

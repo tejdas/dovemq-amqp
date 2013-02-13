@@ -30,21 +30,18 @@ import java.util.concurrent.atomic.AtomicLong;
 import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
+import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 
-public class LinkTestDelayedTarget implements CAMQPTargetInterface
-{
+public class LinkTestDelayedTarget implements CAMQPTargetInterface {
     public LinkTestDelayedTarget(CAMQPLinkReceiverInterface linkReceiver,
-            int averageMsgProcessingTime)
-    {
+            int averageMsgProcessingTime) {
         super();
         this.linkReceiver = linkReceiver;
         this.msgProcessingTime = averageMsgProcessingTime;
     }
 
-    private static class MsgDetails
-    {
-        public MsgDetails(long receivedTime, int messageProcessingTime)
-        {
+    private static class MsgDetails {
+        public MsgDetails(long receivedTime, int messageProcessingTime) {
             super();
             this.receivedTime = receivedTime;
             this.messageProcessingTime = messageProcessingTime;
@@ -54,33 +51,31 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
 
         public int messageProcessingTime;
 
-        public boolean hasExpired(long newTime)
-        {
+        public boolean hasExpired(long newTime) {
             return (newTime - receivedTime > messageProcessingTime);
         }
     }
 
     private final AtomicLong messageCount = new AtomicLong(0);
+
     private final ConcurrentMap<Long, MsgDetails> messagesBeingProcessed = new ConcurrentHashMap<Long, MsgDetails>();
 
     private final int msgProcessingTime;
+
     private final CAMQPLinkReceiverInterface linkReceiver;
+
     private final ScheduledExecutorService _scheduledExecutor = Executors.newScheduledThreadPool(1);
 
     private static final Random r = new Random();
 
-    private class MsgProcessor implements Runnable
-    {
+    private class MsgProcessor implements Runnable {
         @Override
-        public void run()
-        {
+        public void run() {
             Set<Long> msgs = messagesBeingProcessed.keySet();
             long currentTime = System.currentTimeMillis();
-            for (Long msg : msgs)
-            {
+            for (Long msg : msgs) {
                 MsgDetails msgDetail = messagesBeingProcessed.get(msg);
-                if ((msgDetail != null) && msgDetail.hasExpired(currentTime))
-                {
+                if ((msgDetail != null) && msgDetail.hasExpired(currentTime)) {
                     messagesBeingProcessed.remove(msg);
                     linkReceiver.acknowledgeMessageProcessingComplete();
                 }
@@ -89,62 +84,57 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface
     }
 
     @Override
-    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode)
-    {
+    public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode) {
         messageCount.incrementAndGet();
         int msgProcessingTimeDelay = r.nextInt(msgProcessingTime) + 10;
         messagesBeingProcessed.put(deliveryId, new MsgDetails(System.currentTimeMillis(), msgProcessingTimeDelay));
     }
 
-    public long getNumberOfMessagesReceived()
-    {
+    public long getNumberOfMessagesReceived() {
         return messageCount.longValue();
     }
 
-    public void resetNumberOfMessagesReceived()
-    {
+    public void resetNumberOfMessagesReceived() {
         messageCount.set(0);
     }
 
     @Override
-    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean settleMode, Object newState)
-    {
+    public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean settleMode, Object newState) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver)
-    {
+    public void registerMessageReceiver(CAMQPMessageReceiver targetReceiver) {
         // TODO Auto-generated method stub
 
     }
 
-    public void startProcessing()
-    {
+    public void startProcessing() {
         _scheduledExecutor.scheduleWithFixedDelay(new MsgProcessor(), 300, 300, TimeUnit.MILLISECONDS);
     }
 
-    public void stopProcessing()
-    {
+    public void stopProcessing() {
         _scheduledExecutor.shutdown();
     }
 
-    public boolean isDone()
-    {
+    public boolean isDone() {
         return messagesBeingProcessed.isEmpty();
     }
 
     @Override
-    public void acknowledgeMessageProcessingComplete(long deliveryId)
-    {
+    public void acknowledgeMessageProcessingComplete(long deliveryId) {
         // TODO Auto-generated method stub
     }
 
     @Override
-    public long getId()
-    {
+    public long getId() {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    @Override
+    public void closeUnderlyingLink(CAMQPDefinitionError errorDetails) {
+        // TODO Auto-generated method stub
     }
 }
