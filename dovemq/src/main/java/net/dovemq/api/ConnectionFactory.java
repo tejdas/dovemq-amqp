@@ -71,19 +71,6 @@ public final class ConnectionFactory {
     }
 
     /**
-     * Creates a new Session to the target DoveMQ broker over the specified AMQP
-     * connection
-     *
-     * @param connection
-     *            : AMQP connection
-     * @return
-     */
-    public static Session createSession(Connection connection) {
-        CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(connection.getAmqpConnection());
-        return new Session(endpointId, camqpSession);
-    }
-
-    /**
      * Creates a new Session to the target DoveMQ broker. Internally, it creates
      * an AMQP connection.. It then creates an AMQP session over it.
      *

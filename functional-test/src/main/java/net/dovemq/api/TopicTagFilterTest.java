@@ -102,7 +102,7 @@ public class TopicTagFilterTest {
 
 
             Connection connection = ConnectionFactory.createConnection(brokerIP);
-            session = ConnectionFactory.createSession(connection);
+            session = connection.createSession();
 
             Subscriber subscriber = session.createTagFilterSubscriber(topicName, subscriberPatterns[id]);
             System.out.println("create subscriber: " + topicName);

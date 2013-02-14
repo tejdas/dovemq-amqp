@@ -18,20 +18,31 @@
 package net.dovemq.api;
 
 import net.dovemq.transport.connection.CAMQPConnectionInterface;
+import net.dovemq.transport.session.CAMQPSessionFactory;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public final class Connection {
-    Connection(CAMQPConnectionInterface amqpConnection) {
-        super();
-        this.amqpConnection = amqpConnection;
+
+    /**
+     * Creates a new Session to the target DoveMQ broker over this
+     * AMQP connection
+     *
+     * @return
+     *      Session
+     */
+    public Session createSession() {
+        CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(amqpConnection);
+        return new Session(ConnectionFactory.getEndpointId(), camqpSession);
     }
 
     public void close() {
         amqpConnection.close();
     }
 
-    private final CAMQPConnectionInterface amqpConnection;
-
-    public CAMQPConnectionInterface getAmqpConnection() {
-        return amqpConnection;
+    Connection(CAMQPConnectionInterface amqpConnection) {
+        super();
+        this.amqpConnection = amqpConnection;
     }
+
+    private final CAMQPConnectionInterface amqpConnection;
 }

@@ -117,7 +117,7 @@ public class SubscriberTopicHierarchyTest {
 
 
             Connection connection = ConnectionFactory.createConnection(brokerIP);
-            session = ConnectionFactory.createSession(connection);
+            session = connection.createSession();
 
             String topicHierarchy = topicHierarchies[id];
             Subscriber subscriber = session.createHierarchicalTopicSubscriber(topicHierarchy);
