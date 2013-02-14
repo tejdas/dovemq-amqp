@@ -12,16 +12,18 @@ DoveMQ wiki
 Organization of the code
 ------------------------
 
-[Code organization](https://github.com/tejdas/dovemq-amqp/blob/master/CODE_ORGANIZATION.md)
+[Code organization](https://github.com/tejdas/dovemq-amqp/blob/master/code_org.md)
 
 
 Build the source
 ----------------
 
-You need JDK 1.6+ and Maven 3.x to build the code.
+You need JDK 1.7 and Maven 3.x to build the code.
 
-Under dovemq directory, run:
+Download the code from GitHub, build the code using maven
 
+    git clone https://github.com/tejdas/dovemq-amqp.git
+    cd dovemq
     mvn clean assembly:assembly -DskipTests
 
 This creates a tar/zip with all the required jars that's needed to run the broker:
