@@ -47,6 +47,9 @@ public final class Subscriber implements CAMQPMessageReceiver {
      * @param messageReceiver
      */
     public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver) {
+        if (messageReceiver == null) {
+            throw new IllegalArgumentException("Null messageReceiver specified");
+        }
         this.doveMQMessageReceiver = messageReceiver;
         targetEndpoint.registerMessageReceiver(this);
     }

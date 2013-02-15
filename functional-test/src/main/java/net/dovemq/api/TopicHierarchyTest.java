@@ -17,8 +17,6 @@
 
 package net.dovemq.api;
 
-import static junit.framework.Assert.assertTrue;
-
 import java.io.FileNotFoundException;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -26,10 +24,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import junit.framework.TestCase;
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.endpoint.EndpointTestUtils;
 
-public class SubscriberTopicHierarchyTest {
+public class TopicHierarchyTest extends TestCase {
     private static String brokerIP;
     private static String endpointName;
     private static int numSubscribers;
@@ -56,18 +55,13 @@ public class SubscriberTopicHierarchyTest {
     private static final String[] publishTopicHierarchies = new String[] {
         "root.abc.ghi.stu",
         "root.abc.jkl",
-        "other.abc.gh", // should not match
-        "bar.def.pqrs", // should not match
         "root.def.pqr",
         "root.def.pqr.vwxyz",
-        "mock.def.pqr.vwx", // should not match
         "root.def",
         "root.def.mno",
-        "can.def.pqrst", // should not match
         "root.abc",
-        "root.abc.ghi",
-        "nook.abc.stu.ghi", // should not match
         "root",
+        "root.abc.ghi",
         "root.abc.ghi.klmn",
         "root.def.xyz",
         "root.abc.ghi.stu.defghhk",
@@ -182,15 +176,31 @@ public class SubscriberTopicHierarchyTest {
         System.out.println("created publisher");
         int messagesSent = 0;
 
+        Publisher[] publishers = new Publisher[publishTopicHierarchies.length];
+
+        for (int i = 0; i < publishTopicHierarchies.length; i++) {
+            String hierarchy = publishTopicHierarchies[i];
+            Publisher pub = session.createHierarchicalTopicPublisher(hierarchy);
+            publishers[i] = pub;
+            pub.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
+
+                @Override
+                public void messageAcknowledged(DoveMQMessage message)
+                {
+                    messageAckCount.incrementAndGet();
+                }
+            });
+            System.out.println("created publisher: " + hierarchy);
+        }
 
         Random randomGenerator = new Random();
         int numIterations = 1000;
-        for (int iter = 0; iter < numIterations; iter++) {
 
-            for (String hierarchy : publishTopicHierarchies) {
+        for (int i = 0; i < publishTopicHierarchies.length; i++) {
+            Publisher pub = publishers[i];
+            for (int iter = 0; iter < numIterations; iter++) {
                 DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator, true);
-                message.setTopicPublishHierarchy(hierarchy);
-                publisher.publishMessage(message);
+                pub.publishMessage(message);
                 messagesSent++;
             }
         }
@@ -217,6 +227,16 @@ public class SubscriberTopicHierarchyTest {
         }
 
         doneSignal.await();
+
+        System.out.println(subscribers[0].numMessagesReceived());
+        System.out.println(subscribers[1].numMessagesReceived());
+        System.out.println(subscribers[2].numMessagesReceived());
+        System.out.println(subscribers[3].numMessagesReceived());
+        System.out.println(subscribers[4].numMessagesReceived());
+        System.out.println(subscribers[5].numMessagesReceived());
+        System.out.println(subscribers[6].numMessagesReceived());
+        System.out.println(subscribers[7].numMessagesReceived());
+        System.out.println(subscribers[8].numMessagesReceived());
 
         assertTrue(subscribers[0].numMessagesReceived() == 14*numIterations);
         assertTrue(subscribers[1].numMessagesReceived() == 7*numIterations);

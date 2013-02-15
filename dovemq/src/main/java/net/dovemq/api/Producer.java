@@ -38,6 +38,9 @@ public final class Producer implements CAMQPMessageDispositionObserver {
      * @param ackReceiver
      */
     public void registerMessageAckReceiver(DoveMQMessageAckReceiver ackReceiver) {
+        if (ackReceiver == null) {
+            throw new IllegalArgumentException("Null ackReceiver specified");
+        }
         this.ackReceiver = ackReceiver;
     }
 
@@ -47,6 +50,9 @@ public final class Producer implements CAMQPMessageDispositionObserver {
      * @param message
      */
     public void sendMessage(DoveMQMessage message) {
+        if (message == null) {
+            throw new IllegalArgumentException("mesage cannot be null");
+        }
         sourceEndpoint.sendMessage(message);
     }
 
@@ -56,6 +62,9 @@ public final class Producer implements CAMQPMessageDispositionObserver {
      * @param payload
      */
     public void sendMessage(byte[] payload) {
+        if (payload == null) {
+            throw new IllegalArgumentException("payload cannot be null");
+        }
         DoveMQMessage message = MessageFactory.createMessage();
         message.addPayload(payload);
         sourceEndpoint.sendMessage(message);

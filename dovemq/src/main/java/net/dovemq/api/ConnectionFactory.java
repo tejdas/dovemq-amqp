@@ -25,6 +25,8 @@ import net.dovemq.transport.link.CAMQPLinkManager;
 import net.dovemq.transport.session.CAMQPSessionFactory;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * This class is used to initialize and shutdown DoveMQ runtime.
  * Also used as a factory to create AMQP sessions.
@@ -47,6 +49,9 @@ public final class ConnectionFactory {
      */
     public static void initialize(String endpointID) {
         if (endpointId == null) {
+            if (StringUtils.isEmpty(endpointID)) {
+                throw new IllegalArgumentException("Null EndpointID specified");
+            }
             boolean isBroker = false;
             CAMQPLinkManager.initialize(isBroker, endpointID);
             endpointId = CAMQPConnectionManager.getContainerId();
@@ -57,12 +62,20 @@ public final class ConnectionFactory {
      * Shuts down DoveMQ runtime.
      */
     public static void shutdown() {
-        if (endpointId != null) {
-            CAMQPLinkManager.shutdown();
+        if (endpointId == null) {
+            throw new IllegalStateException("DoveMQ Runtime has not been initialized yet");
         }
+        CAMQPLinkManager.shutdown();
+        endpointId = null;
     }
 
     public static Connection createConnection(String targetDoveMQBrokerAddress) {
+        if (StringUtils.isEmpty(targetDoveMQBrokerAddress)) {
+            throw new IllegalArgumentException("Null DoveMQ Broker address specified");
+        }
+        if (endpointId == null) {
+            throw new IllegalStateException("DoveMQ Runtime has not been initialized yet");
+        }
         String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
         CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
 
@@ -78,6 +91,12 @@ public final class ConnectionFactory {
      * @return newly created Session
      */
     public static Session createSession(String targetDoveMQBrokerAddress) {
+        if (StringUtils.isEmpty(targetDoveMQBrokerAddress)) {
+            throw new IllegalArgumentException("Null DoveMQ Broker address specified");
+        }
+        if (endpointId == null) {
+            throw new IllegalStateException("DoveMQ Runtime has not been initialized yet");
+        }
         String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
         CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId, true);
         return new Session(endpointId, camqpSession);

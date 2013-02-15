@@ -20,7 +20,7 @@ public class TopicSubscriber {
 
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
-     * with the Consumer.
+     * with the Subscriber.
      */
     private static class SampleMessageReceiver implements DoveMQMessageReceiver {
         @Override
@@ -59,7 +59,7 @@ public class TopicSubscriber {
             Subscriber subscriber = session.createTagFilterSubscriber(TOPIC_NAME, messageFilterPattern);
 
             /*
-             * Register a message receiver with the consumer to asynchronously
+             * Register a message receiver with the subscriber to asynchronously
              * receive messages.
              */
             SampleMessageReceiver messageReceiver = new SampleMessageReceiver();

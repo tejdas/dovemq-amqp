@@ -58,6 +58,9 @@ public final class Session {
      * @return
      */
     public Producer createProducer(String queueName) {
+        if (StringUtils.isEmpty(queueName)) {
+            throw new IllegalArgumentException("Null queue name specified");
+        }
         String source = String.format("%s.%s", endpointId, queueName);
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, queueName, new CAMQPEndpointPolicy());
         return new Producer(source, sender);
@@ -70,6 +73,9 @@ public final class Session {
      * @return
      */
     public Consumer createConsumer(String queueName) {
+        if (StringUtils.isEmpty(queueName)) {
+            throw new IllegalArgumentException("Null queue name specified");
+        }
         String target = String.format("%s.%s", endpointId, queueName);
         CAMQPTargetInterface receiver = CAMQPEndpointManager.createTarget(session, queueName, target, new CAMQPEndpointPolicy());
         return new Consumer(target, receiver);
@@ -82,6 +88,12 @@ public final class Session {
      * @return
      */
     public Consumer createConsumer(String queueName, DoveMQEndpointPolicy doveMQEndpointPolicy) {
+        if (StringUtils.isEmpty(queueName)) {
+            throw new IllegalArgumentException("Null queue name specified");
+        }
+        if (doveMQEndpointPolicy == null) {
+            throw new IllegalArgumentException("Null DoveMQEndpointPolicy specified");
+        }
         String target = String.format("%s.%s", endpointId, queueName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setDoveMQEndpointPolicy(doveMQEndpointPolicy);
@@ -96,12 +108,12 @@ public final class Session {
      * @return
      */
     public Publisher createPublisher(String topicName) {
-        validateTopicName(topicName);
+        validateTopicName(topicName, false);
         String source = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, topicName, endpointPolicy);
-        return new Publisher(topicName, sender);
+        return new Publisher(sender);
     }
 
     /**
@@ -111,7 +123,7 @@ public final class Session {
      * @return
      */
     public Subscriber createSubscriber(String topicName) {
-        validateTopicName(topicName);
+        validateTopicName(topicName, false);
         String target = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
@@ -127,13 +139,13 @@ public final class Session {
      * @return
      */
     public Publisher createTagFilterPublisher(String topicName) {
-        validateTopicName(topicName);
+        validateTopicName(topicName, false);
         String source = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
         endpointPolicy.setTopicRouterType(TopicRouterType.MessageTagFilter);
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, topicName, endpointPolicy);
-        return new Publisher(topicName, sender);
+        return new Publisher(sender);
     }
 
     /**
@@ -146,7 +158,10 @@ public final class Session {
      * @return
      */
     public Subscriber createTagFilterSubscriber(String topicName, String messageFilterPattern) {
-        validateTopicName(topicName);
+        if (StringUtils.isEmpty(messageFilterPattern)) {
+            throw new IllegalArgumentException("Null messageFilterPattern specified");
+        }
+        validateTopicName(topicName, false);
         Pattern.compile(messageFilterPattern);
         String target = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
@@ -161,18 +176,28 @@ public final class Session {
      * Create a Hierarchical Topic Publisher and bind it to a Topic on the
      * DoveMQ broker.
      *
-     * @param topicRootName
-     *            : root Topic name of the Hierarchy. Example: sports
+     * @param topicName
+     *            : Hierarchical Topic name of the Hierarchy.
+     *            Example: sports.baseball or weather.us
      * @return
      */
-    public Publisher createHierarchicalTopicPublisher(String topicRootName) {
-        validateTopicName(topicRootName);
+    public Publisher createHierarchicalTopicPublisher(String topicName) {
+        validateTopicName(topicName, true);
+
+        String topicRootName;
+        int pos = topicName.indexOf('.');
+        if (pos == -1) {
+            topicRootName = topicName;
+        } else {
+            topicRootName = topicName.substring(0, pos);
+        }
+
         String source = String.format("%s.%s", endpointId, topicRootName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
         endpointPolicy.setTopicRouterType(TopicRouterType.Hierarchical);
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, topicRootName, endpointPolicy);
-        return new Publisher(topicRootName, sender);
+        return new Publisher(topicName, sender);
     }
 
     /**
@@ -184,10 +209,7 @@ public final class Session {
      * @return
      */
     public Subscriber createHierarchicalTopicSubscriber(String topicName) {
-        if (StringUtils.isEmpty(topicName)) {
-            throw new IllegalArgumentException("Topic name cannot be null or empty");
-        }
-
+        validateTopicName(topicName, true);
         String target = String.format("%s.%s", endpointId, topicName);
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
@@ -196,12 +218,14 @@ public final class Session {
         return new Subscriber(target, receiver);
     }
 
-    private static void validateTopicName(String topicName) {
+    private static void validateTopicName(String topicName, boolean isHierarchicalTopic) {
         if (StringUtils.isEmpty(topicName)) {
             throw new IllegalArgumentException("Topic name cannot be null or empty");
         }
-
-        if (topicName.contains(".")) {
+        if (topicName.endsWith(".")) {
+            throw new IllegalArgumentException("Topic name cannot end with .");
+        }
+        if (!isHierarchicalTopic && topicName.contains(".")) {
             throw new IllegalArgumentException(". not allowed in topic name");
         }
     }

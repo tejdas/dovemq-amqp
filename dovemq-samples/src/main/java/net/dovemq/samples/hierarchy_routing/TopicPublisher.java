@@ -12,7 +12,6 @@ import net.dovemq.api.Session;
  * the message is targeted to a publish hierarchy scope.
  */
 public class TopicPublisher {
-    private static final String ROOT_TOPIC_NAME = "HierarchyRoutingTopic";
 
     public static void main(String[] args) {
         /*
@@ -33,85 +32,62 @@ public class TopicPublisher {
             Session session = ConnectionFactory.createSession(brokerIp);
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
-            /*
-             * Create a publisher that creates/binds to a topic on the broker.
-             */
-            Publisher publisher = session.createHierarchicalTopicPublisher(ROOT_TOPIC_NAME);
+            {
+                /*
+                 * published above subscriber's hierarchy, so it should not receive it.
+                 */
+                String topicHierarchy = "sports";
+                Publisher publisher = session.createHierarchicalTopicPublisher(topicHierarchy);
+                DoveMQMessage message = createMessage("First message: Published at hierarchy: " + topicHierarchy);
+                publisher.publishMessage(message);
+            }
 
-            /*
-             * Create and publish a message, without a topic publisher
-             * hierarchy, so the subscriber should not get it.
-             */
-            DoveMQMessage message = MessageFactory.createMessage();
-            String msg = "Hello from Publisher, first message, published without topic hierarchy";
-            System.out.println("publishing message: " + msg);
-            message.addPayload(msg.getBytes());
-            publisher.publishMessage(message);
+            {
+                /*
+                 * published at subscriber's hierarchy, so it should receive it.
+                 */
+                String topicHierarchy = "sports.cricket";
+                Publisher publisher = session.createHierarchicalTopicPublisher(topicHierarchy);
+                DoveMQMessage message = createMessage("Second message: Published at hierarchy: " + topicHierarchy);
+                publisher.publishMessage(message);
+            }
 
-            /*
-             * Create and publish a message, with a topic publisher hierarchy,
-             * that is not under the subscriber's scope, hence should not get it.
-             */
-            DoveMQMessage message1 = MessageFactory.createMessage();
-            String topicPublisherHierarchy1 = ROOT_TOPIC_NAME + ".foo";
-            String msg1 = "Hello from Publisher, second message, published at hierarchy: " + topicPublisherHierarchy1;
-            System.out.println("publishing message: " + msg1);
-            message1.addPayload(msg1.getBytes());
-            message1.setTopicPublishHierarchy(topicPublisherHierarchy1);
-            publisher.publishMessage(message1);
+            {
+                /*
+                 * published under subscriber's hierarchy, so it should receive it.
+                 */
+                String topicHierarchy = "sports.cricket.test";
+                Publisher publisher = session.createHierarchicalTopicPublisher(topicHierarchy);
+                DoveMQMessage message = createMessage("Third message: Published at hierarchy: " + topicHierarchy);
+                publisher.publishMessage(message);
+            }
 
-            /*
-             * Create and publish a message a topic publisher hierarchy,
-             * that is under the subscriber's scope
-             * and therefore should get it.
-             */
-            DoveMQMessage message2 = MessageFactory.createMessage();
-            String topicPublisherHierarchy2 = ROOT_TOPIC_NAME + ".foo.bar";
-            String msg2 = "Hello from Publisher, third message: published at hierarchy: " +
-                    topicPublisherHierarchy2 + " the subscriber should get this message";
-            System.out.println("publishing message: " + msg2);
-            message2.addPayload(msg2.getBytes());
-            message2.setTopicPublishHierarchy(topicPublisherHierarchy2);
-            publisher.publishMessage(message2);
+            {
+                /*
+                 * Not published at/under subscriber's hierarchy, so it should not receive it.
+                 */
+                String topicHierarchy = "sports.cricketers";
+                Publisher publisher = session.createHierarchicalTopicPublisher(topicHierarchy);
+                DoveMQMessage message = createMessage("Fourth message: Published at hierarchy: " + topicHierarchy);
+                publisher.publishMessage(message);
+            }
 
-            /*
-             * Create and publish a message a topic publisher hierarchy, that
-             * the subscriber is not scoped under, and therefore should not get
-             * it.
-             */
-            DoveMQMessage message3 = MessageFactory.createMessage();
-            String topicPublisherHierarchy3 = ROOT_TOPIC_NAME + ".bar";
-            String msg3 = "Hello from Publisher, fourth message: published at hierarchy: " + topicPublisherHierarchy3;
-            System.out.println("publishing message: " + msg3);
-            message3.addPayload(msg3.getBytes());
-            message3.setTopicPublishHierarchy(topicPublisherHierarchy3);
-            publisher.publishMessage(message3);
-
-            /*
-             * Create and publish a message a topic publisher hierarchy, that
-             * the subscriber is not scoped under, and therefore should not get
-             * it.
-             */
-            DoveMQMessage message4 = MessageFactory.createMessage();
-            String topicPublisherHierarchy4 = ROOT_TOPIC_NAME + "foo.ba";
-            String msg4 = "Hello from Publisher, fourth message: published at hierarchy: " + topicPublisherHierarchy4;
-            System.out.println("publishing message: " + msg4);
-            message4.addPayload(msg4.getBytes());
-            message4.setTopicPublishHierarchy(topicPublisherHierarchy4);
-            publisher.publishMessage(message4);
-
-            /*
-             * Create and publish a message a topic publisher hierarchy, that
-             * the subscriber is not scoped under, and therefore should get
-             * it.
-             */
-            DoveMQMessage message5 = MessageFactory.createMessage();
-            String topicPublisherHierarchy5 = ROOT_TOPIC_NAME + ".foo.bar.nook";
-            String msg5 = "Hello from Publisher, fifth message: published at hierarchy: " + topicPublisherHierarchy5 + " the subscriber should get this message";
-            System.out.println("publishing message: " + msg5);
-            message5.addPayload(msg5.getBytes());
-            message5.setTopicPublishHierarchy(topicPublisherHierarchy5);
-            publisher.publishMessage(message5);
+            {
+                /*
+                 * The following example shows how the Publisher's topic hierarchy scope could be overridden by
+                 * a message-specific hierarchy scope.
+                 *
+                 * Publisher not bound at/under subscriber's hierarchy, but we are setting
+                 * a hierarchy scope directly on the message, that is under subscriber's hierarchy,
+                 * so it should receive it.
+                 */
+                String topicHierarchy = "sports";
+                Publisher publisher = session.createHierarchicalTopicPublisher(topicHierarchy);
+                String messageLevelHierarchy = "sports.cricket.odi";
+                DoveMQMessage message = createMessage("Fifth message: Published at hierarchy: " + messageLevelHierarchy);
+                message.setTopicPublishHierarchy(messageLevelHierarchy);
+                publisher.publishMessage(message);
+            }
 
             /*
              * Close the AMQP session
@@ -124,5 +100,12 @@ public class TopicPublisher {
              */
             ConnectionFactory.shutdown();
         }
+    }
+
+    private static DoveMQMessage createMessage(String messageBody) {
+        DoveMQMessage message = MessageFactory.createMessage();
+        System.out.println("publishing message: " + messageBody);
+        message.addPayload(messageBody.getBytes());
+        return message;
     }
 }

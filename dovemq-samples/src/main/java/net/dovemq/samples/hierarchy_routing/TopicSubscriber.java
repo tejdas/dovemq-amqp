@@ -9,17 +9,17 @@ import net.dovemq.api.Subscriber;
 /**
  * This sample shows how to create a DoveMQ Hierarchical subscriber that creates
  * or binds to a certain hierarchy under the root topic and waits for incoming
- * messages. It only gets messages that are published at or above that
+ * messages. It only gets messages that are published at or below that
  * hierarchy.
  */
 public class TopicSubscriber {
-    private static final String ROOT_TOPIC_NAME = "HierarchyRoutingTopic";
+    private static final String TOPIC_NAME = "sports.cricket";
 
     private static volatile boolean doShutdown = false;
 
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
-     * with the Consumer.
+     * with the Subscriber.
      */
     private static class SampleMessageReceiver implements DoveMQMessageReceiver {
         @Override
@@ -50,16 +50,25 @@ public class TopicSubscriber {
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
             /*
-             * Create a subscriber that creates/binds to a topic on the broker.
-             * Also specify the hierarchical scope, so only those messages that
-             * are published at/above this hierarchy are routed to the
+             * Create a subscriber that creates/binds to a hierarchical-scoped
+             * topic on the broker.Only those messages that
+             * are published at/below this hierarchy are routed to the
              * subscriber.
+             *
+             * e.g.
+             * sports.cricket.test
+             * sports.cricket.india
+             *
+             * but not
+             *
+             * sports.baseball
+             * sports
              */
-            String hierarchicalTopicName = ROOT_TOPIC_NAME + ".foo.bar";
-            Subscriber subscriber = session.createHierarchicalTopicSubscriber(hierarchicalTopicName);
+            Subscriber subscriber = session.createHierarchicalTopicSubscriber(TOPIC_NAME);
+            System.out.println("Created TopicSubscriber at hierarchy scope: " + TOPIC_NAME);
 
             /*
-             * Register a message receiver with the consumer to asynchronously
+             * Register a message receiver with the subscriber to asynchronously
              * receive messages.
              */
             SampleMessageReceiver messageReceiver = new SampleMessageReceiver();

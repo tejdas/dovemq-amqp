@@ -472,9 +472,20 @@
 		</java>
 	</target>
 
+	<target name="PerMessageTopicHierarchyTest">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.PerMessageTopicHierarchyTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
+			<arg value="${broker.ip}" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>
+	
 	<target name="TopicHierarchyTest">
 		<echo>...Run DoveMQ Link client</echo>
-		<java fork="true" classname="net.dovemq.api.SubscriberTopicHierarchyTest" maxmemory="2048M" failonerror="true">
+		<java fork="true" classname="net.dovemq.api.TopicHierarchyTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
@@ -699,6 +710,7 @@
 			<antcall target="TopicMTTest"/>
 			<antcall target="TopicMTSharedSessionTest"/>
 			<antcall target="TopicHierarchyTest"/>
+			<antcall target="PerMessageTopicHierarchyTest"/>
 			<antcall target="TopicRoutingTagTest"/>			
 		</sequential>
 	</target>
