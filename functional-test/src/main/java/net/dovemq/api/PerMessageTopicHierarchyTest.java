@@ -184,7 +184,7 @@ public class PerMessageTopicHierarchyTest {
 
 
         Random randomGenerator = new Random();
-        int numIterations = 100000;
+        int numIterations = 1000;
         for (int iter = 0; iter < numIterations; iter++) {
 
             for (String hierarchy : publishTopicHierarchies) {
