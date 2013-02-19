@@ -32,6 +32,8 @@ import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
 
+import org.apache.log4j.Logger;
+
 /**
  * This class implements CAMQPSourceInterface and is responsible for keeping
  * track of message dispositions at source end-point.
@@ -39,6 +41,8 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
  * @author tejdas
  */
 final class CAMQPSource implements CAMQPSourceInterface {
+    private static final Logger log = Logger.getLogger(CAMQPSource.class);
+
     private final CAMQPLinkSenderInterface linkSender;
 
     private final CAMQPEndpointPolicy endpointPolicy;
@@ -48,24 +52,25 @@ final class CAMQPSource implements CAMQPSourceInterface {
     /*
      * Count of unsettled messages
      */
-    private long unsettledDeliveryCount = 0L;
-    private final Object unsettledCountLock = new Object();
-
     private final Map<Long, CAMQPMessage> unsettledDeliveries = new ConcurrentHashMap<>();
 
+    /*
+     * Count of unsent messages at Link Sender, because of link congestion.
+     * (link credit not available and/or session credit not available)
+     */
     private long unsentDeliveryCount = 0L;
     private final Object unsentCountLock = new Object();
+    /*
+     * Max unsent messages at which the message sender waits until the
+     * unsent delivery count drops to minUnsettledDeliveryThreshold
+     */
     private final long maxUnsentDeliveries;
     private final long minUnsentDeliveryThreshold;
-    private final long maxWaitPeriodForUnsentDeliveryThreshold;
-
     /*
-     * Max unsettled messages at which the message sender waits until the
-     * unsettled delivery count falls to minUnsettledDeliveryThreshold
+     * Max time to wait until the unsentDeliveryCount drops to
+     * minUnsettledDeliveryThreshold. Default is 60 seconds.
      */
-    private final long maxUnsettledDeliveries;
-
-    private final long minUnsettledDeliveryThreshold;
+    private final long maxWaitPeriodForUnsentDeliveryThreshold;
 
     @Override
     public void registerDispositionObserver(CAMQPMessageDispositionObserver observer) {
@@ -77,8 +82,6 @@ final class CAMQPSource implements CAMQPSourceInterface {
         super();
         this.linkSender = linkSender;
         this.endpointPolicy = endpointPolicy;
-        this.maxUnsettledDeliveries = CAMQPEndpointConstants.MAX_UNSETTLED_MESSAGES_AT_SOURCE;
-        this.minUnsettledDeliveryThreshold = CAMQPEndpointConstants.UNSETTLED_MESSAGE_THRESHOLD_FOR_SEND_MESSAGE_RESUMPTION;
         this.maxUnsentDeliveries = CAMQPEndpointConstants.MAX_UNSENT_MESSAGES_AT_SOURCE;
         this.minUnsentDeliveryThreshold = CAMQPEndpointConstants.UNSENT_MESSAGE_THRESHOLD_FOR_SEND_MESSAGE_RESUMPTION;
         this.maxWaitPeriodForUnsentDeliveryThreshold = CAMQPEndpointConstants.MAX_WAIT_PERIOD_FOR_UNSENT_MESSAGE_THRESHOLD;
@@ -88,16 +91,12 @@ final class CAMQPSource implements CAMQPSourceInterface {
      * For junit testing
      */
     CAMQPSource(CAMQPLinkSenderInterface linkSender,
-            long maxUnsettledDeliveries,
-            long minUnsettledDeliveryThreshold,
             long maxUnsentDeliveries,
             long minUnsentDeliveryThreshold,
             long maxWaitPeriodForUnsentDeliveryThreshold) {
         super();
         this.linkSender = linkSender;
         this.endpointPolicy = new CAMQPEndpointPolicy();
-        this.maxUnsettledDeliveries = maxUnsettledDeliveries;
-        this.minUnsettledDeliveryThreshold = minUnsettledDeliveryThreshold;
         this.maxUnsentDeliveries = maxUnsentDeliveries;
         this.minUnsentDeliveryThreshold = minUnsentDeliveryThreshold;
         this.maxWaitPeriodForUnsentDeliveryThreshold = maxWaitPeriodForUnsentDeliveryThreshold;
@@ -132,9 +131,6 @@ final class CAMQPSource implements CAMQPSourceInterface {
 
         if (endpointPolicy.getDeliveryPolicy() != CAMQPMessageDeliveryPolicy.AtmostOnce) {
             unsettledDeliveries.put(deliveryId, message);
-            synchronized (unsettledCountLock) {
-                unsettledDeliveryCount++;
-            }
         }
     }
 
@@ -166,27 +162,13 @@ final class CAMQPSource implements CAMQPSourceInterface {
          * Process the unsettled messages
          */
         List<Long> settledDeliveryIds = new ArrayList<>();
-        long settledCount = 0;
         for (long deliveryId : deliveryIds) {
             CAMQPMessage message = unsettledDeliveries.remove(deliveryId);
             if (message != null) {
-                settledCount++;
                 settledDeliveryIds.add(deliveryId);
                 if (observer != null) {
                     observer.messageAckedByConsumer(message.getMessage(), this);
                 }
-            }
-        }
-
-        /*
-         * Notify the message sender if the unsettledDeliveryCount was above
-         * minUnsettledDeliveryThreshold, and now falls below
-         * minUnsettledDeliveryThreshold after processing the disposition.
-         */
-        synchronized (unsettledCountLock) {
-            long currentUnsettledDeliveryCount = unsettledDeliveryCount -= settledCount;
-            if ((currentUnsettledDeliveryCount > minUnsettledDeliveryThreshold) && (unsettledDeliveryCount <= minUnsettledDeliveryThreshold)) {
-                unsettledCountLock.notifyAll();
             }
         }
 
@@ -219,10 +201,6 @@ final class CAMQPSource implements CAMQPSourceInterface {
      */
     @Override
     public void sendMessage(DoveMQMessage message) {
-        if (endpointPolicy.getDeliveryPolicy() != CAMQPMessageDeliveryPolicy.AtmostOnce) {
-            checkUnsettledMessageCountThreshold();
-        }
-
         DoveMQMessageImpl messageImpl = (DoveMQMessageImpl) message;
         CAMQPMessagePayload encodedMessagePayload = messageImpl.marshal();
         String deliveryTag = UUID.randomUUID().toString();
@@ -255,33 +233,11 @@ final class CAMQPSource implements CAMQPSourceInterface {
                 }
 
                 if (unsentDeliveryCount > minUnsentDeliveryThreshold) {
+                    log.warn(CAMQPEndpointConstants.LINK_SENDER_CONGESTION_EXCEPTION);
                     throw new RuntimeException(CAMQPEndpointConstants.LINK_SENDER_CONGESTION_EXCEPTION);
                 }
             }
             unsentDeliveryCount++;
-        }
-    }
-
-    /**
-     * If unsettledDeliveryCount is at/above the maxUnsettledDeliveries limit,
-     * then the message sender waits until:
-     * a. unsettledDeliveryCount falls below minUnsettledDeliveryThreshold threshold.
-     * OR
-     * b. 1 seconds timeout.
-     */
-    private void checkUnsettledMessageCountThreshold() {
-        synchronized (unsettledCountLock) {
-            if (unsettledDeliveryCount >= maxUnsettledDeliveries) {
-                while (unsettledDeliveryCount > minUnsettledDeliveryThreshold) {
-                    try {
-                        unsettledCountLock.wait(CAMQPEndpointConstants.WAIT_INTERVAL_FOR_UNDELIVERED_MESSAGE_THRESHOLD);
-                        break;
-                    }
-                    catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
         }
     }
 

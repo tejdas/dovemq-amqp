@@ -194,7 +194,7 @@ public class TopicHierarchyTest extends TestCase {
         }
 
         Random randomGenerator = new Random();
-        int numIterations = 1000;
+        int numIterations = 100000;
 
         for (int i = 0; i < publishTopicHierarchies.length; i++) {
             Publisher pub = publishers[i];
@@ -227,16 +227,6 @@ public class TopicHierarchyTest extends TestCase {
         }
 
         doneSignal.await();
-
-        System.out.println(subscribers[0].numMessagesReceived());
-        System.out.println(subscribers[1].numMessagesReceived());
-        System.out.println(subscribers[2].numMessagesReceived());
-        System.out.println(subscribers[3].numMessagesReceived());
-        System.out.println(subscribers[4].numMessagesReceived());
-        System.out.println(subscribers[5].numMessagesReceived());
-        System.out.println(subscribers[6].numMessagesReceived());
-        System.out.println(subscribers[7].numMessagesReceived());
-        System.out.println(subscribers[8].numMessagesReceived());
 
         assertTrue(subscribers[0].numMessagesReceived() == 14*numIterations);
         assertTrue(subscribers[1].numMessagesReceived() == 7*numIterations);

@@ -52,7 +52,7 @@ public class CAMQPSourceTest extends TestCase {
         long maxThreshold = 24;
         long maxWaitPeriodForUnsentDeliveryThreshold = 2000;
         final TestLinkSender linkSender = new TestLinkSender();
-        CAMQPSource linkSource = new CAMQPSource(linkSender, 50, 40, maxThreshold, minThreshold, maxWaitPeriodForUnsentDeliveryThreshold);
+        CAMQPSource linkSource = new CAMQPSource(linkSender, maxThreshold, minThreshold, maxWaitPeriodForUnsentDeliveryThreshold);
 
         for (int i = 0; i < maxThreshold; i++) {
             linkSource.sendMessage(MessageFactory.createMessage());
@@ -76,7 +76,7 @@ public class CAMQPSourceTest extends TestCase {
         final long maxThreshold = 24;
         long maxWaitPeriodForUnsentDeliveryThreshold = 4000;
         final TestLinkSender linkSender = new TestLinkSender();
-        final CAMQPSource linkSource = new CAMQPSource(linkSender, 50, 40, maxThreshold, minThreshold, maxWaitPeriodForUnsentDeliveryThreshold);
+        final CAMQPSource linkSource = new CAMQPSource(linkSender, maxThreshold, minThreshold, maxWaitPeriodForUnsentDeliveryThreshold);
 
         for (int i = 0; i < maxThreshold; i++) {
             linkSource.sendMessage(MessageFactory.createMessage());
@@ -121,28 +121,5 @@ public class CAMQPSourceTest extends TestCase {
         } catch (RuntimeException ex) {
             assertFalse("Did not expect RuntimeException ", true);
         }
-    }
-
-    @Test
-    public void testSlowDownDuringSendMessageAboveUndeliveredThreshold() {
-
-        long minThreshold = 40;
-        long maxThreshold = 50;
-        long maxWaitPeriodForUnsentDeliveryThreshold = 2000;
-        final TestLinkSender linkSender = new TestLinkSender();
-        CAMQPSource linkSource = new CAMQPSource(linkSender, maxThreshold, minThreshold, 100, 80, maxWaitPeriodForUnsentDeliveryThreshold);
-
-        for (int i = 0; i < maxThreshold; i++) {
-            linkSource.sendMessage(MessageFactory.createMessage());
-            linkSource.messageSent(i, new CAMQPMessage(UUID.randomUUID().toString(), null));
-        }
-
-        long beginTime = System.currentTimeMillis();
-        for (int i = 0; i < 4; i++) {
-            linkSource.sendMessage(MessageFactory.createMessage());
-        }
-        long endTime = System.currentTimeMillis();
-        assertTrue(endTime - beginTime >= 4*CAMQPEndpointConstants.WAIT_INTERVAL_FOR_UNDELIVERED_MESSAGE_THRESHOLD);
-        assertTrue(endTime - beginTime < 5*CAMQPEndpointConstants.WAIT_INTERVAL_FOR_UNDELIVERED_MESSAGE_THRESHOLD);
     }
 }
