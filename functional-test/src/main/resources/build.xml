@@ -414,6 +414,11 @@
 		<java fork="true" classname="net.dovemq.api.ProducerTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<jvmarg value="-Xss256k" />
+			<jvmarg value="-Xmx2048M" />
+			<jvmarg value="-Xms1536M" />			
 			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
@@ -430,6 +435,11 @@
 		<java fork="true" classname="net.dovemq.api.ConsumerTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<jvmarg value="-Xss256k" />
+			<jvmarg value="-Xmx2048M" />
+			<jvmarg value="-Xms1536M" />
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
@@ -446,6 +456,11 @@
 		<java fork="true" classname="net.dovemq.api.PublisherTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<jvmarg value="-Xss256k" />
+			<jvmarg value="-Xmx2048M" />
+			<jvmarg value="-Xms1536M" />			
 			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
@@ -456,12 +471,35 @@
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
+	
+	<target name="RunPublisherWithLessMemory">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.PublisherTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
+			<arg value="${broker.ip}" />
+			<arg value="${endpointName}" />
+			<arg value="${topicName}" />
+			<arg value="${fileName}" />
+			<arg value="${numIterations}" />
+			<arg value="${numPublishers}" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>	
 
 	<target name="RunMTSubscriber">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.SubscriberMTTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<jvmarg value="-Xss256k" />
+			<jvmarg value="-Xmx2048M" />
+			<jvmarg value="-Xms1536M" />			
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
@@ -471,12 +509,34 @@
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
+	
+	<target name="RunMTSubscriberWithLessMemory">
+		<echo>...Run DoveMQ Link client</echo>
+		<java fork="true" classname="net.dovemq.api.SubscriberMTTest" maxmemory="2048M" failonerror="true">
+			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
+			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
+			<arg value="${broker.ip}" />
+			<arg value="${endpointName}" />
+			<arg value="${topicName}" />
+			<arg value="${numThreads}" />
+			<arg value="${sharedSession}" />
+			<classpath refid="dovemq-functest-classpath" />
+		</java>
+	</target>	
 
 	<target name="PerMessageTopicHierarchyTest">
 		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.PerMessageTopicHierarchyTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<jvmarg value="-Xss256k" />
+			<jvmarg value="-Xmx2048M" />
+			<jvmarg value="-Xms1536M" />			
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<classpath refid="dovemq-functest-classpath" />
@@ -488,6 +548,11 @@
 		<java fork="true" classname="net.dovemq.api.TopicHierarchyTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<jvmarg value="-Xss256k" />
+			<jvmarg value="-Xmx2048M" />
+			<jvmarg value="-Xms1536M" />			
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<classpath refid="dovemq-functest-classpath" />
@@ -499,6 +564,11 @@
 		<java fork="true" classname="net.dovemq.api.TopicTagFilterTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
+			<jvmarg value="-XX:+UseConcMarkSweepGC" />
+			<jvmarg value="-XX:+UseParNewGC" />
+			<jvmarg value="-Xss256k" />
+			<jvmarg value="-Xmx2048M" />
+			<jvmarg value="-Xms1536M" />			
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<classpath refid="dovemq-functest-classpath" />
@@ -511,63 +581,63 @@
 		</delete>
 
 		<parallel>
-			<antcall target="RunMTSubscriber">
+			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub1" />
 				<param name="topicName" value="first" />
 				<param name="numThreads" value="4" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunMTSubscriber">
+			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub2" />
 				<param name="topicName" value="first" />
 				<param name="numThreads" value="4" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunMTSubscriber">
+			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub3" />
 				<param name="topicName" value="second" />
 				<param name="numThreads" value="2" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunMTSubscriber">
+			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub4" />
 				<param name="topicName" value="second" />
 				<param name="numThreads" value="2" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunMTSubscriber">
+			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub5" />
 				<param name="topicName" value="first" />
 				<param name="numThreads" value="2" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunMTSubscriber">
+			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub6" />
 				<param name="topicName" value="first" />
 				<param name="numThreads" value="2" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunMTSubscriber">
+			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub7" />
 				<param name="topicName" value="second" />
 				<param name="numThreads" value="4" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunMTSubscriber">
+			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub8" />
 				<param name="topicName" value="second" />
 				<param name="numThreads" value="4" />
 				<param name="sharedSession" value="false" />
 			</antcall>
 
-			<antcall target="RunPublisher">
+			<antcall target="RunPublisherWithLessMemory">
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
@@ -575,7 +645,7 @@
 				<param name="numPublishers" value="1" />
 			</antcall>
 
-			<antcall target="RunPublisher">
+			<antcall target="RunPublisherWithLessMemory">
 				<param name="endpointName" value="pub2" />
 				<param name="topicName" value="second" />
 				<param name="fileName" value="err.txt" />
@@ -605,7 +675,7 @@
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="16" />
 				<param name="numConsumersPerQueue" value="1" />
-				<param name="numIterations" value="20" />
+				<param name="numIterations" value="40" />
 			</antcall>
 		</parallel>
 	</target>
@@ -619,7 +689,7 @@
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
 				<param name="queueNamePrefix" value="first" />
-				<param name="numProducers" value="4" />		
+				<param name="numProducers" value="8" />		
 				<param name="numConsumersPerQueue" value="8" />					
 				<param name="ackExplicit" value="false" />
 			</antcall>
@@ -627,9 +697,9 @@
 			<antcall target="RunProducer">
 				<param name="endpointName" value="producer" />
 				<param name="queueNamePrefix" value="first" />
-				<param name="numProducers" value="4" />
+				<param name="numProducers" value="8" />
 				<param name="numConsumersPerQueue" value="8" />	
-				<param name="numIterations" value="20" />
+				<param name="numIterations" value="40" />
 			</antcall>
 		</parallel>
 	</target>	
@@ -653,7 +723,7 @@
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="16" />
 				<param name="numConsumersPerQueue" value="1" />	
-				<param name="numIterations" value="10" />
+				<param name="numIterations" value="20" />
 			</antcall>
 		</parallel>
 	</target>
@@ -675,8 +745,8 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
-				<param name="numIterations" value="4" />
-				<param name="numPublishers" value="4" />
+				<param name="numIterations" value="16" />
+				<param name="numPublishers" value="8" />
 			</antcall>
 		</parallel>
 	</target>
@@ -698,7 +768,7 @@
 				<param name="endpointName" value="pub" />
 				<param name="topicName" value="first" />
 				<param name="fileName" value="build.xml" />
-				<param name="numIterations" value="4" />
+				<param name="numIterations" value="32" />
 				<param name="numPublishers" value="4" />
 			</antcall>
 		</parallel>
