@@ -21,11 +21,14 @@ import net.dovemq.api.Session;
  * response for the outgoing request.
  */
 public class Requester {
+    private static final class MessageSynchronizer {
+        public DoveMQMessage replyMessage = null;
+    }
     /*
      * Outgoing request messages are stored until a response message has been
      * received.
      */
-    private static final ConcurrentMap<String, DoveMQMessage> outstandingRequests = new ConcurrentHashMap<String, DoveMQMessage>();
+    private static final ConcurrentMap<String, MessageSynchronizer> outstandingRequests = new ConcurrentHashMap<String, MessageSynchronizer>();
 
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
@@ -41,13 +44,14 @@ public class Requester {
         public void messageReceived(DoveMQMessage message) {
             String correlationId = message.getMessageProperties()
                     .getCorrlelationId();
-            DoveMQMessage requestMessage = outstandingRequests.remove(correlationId);
-            if (requestMessage != null) {
+            final MessageSynchronizer requestMessageSynchronizer = outstandingRequests.remove(correlationId);
+            if (requestMessageSynchronizer != null) {
                 System.out.println("received response for requestId: " + correlationId);
 
-                byte[] body = message.getPayload();
-                String payload = new String(body);
-                System.out.println("Response payload: " + payload);
+                synchronized (requestMessageSynchronizer) {
+                    requestMessageSynchronizer.replyMessage = message;
+                    requestMessageSynchronizer.notify();
+                }
             }
         }
     }
@@ -105,7 +109,8 @@ public class Requester {
              * Put the message in the outstandingRequests map. It is removed
              * when a response is received.
              */
-            outstandingRequests.put(messageId, message);
+            final MessageSynchronizer requestMessageSynchronizer = new MessageSynchronizer();
+            outstandingRequests.put(messageId, requestMessageSynchronizer);
 
             String msg = "Request from Producer";
             System.out.println("sending message: " + msg);
@@ -113,7 +118,20 @@ public class Requester {
             producer.sendMessage(message);
 
             System.out.println("waiting for response");
-            Thread.sleep(10000);
+            synchronized (requestMessageSynchronizer) {
+                while (requestMessageSynchronizer.replyMessage == null) {
+                    requestMessageSynchronizer.wait(5000);
+                    break;
+                }
+
+                if (requestMessageSynchronizer.replyMessage != null) {
+                    byte[] body = requestMessageSynchronizer.replyMessage.getPayload();
+                    String payload = new String(body);
+                    System.out.println("Response payload: " + payload);
+                } else {
+                    System.out.println("Timed out waiting for response");
+                }
+            }
 
             /*
              * Close the AMQP session

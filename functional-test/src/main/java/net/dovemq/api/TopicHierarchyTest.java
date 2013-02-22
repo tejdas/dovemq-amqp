@@ -30,6 +30,8 @@ import net.dovemq.transport.endpoint.EndpointTestUtils;
 
 public class TopicHierarchyTest extends TestCase {
     private static String brokerIP;
+    private static int numIterations = 1000;
+
     private static String endpointName;
     private static int numSubscribers;
 
@@ -142,6 +144,7 @@ public class TopicHierarchyTest extends TestCase {
 
     public static void main(String[] args) throws InterruptedException, FileNotFoundException {
         brokerIP = args[0];
+        numIterations = Integer.parseInt(args[1]);
         endpointName = "TestPubSub";
 
         ConnectionFactory.initialize(endpointName);
@@ -194,7 +197,6 @@ public class TopicHierarchyTest extends TestCase {
         }
 
         Random randomGenerator = new Random();
-        int numIterations = 100000;
 
         for (int i = 0; i < publishTopicHierarchies.length; i++) {
             Publisher pub = publishers[i];

@@ -32,12 +32,6 @@ public class Responder {
      */
     private static final Map<String, Producer> messageProducers = new HashMap<String, Producer>();
 
-    /*
-     * Incoming message queue used by the MessageReceiver to hand-off to a
-     * RequestProcessor
-     */
-    private static final BlockingQueue<DoveMQMessage> incomingRequests = new LinkedBlockingQueue<DoveMQMessage>();
-
     /**
      * This class processes the incoming requests. Gets the replyTo property and
      * gets a corresponding Producer from the messageProducers map (creates one
@@ -105,16 +99,32 @@ public class Responder {
         private final Session session;
 
         private volatile boolean shutdown = false;
+
+        /*
+         * Incoming message queue used by the MessageReceiver to hand-off to a
+         * RequestProcessor
+         */
+        private final BlockingQueue<DoveMQMessage> incomingRequests = new LinkedBlockingQueue<DoveMQMessage>();
+        protected void handoffMessage(DoveMQMessage message) {
+            incomingRequests.add(message);
+        }
     }
 
     /**
      * Receive the request message and hand it off to RequestProcessor.
      */
     private static class SampleMessageReceiver implements DoveMQMessageReceiver {
+        public SampleMessageReceiver(RequestProcessor requestProcessor) {
+            super();
+            this.requestProcessor = requestProcessor;
+        }
+
         @Override
         public void messageReceived(DoveMQMessage message) {
-            incomingRequests.add(message);
+            requestProcessor.handoffMessage(message);
         }
+
+        private final RequestProcessor requestProcessor;
     }
 
     public static void main(String[] args) {
@@ -137,17 +147,17 @@ public class Responder {
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
             /*
-             * Create a consumer and register a message receiver to receive the
-             * request message from.
-             */
-            Consumer consumer = session.createConsumer(LISTEN_TO_ADDRESS);
-            consumer.registerMessageReceiver(new SampleMessageReceiver());
-
-            /*
              * Create a RequestProcessor to process incoming messages.
              */
             final RequestProcessor requestProcessor = new RequestProcessor(session);
             new Thread(requestProcessor).start();
+
+            /*
+             * Create a consumer and register a message receiver to receive the
+             * request message from.
+             */
+            Consumer consumer = session.createConsumer(LISTEN_TO_ADDRESS);
+            consumer.registerMessageReceiver(new SampleMessageReceiver(requestProcessor));
 
             /*
              * Register a shutdown hook to perform graceful shutdown.

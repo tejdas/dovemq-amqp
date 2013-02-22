@@ -41,7 +41,7 @@ public class TopicMultipleSubscribers {
         public void messageReceived(DoveMQMessage message) {
             byte[] body = message.getPayload();
             String payload = new String(body);
-            System.out.println("Received message by consumer: " + id + " payload: " + payload);
+            System.out.println("Received message by subscriber: " + id + " payload: " + payload);
         }
 
         private final int id;
@@ -63,7 +63,7 @@ public class TopicMultipleSubscribers {
                 Subscriber subscriber = session.createSubscriber(TOPIC_NAME);
 
                 /*
-                 * Register a message receiver with the consumer to
+                 * Register a message receiver with the subscriber to
                  * asynchronously receive messages.
                  */
                 SampleMessageReceiver messageReceiver = new SampleMessageReceiver(id);
@@ -93,7 +93,7 @@ public class TopicMultipleSubscribers {
         /*
          * Initialize the DoveMQ runtime, specifying an endpoint name.
          */
-        ConnectionFactory.initialize("consumer");
+        ConnectionFactory.initialize("subscriber");
 
         try {
             /*
@@ -103,8 +103,8 @@ public class TopicMultipleSubscribers {
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
             for (int i = 0; i < NUM_SUBSCRIBERS; i++) {
-                SampleSubscriber sampleConsumer = new SampleSubscriber(session, i);
-                executor.submit(sampleConsumer);
+                SampleSubscriber sampleSubscriber = new SampleSubscriber(session, i);
+                executor.submit(sampleSubscriber);
             }
 
             /*
@@ -135,7 +135,7 @@ public class TopicMultipleSubscribers {
                 }
             });
 
-            System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
+            System.out.println("waiting for messages. Press Ctl-C to shut down subscriber.");
             while (!doShutdown) {
                 try {
                     Thread.sleep(1000);

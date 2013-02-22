@@ -31,6 +31,8 @@ import net.dovemq.transport.endpoint.EndpointTestUtils;
 
 public class PerMessageTopicHierarchyTest {
     private static String brokerIP;
+    private static int numIterations = 1000;
+
     private static String endpointName;
     private static int numSubscribers;
 
@@ -148,6 +150,7 @@ public class PerMessageTopicHierarchyTest {
 
     public static void main(String[] args) throws InterruptedException, FileNotFoundException {
         brokerIP = args[0];
+        numIterations = Integer.parseInt(args[1]);
         endpointName = "TestPubSub";
 
         ConnectionFactory.initialize(endpointName);
@@ -184,7 +187,6 @@ public class PerMessageTopicHierarchyTest {
 
 
         Random randomGenerator = new Random();
-        int numIterations = 1000;
         for (int iter = 0; iter < numIterations; iter++) {
 
             for (String hierarchy : publishTopicHierarchies) {

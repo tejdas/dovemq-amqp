@@ -539,6 +539,7 @@
 			<jvmarg value="-Xms1536M" />			
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
+			<arg value="10000" />			
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -555,6 +556,7 @@
 			<jvmarg value="-Xms1536M" />			
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
+			<arg value="10000" />			
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
