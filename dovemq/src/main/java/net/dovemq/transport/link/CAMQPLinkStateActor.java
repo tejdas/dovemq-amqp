@@ -162,6 +162,13 @@ final class CAMQPLinkStateActor {
 
     private QueuedContext processAttachReceived(QueuedContext contextToProcess) {
         CAMQPLinkControlInfo attachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
+        synchronized (this) {
+            if (attachContext.isInitiator && (currentState == State.ATTACH_SENT)) {
+                currentState = State.ATTACHED;
+                notifyAll();
+            }
+        }
+
         if (!attachContext.isInitiator) {
             linkEndpoint.processAttachReceived((CAMQPControlAttach) attachContext.data, attachContext.isInitiator);
         }
@@ -170,10 +177,6 @@ final class CAMQPLinkStateActor {
         }
 
         synchronized (this) {
-            if (attachContext.isInitiator && (currentState == State.ATTACH_SENT)) {
-                currentState = State.ATTACHED;
-                notifyAll();
-            }
             return getNextEvent();
         }
     }
@@ -197,10 +200,6 @@ final class CAMQPLinkStateActor {
         linkEndpoint.getSession()
                 .sendLinkControlFrame(encoder.getEncodedBuffer());
 
-        if (!attachContext.isInitiator) {
-            linkEndpoint.attached(attachContext.isInitiator);
-        }
-
         synchronized (this) {
             if (currentState == State.DETACHED) {
                 currentState = State.ATTACH_SENT;
@@ -209,6 +208,13 @@ final class CAMQPLinkStateActor {
                 currentState = State.ATTACHED;
                 notify();
             }
+        }
+
+        if (!attachContext.isInitiator) {
+            linkEndpoint.attached(attachContext.isInitiator);
+        }
+
+        synchronized (this) {
             return getNextEvent();
         }
     }
@@ -226,6 +232,12 @@ final class CAMQPLinkStateActor {
 
     QueuedContext processDetachReceived(QueuedContext contextToProcess) {
         CAMQPLinkControlInfo detachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
+        synchronized (this) {
+            if (detachContext.isInitiator && (currentState == State.DETACH_SENT)) {
+                currentState = State.DETACHED;
+                notify();
+            }
+        }
         if (detachContext.isInitiator) {
             linkEndpoint.detached(detachContext.isInitiator);
         }
@@ -234,10 +246,6 @@ final class CAMQPLinkStateActor {
         }
 
         synchronized (this) {
-            if (detachContext.isInitiator && (currentState == State.DETACH_SENT)) {
-                currentState = State.DETACHED;
-                notify();
-            }
             return getNextEvent();
         }
     }
@@ -260,10 +268,6 @@ final class CAMQPLinkStateActor {
         linkEndpoint.getSession()
                 .sendLinkControlFrame(encoder.getEncodedBuffer());
 
-        if (!detachContext.isInitiator) {
-            linkEndpoint.detached(detachContext.isInitiator);
-        }
-
         synchronized (this) {
             if (currentState == State.ATTACHED) {
                 currentState = State.DETACH_SENT;
@@ -271,6 +275,13 @@ final class CAMQPLinkStateActor {
             else if (currentState == State.DETACH_RCVD) {
                 currentState = State.DETACHED;
             }
+        }
+
+        if (!detachContext.isInitiator) {
+            linkEndpoint.detached(detachContext.isInitiator);
+        }
+
+        synchronized (this) {
             return getNextEvent();
         }
     }

@@ -17,21 +17,15 @@
 
 package net.dovemq.broker.driver;
 
-import net.dovemq.api.DoveMQEndpointPolicy;
-import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
-import net.dovemq.broker.endpoint.DoveMQEndpointManager;
-import net.dovemq.broker.endpoint.DoveMQEndpointManagerImpl;
-import net.dovemq.transport.endpoint.CAMQPEndpointManager;
-import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
-import net.dovemq.transport.link.CAMQPLinkManager;
-import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
+import net.dovemq.broker.endpoint.DoveMQEndpointDriver;
 
 public final class DoveMQBrokerDriver {
     private static volatile boolean doShutdown = false;
 
     static void shutdown() {
         System.out.println("DoveMQ broker shutting down");
-        CAMQPLinkManager.shutdown();
+        boolean isBroker = true;
+        DoveMQEndpointDriver.shutdown(isBroker);
         System.out.println("DoveMQ broker shut down");
         doShutdown = true;
     }
@@ -40,16 +34,8 @@ public final class DoveMQBrokerDriver {
         final DoveMQBrokerShutdownHook sh = new DoveMQBrokerShutdownHook();
         Runtime.getRuntime().addShutdownHook(sh);
 
-        CAMQPLinkManager.initialize(true, "broker");
-
-        CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
-        defaultEndpointPolicy.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
-        defaultEndpointPolicy.setDoveMQEndpointPolicy(new DoveMQEndpointPolicy(MessageAcknowledgementPolicy.CONSUMER_ACKS));
-
-        CAMQPEndpointManager.setDefaultEndpointPolicy(defaultEndpointPolicy);
-
-        DoveMQEndpointManager doveMQEndpointManager = new DoveMQEndpointManagerImpl();
-        CAMQPEndpointManager.registerDoveMQEndpointManager(doveMQEndpointManager);
+        boolean isBroker = true;
+        DoveMQEndpointDriver.initialize(isBroker, "DoveMQBroker");
         while (!doShutdown) {
             try {
                 Thread.sleep(1000);

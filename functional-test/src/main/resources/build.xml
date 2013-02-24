@@ -426,6 +426,7 @@
 			<arg value="${numProducers}" />
 			<arg value="${numConsumersPerQueue}" />			
 			<arg value="${numIterations}" />
+			<arg value="${waitForAcks}" />			
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
@@ -658,6 +659,31 @@
 		</parallel>
 	</target>
 
+	<target name="QueueTestProducerBeforeConsumer" description="run MT queue test">
+		<delete>
+			<fileset dir="." includes="**/consumer*.txt" />
+		</delete>
+
+		<sequential>
+			<antcall target="RunProducer">
+				<param name="endpointName" value="producer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="1" />
+				<param name="numConsumersPerQueue" value="1" />
+				<param name="numIterations" value="1" />
+				<param name="waitForAcks" value="false" />				
+			</antcall>
+
+			<antcall target="RunConsumer">
+				<param name="endpointName" value="consumer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="1" />				
+				<param name="numConsumersPerQueue" value="1" />				
+				<param name="ackExplicit" value="false" />
+			</antcall>
+		</sequential>
+	</target>
+		
 	<target name="QueueMTTest" description="run MT queue test">
 		<delete>
 			<fileset dir="." includes="**/consumer*.txt" />
@@ -790,6 +816,7 @@
 	<target name="QueueTest" description="running queue tests">
 		<sequential>
 			<antcall target="RunProducerFailTest"/>
+			<antcall target="QueueTestProducerBeforeConsumer"/>			
 			<antcall target="QueueMTTest"/>
 			<antcall target="QueueMTRoundRobinTest"/>
 			<antcall target="QueueMTAckExplicitTest"/>

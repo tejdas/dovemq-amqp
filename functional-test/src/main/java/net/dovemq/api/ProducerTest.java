@@ -36,6 +36,7 @@ public class ProducerTest
     private static int numProducers;
     private static int numConsumersPerQueue = 1;
     private static int numIterations;
+    private static boolean waitForAcks = true;
 
     private static class TestProducer extends CAMQPTestTask implements Runnable
     {
@@ -61,14 +62,15 @@ public class ProducerTest
 
             final AtomicInteger messageAckCount = new AtomicInteger(0);
             Producer producer = session.createProducer(String.format("%s.%d", queueNamePrefix, id));
-            producer.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
+            if (waitForAcks) {
+                producer.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
 
-                @Override
-                public void messageAcknowledged(DoveMQMessage message)
-                {
-                    messageAckCount.incrementAndGet();
-                }
-            });
+                    @Override
+                    public void messageAcknowledged(DoveMQMessage message) {
+                        messageAckCount.incrementAndGet();
+                    }
+                });
+            }
 
             String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/build.xml";
 
@@ -94,15 +96,24 @@ public class ProducerTest
                 messagesSent++;
             }
 
-            while (messageAckCount.get() < messagesSent)
-            {
-                try
-                {
-                    Thread.sleep(5000);
-                    System.out.println("producer waiting: " + messagesSent + " " + messageAckCount.get());
+            if (waitForAcks) {
+                while (messageAckCount.get() < messagesSent) {
+                    try {
+                        Thread.sleep(5000);
+                        System.out.println("producer waiting: " + messagesSent
+                                + " "
+                                + messageAckCount.get());
+                    }
+                    catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
-                catch (InterruptedException e)
-                {
+            } else {
+                System.out.println("Producer sent " + messagesSent + " messages");
+                try {
+                    Thread.sleep(5000);
+                }
+                catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
@@ -123,6 +134,9 @@ public class ProducerTest
         numProducers = Integer.parseInt(args[3]);
         numConsumersPerQueue = Integer.parseInt(args[4]);
         numIterations = Integer.parseInt(args[5]);
+        if (args.length > 6) {
+            waitForAcks = Boolean.parseBoolean(args[6]);
+        }
 
         ConnectionFactory.initialize(endpointName);
 
@@ -139,7 +153,9 @@ public class ProducerTest
         Thread.sleep(10000);
         startSignal.countDown();
         doneSignal.await();
-        System.out.println("Producer got all messages acked");
+        if (waitForAcks) {
+            System.out.println("Producer got all messages acked");
+        }
         executor.shutdown();
 
         ConnectionFactory.shutdown();

@@ -17,6 +17,9 @@
 
 package net.dovemq.broker.endpoint;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +28,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import junit.framework.TestCase;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.api.MessageFactory;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
@@ -36,9 +38,13 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class QueueRouterTest extends TestCase {
+public class QueueRouterTest {
     private static final AtomicLong linkIds = new AtomicLong(0L);
 
     private static final AtomicLong deliveryIds = new AtomicLong(0L);
@@ -351,14 +357,26 @@ public class QueueRouterTest extends TestCase {
         }
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeClass
+    public static void setupBeforeClass() throws Exception
+    {
+        DoveMQEndpointDriver.setManager(new DoveMQEndpointManagerImpl());
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @Before
+    public void setup() {
+
+    }
+
+    @After
+    public void tearDown() {
+
+    }
+
+    @AfterClass
+    public static void teardownAfterClass() throws Exception
+    {
+        DoveMQEndpointDriver.shutdownManager();
     }
 
     @Test
@@ -435,6 +453,7 @@ public class QueueRouterTest extends TestCase {
         MockConsumerProxy consumer = new MockConsumerProxy();
         queueRouter.consumerAttached(consumer);
 
+        consumer.waitForMessages(messagesPerConsumer);
         assertTrue(consumer.getCount() == messagesPerConsumer);
     }
 
@@ -455,6 +474,7 @@ public class QueueRouterTest extends TestCase {
         MockConsumerProxy consumer = new MockConsumerProxy();
         queueRouter.consumerAttached(consumer);
 
+        consumer.waitForMessages(messagesPerConsumer);
         assertTrue(consumer.getCount() == messagesPerConsumer);
     }
 

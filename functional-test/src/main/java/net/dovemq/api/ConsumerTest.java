@@ -27,6 +27,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
 import net.dovemq.transport.common.CAMQPTestTask;
@@ -46,6 +47,7 @@ public class ConsumerTest
     {
         private final BlockingQueue<DoveMQMessage> receivedMessages = new LinkedBlockingQueue<DoveMQMessage>();
         private volatile boolean receivedFinalMessage = false;
+        final AtomicInteger messageCount = new AtomicInteger(0);
 
         public boolean hasReceivedFinalMessage()
         {
@@ -62,6 +64,7 @@ public class ConsumerTest
         @Override
         public void messageReceived(DoveMQMessage message)
         {
+            messageCount.incrementAndGet();
             Collection<byte[]> body = message.getPayloads();
             for (byte[] b : body)
             {
@@ -197,6 +200,7 @@ public class ConsumerTest
                 }
             }
 
+            System.out.println("consumer: " + consumerId + " received message count: " + messageReceiver.messageCount.get());
             if (ackExplicit)
                 acker.shutdown();
 

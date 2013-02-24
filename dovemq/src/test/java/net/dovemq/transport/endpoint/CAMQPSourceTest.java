@@ -104,6 +104,7 @@ public class CAMQPSourceTest extends TestCase {
         };
 
         new Thread(linkLayer).start();
+        long beginTime = System.currentTimeMillis();
         startSignal.countDown();
         try {
             waitSignal.await();
@@ -112,7 +113,6 @@ public class CAMQPSourceTest extends TestCase {
             Thread.currentThread().interrupt();
         }
         try {
-            long beginTime = System.currentTimeMillis();
             linkSource.sendMessage(MessageFactory.createMessage());
             long endTime = System.currentTimeMillis();
             assertTrue(endTime-beginTime >= runnableSleepTime);

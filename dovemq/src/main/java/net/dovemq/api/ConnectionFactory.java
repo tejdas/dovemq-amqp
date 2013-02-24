@@ -17,11 +17,11 @@
 
 package net.dovemq.api;
 
+import net.dovemq.broker.endpoint.DoveMQEndpointDriver;
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.CAMQPConnectionProperties;
-import net.dovemq.transport.link.CAMQPLinkManager;
 import net.dovemq.transport.session.CAMQPSessionFactory;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
@@ -53,7 +53,7 @@ public final class ConnectionFactory {
                 throw new IllegalArgumentException("Null EndpointID specified");
             }
             boolean isBroker = false;
-            CAMQPLinkManager.initialize(isBroker, endpointID);
+            DoveMQEndpointDriver.initialize(isBroker, endpointID);
             endpointId = CAMQPConnectionManager.getContainerId();
         }
     }
@@ -65,7 +65,8 @@ public final class ConnectionFactory {
         if (endpointId == null) {
             throw new IllegalStateException("DoveMQ Runtime has not been initialized yet");
         }
-        CAMQPLinkManager.shutdown();
+        boolean isBroker = false;
+        DoveMQEndpointDriver.shutdown(isBroker);
         endpointId = null;
     }
 

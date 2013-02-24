@@ -21,10 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
+import net.dovemq.transport.utils.CAMQPThreadFactory;
 
 import org.apache.log4j.Logger;
 
@@ -34,6 +38,22 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
     private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<>();
 
     private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap = new HashMap<>();
+
+    private final ExecutorService executor = Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQEndpointManagerThread"));
+
+    ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void shutdown() {
+        executor.shutdown();
+        try {
+            executor.awaitTermination(300, TimeUnit.SECONDS);
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     public DoveMQEndpointManagerImpl() {
         topicRoutersMap.put(TopicRouterType.Basic, new ConcurrentHashMap<String, TopicRouter>());

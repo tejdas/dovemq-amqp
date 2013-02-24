@@ -152,6 +152,11 @@ final class QueueRouter implements
                 messageQueue.remove();
             }
             catch (RuntimeException ex) {
+                log.fatal("Caught RuntimeException while routing messages off " + queueName + " to consumer proxies: " + ex.getMessage());
+                synchronized (this) {
+                    sendInProgress = false;
+                    return;
+                }
             }
         }
     }
@@ -190,7 +195,13 @@ final class QueueRouter implements
         inFlightMessagesByConsumerId.put(consumerProxy.getId(), messageMap);
 
         if (currentDestination != null) {
-            sendMessages(currentDestination);
+            final CAMQPSourceInterface destinationToSendMessages = currentDestination;
+            DoveMQEndpointDriver.getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    sendMessages(destinationToSendMessages);
+                }
+            });
         }
     }
 
@@ -198,18 +209,23 @@ final class QueueRouter implements
         synchronized (this) {
             consumerProxies.remove(consumerProxy);
         }
-        ConcurrentMap<Long, DoveMQMessage> messageMap = inFlightMessagesByConsumerId.remove(consumerProxy.getId());
+        final ConcurrentMap<Long, DoveMQMessage> messageMap = inFlightMessagesByConsumerId.remove(consumerProxy.getId());
         /*
          * Since the consumer has detached, treat the following messages as
          * having been acked and notify the producer, so its link-credit window
          * opens up. REVISIT TODO
          */
-        if (messageMap != null) {
-            Set<Long> deliveryIds = messageMap.keySet();
-            for (long deliveryId : deliveryIds) {
-                DoveMQMessage message = messageMap.get(deliveryId);
-                acknowledgeMessageDelivered(message, deliveryId);
-            }
+        if ((messageMap != null) && !messageMap.isEmpty()) {
+            DoveMQEndpointDriver.getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    Set<Long> deliveryIds = messageMap.keySet();
+                    for (long deliveryId : deliveryIds) {
+                        DoveMQMessage message = messageMap.get(deliveryId);
+                        acknowledgeMessageDelivered(message, deliveryId);
+                    }
+                }
+            });
         }
     }
 
@@ -247,18 +263,20 @@ final class QueueRouter implements
         }
     }
 
-    void producerDetached(CAMQPTargetInterface producerSink) {
-        synchronized (this) {
-            if (this.producerSink == null) {
-                log.error("The QueueRouter: " + queueName + " is not attached to any producer");
-            }
-            else if (this.producerSink != producerSink) {
-                log.error("The Producer: " + producerSink + " is not attached to queue: " + queueName +
-                        " . The queue is attached by: " + this.producerSink);
-            }
-            else {
-                this.producerSink = null;
-            }
+    synchronized void producerDetached(CAMQPTargetInterface producerSink) {
+        if (this.producerSink == null) {
+            log.error("The QueueRouter: " + queueName
+                    + " is not attached to any producer");
+        }
+        else if (this.producerSink != producerSink) {
+            log.error("The Producer: " + producerSink
+                    + " is not attached to queue: "
+                    + queueName
+                    + " . The queue is attached by: "
+                    + this.producerSink);
+        }
+        else {
+            this.producerSink = null;
         }
     }
 
