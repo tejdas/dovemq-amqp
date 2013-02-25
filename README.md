@@ -47,7 +47,7 @@ b. On Unix, run
 DoveMQ samples
 --------------
 
-[Check out DoveMQ samples for specific examples on how to build and run the samples](https://github.com/tejdas/dovemq-amqp/blob/master/README_SAMPLES.md)
+[Check out DoveMQ samples for specific examples on how to build and run the samples](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-Samples)
 
 License
 -------
