@@ -9,6 +9,11 @@ DoveMQ wiki
 
 [Check out DoveMQ wiki](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ)
 
+DoveMQ samples
+--------------
+
+[Check out DoveMQ samples for specific examples on how to build and run the samples](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-Samples)
+
 Organization of the code
 ------------------------
 
@@ -43,11 +48,6 @@ b. On Unix, run
   On Windows, run
   
     bin\runbroker.bat
-
-DoveMQ samples
---------------
-
-[Check out DoveMQ samples for specific examples on how to build and run the samples](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-Samples)
 
 License
 -------
