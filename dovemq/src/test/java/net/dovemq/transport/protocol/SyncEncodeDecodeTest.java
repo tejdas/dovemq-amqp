@@ -17,8 +17,6 @@
 
 package net.dovemq.transport.protocol;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,8 +31,6 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 public class SyncEncodeDecodeTest extends TestCase
 {
-    private static final String testFileName = System.getenv("HOME") + "/testfile.tar";
-    
     public SyncEncodeDecodeTest()
     {
     }
@@ -60,7 +56,7 @@ public class SyncEncodeDecodeTest extends TestCase
         inputPipe.take(buffer);
         assertTrue(CAMQPFormatCodes.NULL == inputPipe.readFormatCode());
     }
-    
+
     public void testEncodeDecodeNULL() throws Exception
     {
         CAMQPEncoder outstream = CAMQPEncoder.createCAMQPEncoder();
@@ -138,7 +134,7 @@ public class SyncEncodeDecodeTest extends TestCase
         assertTrue(CAMQPFormatCodes.UINT == inputPipe.readFormatCode());
         assertFalse(val2 == inputPipe.readUInt());
     }
-    
+
     public void testEncodeDecodeBigInteger() throws Exception
     {
         CAMQPEncoder outstream = CAMQPEncoder.createCAMQPEncoder();
@@ -151,7 +147,7 @@ public class SyncEncodeDecodeTest extends TestCase
         assertTrue(CAMQPFormatCodes.LONG == inputPipe.readFormatCode());
         BigInteger output = inputPipe.readULong();
         assertEquals(output.longValue(), 8746L);
-    }    
+    }
 
     public void testEncodeDecodeByte() throws Exception
     {
@@ -282,7 +278,7 @@ public class SyncEncodeDecodeTest extends TestCase
         assertTrue(CAMQPFormatCodes.UUID == inputPipe.readFormatCode());
         assertEquals(uuid, inputPipe.readUUID());
     }
-    
+
     public void testEncodeDecodeUTF8String() throws Exception
     {
         CAMQPEncoder outstream = CAMQPEncoder.createCAMQPEncoder();
@@ -330,28 +326,21 @@ public class SyncEncodeDecodeTest extends TestCase
         Random rand = new Random();
         CAMQPEncoder outstream = CAMQPEncoder.createCAMQPEncoder();
 
+        int totalBufToRead = 8388608;
+        int bufReadSoFar = 0;
         int bufSize;
         if (formatCode == CAMQPFormatCodes.VBIN8)
             bufSize = 128;
         else
             bufSize = 262144;
 
-        BufferedInputStream inputStream =
-                new BufferedInputStream(new FileInputStream(testFileName));
-        while (inputStream.available() > 0)
+        Random r = new Random();
+        while (bufReadSoFar < totalBufToRead)
         {
             byte[] inbuf = new byte[bufSize];
-            int bytesRead = inputStream.read(inbuf);
-            if (bytesRead < bufSize)
-            {
-                byte[] inbuf2 = new byte[bytesRead];
-                for (int i = 0; i < bytesRead; i++)
-                {
-                    inbuf2[i] = inbuf[i];
-                }
-                outstream.writeBinary(inbuf2, bytesRead, adoptOrCopyOnEncode);
-            } else
-                outstream.writeBinary(inbuf, bytesRead, adoptOrCopyOnEncode);
+            r.nextBytes(inbuf);
+            bufReadSoFar += bufSize;
+            outstream.writeBinary(inbuf, bufSize, adoptOrCopyOnEncode);
 
             long val = 0;
             int val2 = 0;
@@ -393,7 +382,7 @@ public class SyncEncodeDecodeTest extends TestCase
             assertTrue((binaryDataformatCode == CAMQPFormatCodes.VBIN8)
                     || (binaryDataformatCode == CAMQPFormatCodes.VBIN32));
             long bytesToRead = inputPipe.readBinaryDataSize(binaryDataformatCode);
-            assertEquals(bytesRead, bytesToRead);
+            assertEquals(bufSize, bytesToRead);
             while (bytesToRead > 0)
             {
                 ChannelBuffer bufferRead =
@@ -423,7 +412,6 @@ public class SyncEncodeDecodeTest extends TestCase
                             .readFormatCode());
             }
         }
-        inputStream.close();
     }
 
     public void
@@ -437,19 +425,19 @@ public class SyncEncodeDecodeTest extends TestCase
     {
         testEncodeDecodeBinaryAllFormatCodes(false, true, true);
     }
-    
+
     public void
     testEncodeDecodeBinaryMultipleTypesCopyOnEncode() throws Exception
     {
         testEncodeDecodeBinaryAllFormatCodes(true, false, true);
     }
-    
+
     public void
     testEncodeDecodeBinaryMultipleTypesCopyOnEncodeDecode() throws Exception
     {
         testEncodeDecodeBinaryAllFormatCodes(false, false, true);
     }
-    
+
     private void testEncodeDecodeBinaryAllFormatCodes(
             boolean adoptOrCopyOnEncode, boolean adoptOrCopyOnDecode,
             boolean multipleDataTypes) throws Exception
@@ -458,32 +446,26 @@ public class SyncEncodeDecodeTest extends TestCase
         Random rand = new Random();
         CAMQPEncoder outstream = CAMQPEncoder.createCAMQPEncoder();
 
-        BufferedInputStream inputStream =
-                new BufferedInputStream(new FileInputStream(testFileName));
+        int totalBufToRead = 8388608;
+        int bufReadSoFar = 0;
+
         int iter = 0;
-        while (inputStream.available() > 0)
+        Random r = new Random();
+        while (bufReadSoFar < totalBufToRead)
         {
             int formatCode = formatCodes[iter % 2];
             iter++;
-            
+
             int bufSize;
             if (formatCode == CAMQPFormatCodes.VBIN8)
                 bufSize = 128;
             else
                 bufSize = 262144;
-            
+
             byte[] inbuf = new byte[bufSize];
-            int bytesRead = inputStream.read(inbuf);
-            if (bytesRead < bufSize)
-            {
-                byte[] inbuf2 = new byte[bytesRead];
-                for (int i = 0; i < bytesRead; i++)
-                {
-                    inbuf2[i] = inbuf[i];
-                }
-                outstream.writeBinary(inbuf2, bytesRead, adoptOrCopyOnEncode);
-            } else
-                outstream.writeBinary(inbuf, bytesRead, adoptOrCopyOnEncode);
+            r.nextBytes(inbuf);
+            bufReadSoFar += bufSize;
+            outstream.writeBinary(inbuf, bufSize, adoptOrCopyOnEncode);
 
             long val = 0;
             int val2 = 0;
@@ -492,8 +474,8 @@ public class SyncEncodeDecodeTest extends TestCase
             boolean val5 = false;
             UUID uuid = UUID.randomUUID();
             Date date = new Date();
-            
-            String str = "John Doe, First St, Cupertino, CA - 95045";          
+
+            String str = "John Doe, First St, Cupertino, CA - 95045";
 
             if (multipleDataTypes)
             {
@@ -504,7 +486,7 @@ public class SyncEncodeDecodeTest extends TestCase
                 outstream.writeInt(val2);
 
                 outstream.writeUUID(uuid);
-                
+
                 outstream.writeUTF8String(str);
 
                 val3 = rand.nextFloat();
@@ -517,8 +499,8 @@ public class SyncEncodeDecodeTest extends TestCase
 
                 val5 = rand.nextBoolean();
                 outstream.writeBoolean(val5);
-                
-                //outstream.writeUTF16String(str2);                
+
+                //outstream.writeUTF16String(str2);
             }
 
             ChannelBuffer buffer = outstream.getEncodedBuffer();
@@ -532,7 +514,7 @@ public class SyncEncodeDecodeTest extends TestCase
             assertTrue((binaryDataformatCode == CAMQPFormatCodes.VBIN8)
                     || (binaryDataformatCode == CAMQPFormatCodes.VBIN32));
             long bytesToRead = inputPipe.readBinaryDataSize(binaryDataformatCode);
-            assertEquals(bytesRead, bytesToRead);
+            assertEquals(bufSize, bytesToRead);
             while (bytesToRead > 0)
             {
                 ChannelBuffer bufferRead =
@@ -563,41 +545,37 @@ public class SyncEncodeDecodeTest extends TestCase
                 else
                     assertTrue(CAMQPFormatCodes.FALSE == inputPipe
                             .readFormatCode());
-                //assertTrue(CAMQPFormatCodes.STR8_UTF16 == inputPipe.readFormatCode());
-                //String strresult2 = inputPipe.readString(CAMQPFormatCodes.STR8_UTF16);
-                //assertEquals(str2, strresult2);
             }
         }
-        inputStream.close();
     }
-    
+
     public void testCodecArray() throws Exception
     {
         CAMQPEncoder outstream = CAMQPEncoder.createCAMQPEncoder();
         Collection<String> values = new ArrayList<String>();
         values.add("ASCII");
         values.add("EBCDIC");
-        
+
         outstream.writeArrayHeader(2, CAMQPFormatCodes.SYM8);
         for (String s : values)
         {
             outstream.writeUTF8StringArrayElement(s);
         }
         outstream.fillCompoundSize(2);
-        
+
         ChannelBuffer buffer = outstream.getEncodedBuffer();
-        
+
         CAMQPSyncDecoder inputPipe =
                 CAMQPSyncDecoder.createCAMQPSyncDecoder();
         inputPipe.take(buffer);
-        
+
         int formatCode = inputPipe.readFormatCode();
         assertTrue(CAMQPFormatCodes.ARRAY8 == formatCode);
         long arrayCount = inputPipe.readArrayCount(formatCode);
         assertTrue(arrayCount == 2);
         int arrayElementFormatCode = inputPipe.readFormatCode();
         assertTrue(CAMQPFormatCodes.SYM8 == arrayElementFormatCode);
-       
+
         Collection<String> outValues = new ArrayList<String>();
         for (int i = 0; i < arrayCount; i++)
         {
@@ -606,14 +584,14 @@ public class SyncEncodeDecodeTest extends TestCase
         }
         assertTrue(values.containsAll(outValues));
     }
-    
+
     // TODO
-  /*  
+  /*
     public void testCodecArrayCompoundElements() throws Exception
     {
         CAMQPEncoder outstream = CAMQPEncoder.createCAMQPEncoder();
         Collection<CAMQPDefinitionExtent> values = new ArrayList<CAMQPDefinitionExtent>();
-        
+
         {
             CAMQPDefinitionExtent extent1 = new CAMQPDefinitionExtent();
             extent1.setFirst(1L);
@@ -630,12 +608,12 @@ public class SyncEncodeDecodeTest extends TestCase
             CAMQPDefinitionExtent.encodeAsArrayElement(outstream, s);
         }
         outstream.fillCompoundSize(1);
-        
+
         ChannelBuffer buffer = outstream.getEncodedBuffer();
         while (buffer.readable())
         {
             System.out.print(Integer.toHexString(buffer.readByte() & 0xFF) + " ");
-        }        
-    }    
+        }
+    }
     */
 }
