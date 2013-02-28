@@ -57,7 +57,7 @@ public class SessionSysTestJMXClient
         localSessionCommand.registerFactory("SysTestCommandReceiver");
         localConnectionCommand.create(brokerContainerId);
 
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         SessionCommandMBean mbeanProxy = jmxWrapper.getSessionBean();
         mbeanProxy.setSessionWindowSize(512, 512);
@@ -78,7 +78,7 @@ public class SessionSysTestJMXClient
             System.out.println("waiting for IO to be done");
             while (true)
             {
-                Thread.sleep(5000);
+                Thread.sleep(1000);
                 if (mbeanProxy.isIODone())
                     break;
             }

@@ -92,9 +92,6 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-        //if (transferId % 100 == 0)
-          //  System.out.println("transferReceived : " + transferId);
     }
 
     private void parsePayload(byte[] payload) throws IOException, ClassNotFoundException
@@ -107,7 +104,7 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
             System.out.println("Target fileName: " + fh.getFileName());
             System.out.println("Target fileSize: " + expectedBytes);
 
-            String localFileName = SessionIOTestUtils.convertToLocalFileName(fh.getFileName());
+            String localFileName = fh.getFileName();
             try
             {
                 outputStream = new FileOutputStream(localFileName, false);
@@ -141,20 +138,17 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
     public void flowReceived(CAMQPControlFlow flow)
     {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void attachReceived(CAMQPControlAttach controlFrame)
     {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void detachReceived(CAMQPControlDetach controlFrame)
     {
         // TODO Auto-generated method stub
-
     }
 }

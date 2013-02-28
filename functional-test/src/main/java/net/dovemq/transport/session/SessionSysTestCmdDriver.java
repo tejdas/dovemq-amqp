@@ -131,7 +131,7 @@ public class SessionSysTestCmdDriver
             {
                 CAMQPSession session = CAMQPSessionManager.getSession(targetContainerId, sessionAttachedChannelId);
                 if (session != null)
-                    SessionIOTestUtils.transmitFile(session, argList[3], argList[4]);
+                    SessionIOTestUtils.transmitBinaryData(session, argList[4]);
             } catch (InterruptedException e)
             {
                 // TODO Auto-generated catch block

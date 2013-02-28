@@ -55,7 +55,7 @@ public class SessionSysTestBiDir
         localSessionCommand.registerFactory(linkReceiverFactory);
         localConnectionCommand.create(brokerContainerId);
 
-        Thread.sleep(2000);
+        Thread.sleep(500);
 
         SessionCommandMBean mbeanProxy = jmxWrapper.getSessionBean();
         mbeanProxy.setSessionWindowSize(512, 512);
