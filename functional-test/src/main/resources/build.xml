@@ -669,7 +669,7 @@
 				<param name="endpointName" value="producer" />
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="1" />
-				<param name="numConsumersPerQueue" value="1" />
+				<param name="numConsumersPerQueue" value="2" />
 				<param name="numIterations" value="1" />
 				<param name="waitForAcks" value="false" />				
 			</antcall>
@@ -678,7 +678,7 @@
 				<param name="endpointName" value="consumer" />
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="1" />				
-				<param name="numConsumersPerQueue" value="1" />				
+				<param name="numConsumersPerQueue" value="2" />				
 				<param name="ackExplicit" value="false" />
 			</antcall>
 		</sequential>
@@ -704,6 +704,7 @@
 				<param name="numProducers" value="16" />
 				<param name="numConsumersPerQueue" value="1" />
 				<param name="numIterations" value="40" />
+				<param name="waitForAcks" value="true" />				
 			</antcall>
 		</parallel>
 	</target>
@@ -728,6 +729,7 @@
 				<param name="numProducers" value="8" />
 				<param name="numConsumersPerQueue" value="8" />	
 				<param name="numIterations" value="40" />
+				<param name="waitForAcks" value="true" />				
 			</antcall>
 		</parallel>
 	</target>	
@@ -752,6 +754,7 @@
 				<param name="numProducers" value="16" />
 				<param name="numConsumersPerQueue" value="1" />	
 				<param name="numIterations" value="20" />
+				<param name="waitForAcks" value="true" />				
 			</antcall>
 		</parallel>
 	</target>
