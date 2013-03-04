@@ -7,42 +7,17 @@ It constitutes a standalone AMQP Broker and an API to write messaging applicatio
 [DoveMQ wiki](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ)
 -------------
 
-[DoveMQ samples](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-Samples)
----------------
+[Messaging and pub-sub samples](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-Samples)
+-------------------------------
 
 [Organization of the code](https://github.com/tejdas/dovemq-amqp/blob/master/code_org.md)
 --------------------------
 
+[Build and run broker](https://github.com/tejdas/dovemq-amqp/wiki/Build-and-run-DoveMQ-broker)
+----------------------
+
 [Run junit and functional tests](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-tests)
 --------------------------------
-Build the source
-----------------
-
-You need JDK 1.7 and Maven 3.x to build the code.
-
-Download the code from GitHub, build the code using maven
-
-    git clone https://github.com/tejdas/dovemq-amqp.git
-    cd dovemq
-    mvn clean assembly:assembly -DskipTests
-
-This creates a tar/zip with all the required jars that's needed to run the broker:
-
-    dovemq-1.0-SNAPSHOT-bin.tar.gz
-    dovemq-1.0-SNAPSHOT-bin.zip
-
-Run the broker
---------------
-
-a. Unzip the tar or zip that was generated in the above step.
-
-b. On Unix, run
-
-    bin/runbroker.sh
-
-  On Windows, run
-  
-    bin\runbroker.bat
 
 License
 -------
