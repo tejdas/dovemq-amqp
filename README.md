@@ -13,6 +13,8 @@ It constitutes a standalone AMQP Broker and an API to write messaging applicatio
 [Organization of the code](https://github.com/tejdas/dovemq-amqp/blob/master/code_org.md)
 --------------------------
 
+[Run junit and functional tests](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-tests)
+--------------------------------
 Build the source
 ----------------
 
