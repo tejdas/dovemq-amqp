@@ -72,7 +72,7 @@ public class ProducerTest
                 });
             }
 
-            String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/build.xml";
+            String sourceName = "build.xml";
 
             int messagesSent = 0;
             try

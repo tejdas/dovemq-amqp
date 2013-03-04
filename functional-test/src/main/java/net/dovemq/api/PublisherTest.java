@@ -83,7 +83,7 @@ public class PublisherTest
                 Thread.currentThread().interrupt();
             }
 
-            String sourceName = System.getenv("DOVEMQ_TEST_DIR") + "/" + fileName;
+            String sourceName = fileName;
             int messagesSent = 0;
             for (int i = 0; i < numIterations; i++)
             {

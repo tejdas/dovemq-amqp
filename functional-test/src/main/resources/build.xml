@@ -24,21 +24,7 @@
 		</fileset>
 	</path>
 
-	<target name="init" depends="clean">
-		<mkdir dir="${lib}" />
-		<copy file="${mvn.repo.dir}/commons-lang/commons-lang/2.5/commons-lang-2.5.jar" todir="${lib}" />
-		<copy file="${mvn.repo.dir}/io/netty/netty/3.5.8.Final/netty-3.5.8.Final.jar" todir="${lib}" />
-		<copy file="${mvn.repo.dir}/log4j/log4j/1.2.15/log4j-1.2.15.jar" todir="${lib}" />
-		<copy file="${dovemq.jars.dir}/dovemq/${dovemq.version}/dovemq-${dovemq.version}.jar" todir="${lib}" />
-		<copy file="${dovemq.jars.dir}/dovemq-functional-test/${dovemq.version}/dovemq-functional-test-${dovemq.version}.jar" todir="${lib}" />
-		<copy file="${mvn.repo.dir}/junit/junit/4.8.1/junit-4.8.1.jar" todir="${lib}" />
-	</target>
-
 	<target name="usage" description="How to run DoveMQ functional tests">
-		<echo>To run one functional test:</echo>
-		<echo>ant -Dbroker.ip=FullyQualifiedHostName testName -Dparam1=foo -Dparam2=bar ...</echo>
-		<echo>Example:</echo>
-		<echo>ant -Dbroker.ip=192.168.1.105 SessionTestIOFlowControl</echo>
 		<echo>To run all Connection tests:</echo>
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName ConnectionTest</echo>
 		<echo>To run all Session tests:</echo>
@@ -47,15 +33,13 @@
 		<echo>ant -Dbroker.ip=FullyQualifiedHostName LinkTest</echo>
 		<echo>To run Functional test server standalone:</echo>
 		<echo>ant RunDoveMQBroker</echo>
-		<echo>To run DoveMQ Broker:</echo>
-		<echo>ant RunDoveMQFullBroker</echo>
 	</target>
 
 	<target name="clean" description="clean up">
 		<delete dir="${lib}" />
 	</target>
 
-	<target name="RunDoveMQBroker" depends="init">
+	<target name="RunDoveMQBroker">
 		<echo>...Starting DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.transport.common.DoveMQTestJMXServer" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
@@ -68,7 +52,7 @@
 		</java>
 	</target>
 
-	<target name="RunDoveMQFullBroker" depends="init">
+	<target name="RunDoveMQFullBroker">
 		<echo>...Starting DoveMQ Broker</echo>
 		<java fork="true" classname="net.dovemq.broker.driver.DoveMQBrokerDriver" maxmemory="2048M" failonerror="true">
 			<!-- Enable the following two arguments for remote debugging
@@ -651,7 +635,7 @@
 			<antcall target="RunPublisherWithLessMemory">
 				<param name="endpointName" value="pub2" />
 				<param name="topicName" value="second" />
-				<param name="fileName" value="err.txt" />
+				<param name="fileName" value="build.xml" />
 				<param name="numIterations" value="1" />
 				<param name="numPublishers" value="1" />
 			</antcall>
