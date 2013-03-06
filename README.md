@@ -5,19 +5,14 @@ DoveMQ is an [AMQP 1.0](http://www.amqp.org) based messaging framework, written 
 It constitutes a standalone AMQP Broker and an API to write messaging applications.
 
 [DoveMQ: A tour of API](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ)
------------------------
 
 [Messaging and pub-sub samples](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-Samples)
--------------------------------
 
 [Organization of the code](https://github.com/tejdas/dovemq-amqp/blob/master/code_org.md)
---------------------------
 
 [Build and run broker](https://github.com/tejdas/dovemq-amqp/wiki/Build-and-run-DoveMQ-broker)
-----------------------
 
 [Run junit and functional tests](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-tests)
---------------------------------
 
 License
 -------
