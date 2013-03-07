@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.data.CAMQPControlAttach;
 import net.dovemq.transport.protocol.data.CAMQPControlDetach;
+import net.dovemq.transport.utils.CAMQPQueuedContext;
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
@@ -38,26 +39,6 @@ enum Event {
     SEND_DETACH, // API
     RECEIVED_DETACH, // From Peer
     SESSION_UNMAPPED // From Session layer
-}
-
-class QueuedContext {
-    Event getEvent() {
-        return event;
-    }
-
-    Object getContext() {
-        return context;
-    }
-
-    QueuedContext(Event event, Object context) {
-        super();
-        this.event = event;
-        this.context = context;
-    }
-
-    private final Event event;
-
-    private final Object context;
 }
 
 /**
@@ -85,7 +66,7 @@ final class CAMQPLinkStateActor {
 
     private boolean processingQueuedEvents = false;
 
-    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<>();
+    private final Queue<CAMQPQueuedContext<Event>> queuedEvents = new ConcurrentLinkedQueue<>();
 
     private volatile State currentState = State.DETACHED;
 
@@ -98,7 +79,7 @@ final class CAMQPLinkStateActor {
     }
 
     void sendAttach(CAMQPControlAttach attachContext) {
-        queuedEvents.add(new QueuedContext(Event.SEND_ATTACH, new CAMQPLinkControlInfo(attachContext)));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_ATTACH, new CAMQPLinkControlInfo(attachContext)));
         processEvents();
     }
 
@@ -114,7 +95,7 @@ final class CAMQPLinkStateActor {
     }
 
     void sendDetach(CAMQPControlDetach detachContext) {
-        queuedEvents.add(new QueuedContext(Event.SEND_DETACH, new CAMQPLinkControlInfo(detachContext)));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_DETACH, new CAMQPLinkControlInfo(detachContext)));
         processEvents();
     }
 
@@ -134,22 +115,22 @@ final class CAMQPLinkStateActor {
     }
 
     void attachReceived(CAMQPControlAttach data) {
-        queuedEvents.add(new QueuedContext(Event.RECEIVED_ATTACH, new CAMQPLinkControlInfo(data)));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.RECEIVED_ATTACH, new CAMQPLinkControlInfo(data)));
         processEvents();
     }
 
     void detachReceived(CAMQPControlDetach data) {
-        queuedEvents.add(new QueuedContext(Event.RECEIVED_DETACH, new CAMQPLinkControlInfo(data)));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.RECEIVED_DETACH, new CAMQPLinkControlInfo(data)));
         processEvents();
     }
 
     void sessionAbruptlyEnded() {
-        queuedEvents.add(new QueuedContext(Event.SESSION_UNMAPPED, null));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.SESSION_UNMAPPED, null));
         processEvents();
     }
 
     @GuardedBy("this")
-    private void preProcessAttachReceived(QueuedContext contextToProcess) {
+    private void preProcessAttachReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPLinkControlInfo attachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         if (currentState == State.DETACHED) {
             attachContext.isInitiator = false;
@@ -160,7 +141,7 @@ final class CAMQPLinkStateActor {
         }
     }
 
-    private QueuedContext processAttachReceived(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processAttachReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPLinkControlInfo attachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         synchronized (this) {
             if (attachContext.isInitiator && (currentState == State.ATTACH_SENT)) {
@@ -182,7 +163,7 @@ final class CAMQPLinkStateActor {
     }
 
     @GuardedBy("this")
-    private void preProcessSendAttach(QueuedContext contextToProcess) {
+    private void preProcessSendAttach(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPLinkControlInfo attachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         if (currentState == State.DETACHED) {
             attachContext.isInitiator = true;
@@ -192,7 +173,7 @@ final class CAMQPLinkStateActor {
         }
     }
 
-    private QueuedContext processSendAttach(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processSendAttach(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPLinkControlInfo attachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlAttach.encode(encoder, (CAMQPControlAttach) attachContext.data);
@@ -220,7 +201,7 @@ final class CAMQPLinkStateActor {
     }
 
     @GuardedBy("this")
-    private void preProcessDetachReceived(QueuedContext contextToProcess) {
+    private void preProcessDetachReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPLinkControlInfo detachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         if (currentState == State.ATTACHED) {
             currentState = State.DETACH_RCVD;
@@ -230,7 +211,7 @@ final class CAMQPLinkStateActor {
         }
     }
 
-    QueuedContext processDetachReceived(QueuedContext contextToProcess) {
+    CAMQPQueuedContext<Event> processDetachReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPLinkControlInfo detachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         synchronized (this) {
             if (detachContext.isInitiator && (currentState == State.DETACH_SENT)) {
@@ -251,7 +232,7 @@ final class CAMQPLinkStateActor {
     }
 
     @GuardedBy("this")
-    private void preProcessSendDetach(QueuedContext contextToProcess) {
+    private void preProcessSendDetach(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPLinkControlInfo detachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         if (currentState == State.ATTACHED) {
             detachContext.isInitiator = true;
@@ -261,7 +242,7 @@ final class CAMQPLinkStateActor {
         }
     }
 
-    private QueuedContext processSendDetach(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processSendDetach(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPLinkControlInfo detachContext = (CAMQPLinkControlInfo) contextToProcess.getContext();
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlDetach.encode(encoder, (CAMQPControlDetach) detachContext.data);
@@ -287,20 +268,20 @@ final class CAMQPLinkStateActor {
     }
 
     @GuardedBy("this")
-    private void preProcessSessionUnmapped(QueuedContext contextToProcess) {
+    private void preProcessSessionUnmapped(CAMQPQueuedContext<Event> contextToProcess) {
         log.debug("Session: + detached abruptly");
         processingQueuedEvents = false;
         queuedEvents.clear();
         currentState = State.DETACHED;
     }
 
-    private QueuedContext processSessionUnmapped(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processSessionUnmapped(CAMQPQueuedContext<Event> contextToProcess) {
         return null;
     }
 
     private void processEvents() {
         boolean firstPass = true;
-        QueuedContext contextToProcess = null;
+        CAMQPQueuedContext<Event> contextToProcess = null;
         while (true) {
             if (firstPass) {
                 firstPass = false;
@@ -325,7 +306,7 @@ final class CAMQPLinkStateActor {
     /*
      * Process current event and return next event off the queue
      */
-    private QueuedContext processEvent(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processEvent(CAMQPQueuedContext<Event> contextToProcess) {
         if (contextToProcess == null) {
             return null;
         }
@@ -350,14 +331,14 @@ final class CAMQPLinkStateActor {
     }
 
     @GuardedBy("this")
-    private QueuedContext getNextEvent() {
+    private CAMQPQueuedContext<Event> getNextEvent() {
         while (true) {
             if (queuedEvents.isEmpty()) {
                 processingQueuedEvents = false;
                 return null;
             }
 
-            QueuedContext contextToProcess = queuedEvents.remove();
+            CAMQPQueuedContext<Event> contextToProcess = queuedEvents.remove();
             if (checkCurrentState(contextToProcess.getEvent())) {
                 processPreCondition(contextToProcess);
                 return contextToProcess;
@@ -394,7 +375,7 @@ final class CAMQPLinkStateActor {
     }
 
     @GuardedBy("this")
-    private void processPreCondition(QueuedContext contextToProcess) {
+    private void processPreCondition(CAMQPQueuedContext<Event> contextToProcess) {
         Event eventToBeProcessed = contextToProcess.getEvent();
         if (eventToBeProcessed == Event.RECEIVED_ATTACH) {
             preProcessAttachReceived(contextToProcess);

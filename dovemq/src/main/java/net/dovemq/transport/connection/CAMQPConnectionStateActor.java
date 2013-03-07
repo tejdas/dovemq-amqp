@@ -27,8 +27,8 @@ import net.dovemq.transport.frame.CAMQPFrameHeaderCodec;
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.data.CAMQPControlClose;
 import net.dovemq.transport.protocol.data.CAMQPControlOpen;
+import net.dovemq.transport.utils.CAMQPQueuedContext;
 import net.jcip.annotations.GuardedBy;
-import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
@@ -55,27 +55,6 @@ enum Event {
 
 enum State {
     START, HDR_RCVD, HDR_SENT, HDR_EXCH, OPEN_RCVD, OPEN_SENT, OPEN_PIPE, CLOSE_PIPE, OC_PIPE, OPENED, CLOSE_RCVD, CLOSE_SENT, END
-}
-
-@Immutable
-final class QueuedContext {
-    Event getEvent() {
-        return event;
-    }
-
-    Object getContext() {
-        return context;
-    }
-
-    QueuedContext(Event event, Object context) {
-        super();
-        this.event = event;
-        this.context = context;
-    }
-
-    private final Event event;
-
-    private final Object context;
 }
 
 /**
@@ -120,9 +99,9 @@ class CAMQPConnectionStateActor {
         return receivedConnectionHeaderBytes;
     }
 
-    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<>();
+    private final Queue<CAMQPQueuedContext<Event>> queuedEvents = new ConcurrentLinkedQueue<>();
 
-    private final Queue<QueuedContext> queuedGeneratedEvents = new ConcurrentLinkedQueue<>();
+    private final Queue<CAMQPQueuedContext<Event>> queuedGeneratedEvents = new ConcurrentLinkedQueue<>();
 
     @GuardedBy("this")
     private State currentState = State.START;
@@ -146,7 +125,7 @@ class CAMQPConnectionStateActor {
         synchronized (this) {
             this.connectionProps = connectionProps;
         }
-        queuedEvents.add(new QueuedContext(Event.SEND_CONN_HEADER_REQUESTED, null));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_CONN_HEADER_REQUESTED, null));
         processEvents();
     }
 
@@ -162,27 +141,27 @@ class CAMQPConnectionStateActor {
     }
 
     void sendOpenControl(CAMQPControlOpen openControlData) {
-        queuedEvents.add(new QueuedContext(Event.SEND_OPEN_REQUESTED, openControlData));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_OPEN_REQUESTED, openControlData));
         processEvents();
     }
 
     void sendCloseControl() {
-        queuedEvents.add(new QueuedContext(Event.SEND_CLOSE_REQUESTED, new CAMQPControlClose()));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_CLOSE_REQUESTED, new CAMQPControlClose()));
         processEvents();
     }
 
     void notifyHeartbeatDelay() {
-        queuedGeneratedEvents.add(new QueuedContext(Event.HEARTBEAT_DELAYED, null));
+        queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.HEARTBEAT_DELAYED, null));
         processEvents();
     }
 
     void openControlReceived(CAMQPControlOpen peerConnectionProps) {
-        queuedEvents.add(new QueuedContext(Event.OPEN_RECEIVED, peerConnectionProps));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.OPEN_RECEIVED, peerConnectionProps));
         processEvents();
     }
 
     void closeControlReceived(CAMQPControlClose closeContext) {
-        queuedEvents.add(new QueuedContext(Event.CLOSE_RECEIVED, closeContext));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.CLOSE_RECEIVED, closeContext));
         processEvents();
     }
 
@@ -192,12 +171,12 @@ class CAMQPConnectionStateActor {
 
     void connectionHeaderBytesReceived(ChannelBuffer buffer) {
         receivedConnectionHeaderBytes = true;
-        queuedEvents.add(new QueuedContext(Event.CONN_HDR_BYTES_RECEIVED, buffer));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.CONN_HDR_BYTES_RECEIVED, buffer));
         processEvents();
     }
 
     void disconnectReceived() {
-        queuedGeneratedEvents.add(new QueuedContext(Event.CONNECTION_ABORTED, null));
+        queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.CONNECTION_ABORTED, null));
         processEvents();
     }
 
@@ -207,7 +186,7 @@ class CAMQPConnectionStateActor {
      */
     private void processEvents() {
         boolean firstPass = true;
-        QueuedContext contextToProcess = null;
+        CAMQPQueuedContext<Event> contextToProcess = null;
         while (true) {
             if (firstPass) {
                 firstPass = false;
@@ -270,7 +249,7 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processSendConnHeaderRequested(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processSendConnHeaderRequested(CAMQPQueuedContext<Event> contextToProcess) {
         byte[] amqpHeader = CAMQPHeaderUtil.composeAMQPHeader();
         sender.sendBuffer(ChannelBuffers.wrappedBuffer(amqpHeader), CAMQPFrameConstants.FRAME_TYPE_CONNECTION);
         synchronized (this) {
@@ -285,7 +264,7 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processSendConnHeader(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processSendConnHeader(CAMQPQueuedContext<Event> contextToProcess) {
         byte[] amqpHeader = CAMQPHeaderUtil.composeAMQPHeader();
         sender.sendBuffer(ChannelBuffers.wrappedBuffer(amqpHeader), CAMQPFrameConstants.FRAME_TYPE_CONNECTION);
         synchronized (this) {
@@ -294,10 +273,10 @@ class CAMQPConnectionStateActor {
 
                 CAMQPControlOpen controlOpen = initializeControlOpen(CAMQPConnectionManager.getContainerId());
 
-                queuedGeneratedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
+                queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_OPEN, controlOpen));
             }
             else if (currentState == State.END) {
-                queuedGeneratedEvents.add(new QueuedContext(Event.CLOSED, null));
+                queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.CLOSED, null));
             }
             else {
                 log.error("Connection is in bad state: " + currentState);
@@ -307,17 +286,17 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processConnHdrBytesReceived(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processConnHdrBytesReceived(CAMQPQueuedContext<Event> contextToProcess) {
         ChannelBuffer buffer = (ChannelBuffer) contextToProcess.getContext();
         byte[] receivedAMQPHeader = new byte[buffer.readableBytes()];
         buffer.getBytes(0, receivedAMQPHeader);
 
         if (CAMQPHeaderUtil.validateAMQPHeader(receivedAMQPHeader)) {
-            queuedGeneratedEvents.add(new QueuedContext(Event.CONN_HEADER_RECEIVED, null));
+            queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.CONN_HEADER_RECEIVED, null));
         }
         else {
             log.error("MalformedHeader received: " + new String(receivedAMQPHeader));
-            queuedGeneratedEvents.add(new QueuedContext(Event.MALFORMED_CONN_HEADER_RECEIVED, null));
+            queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.MALFORMED_CONN_HEADER_RECEIVED, null));
         }
 
         synchronized (this) {
@@ -326,16 +305,16 @@ class CAMQPConnectionStateActor {
     }
 
     @GuardedBy("this")
-    private void processPreconditionConnHeaderReceived(QueuedContext contextToProcess) {
+    private void processPreconditionConnHeaderReceived(CAMQPQueuedContext<Event> contextToProcess) {
         if (currentState == State.START) {
             currentState = State.HDR_RCVD;
-            queuedGeneratedEvents.add(new QueuedContext(Event.SEND_CONN_HEADER, null));
+            queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_CONN_HEADER, null));
         }
         else if (currentState == State.HDR_SENT) {
             CAMQPControlOpen controlOpen = initializeControlOpen(CAMQPConnectionManager.getContainerId());
 
             currentState = State.HDR_EXCH;
-            queuedGeneratedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
+            queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_OPEN, controlOpen));
         }
         else if (currentState == State.OPEN_PIPE) {
             currentState = State.OPEN_SENT;
@@ -351,19 +330,19 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processMalformedConnHeaderReceived(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processMalformedConnHeaderReceived(CAMQPQueuedContext<Event> contextToProcess) {
         if (!isInitiator) {
             byte[] amqpHeader = CAMQPHeaderUtil.composeAMQPHeader();
             sender.sendBuffer(ChannelBuffers.wrappedBuffer(amqpHeader), CAMQPFrameConstants.FRAME_TYPE_CONNECTION);
         }
         synchronized (this) {
             currentState = State.END;
-            queuedGeneratedEvents.add(new QueuedContext(Event.CLOSED, null));
+            queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.CLOSED, null));
             return getNextEvent();
         }
     }
 
-    private QueuedContext processSendOpenRequested(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processSendOpenRequested(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlOpen.encode(encoder, (CAMQPControlOpen) contextToProcess.getContext());
         ChannelBuffer encodedControl = encoder.getEncodedBuffer();
@@ -386,7 +365,7 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processSendOpen(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processSendOpen(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlOpen.encode(encoder, (CAMQPControlOpen) contextToProcess.getContext());
         ChannelBuffer encodedControl = encoder.getEncodedBuffer();
@@ -403,7 +382,7 @@ class CAMQPConnectionStateActor {
             }
             else if (currentState == State.OPEN_RCVD) {
                 currentState = State.OPENED;
-                queuedGeneratedEvents.add(new QueuedContext(Event.OPENED, null));
+                queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.OPENED, null));
             }
             else {
                 log.error("Connection is in bad state: " + currentState);
@@ -413,7 +392,7 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processOpened(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processOpened(CAMQPQueuedContext<Event> contextToProcess) {
         if (!isInitiator) {
             CAMQPConnectionManager.connectionAccepted(this, key);
         }
@@ -428,7 +407,7 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processOpenReceived(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processOpenReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPControlOpen peerOpenControlData = (CAMQPControlOpen) contextToProcess.getContext();
         key.setRemoteContainerId(peerOpenControlData.getContainerId());
         synchronized (this) {
@@ -437,11 +416,11 @@ class CAMQPConnectionStateActor {
                 CAMQPControlOpen controlOpen = initializeControlOpen(CAMQPConnectionManager.getContainerId());
 
                 currentState = State.OPEN_RCVD;
-                queuedGeneratedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
+                queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_OPEN, controlOpen));
             }
             else if (currentState == State.OPEN_SENT) {
                 currentState = State.OPENED;
-                queuedGeneratedEvents.add(new QueuedContext(Event.OPENED, null));
+                queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.OPENED, null));
             }
             else if (currentState == State.CLOSE_PIPE) {
                 currentState = State.CLOSE_SENT;
@@ -451,7 +430,7 @@ class CAMQPConnectionStateActor {
                 CAMQPControlOpen controlOpen = initializeControlOpen(CAMQPConnectionManager.getContainerId());
 
                 currentState = State.OPEN_RCVD;
-                queuedGeneratedEvents.add(new QueuedContext(Event.SEND_OPEN, controlOpen));
+                queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_OPEN, controlOpen));
             }
             else {
                 log.fatal("Incorrect state detected: currentState: " + currentState + " Event to be processed: " + contextToProcess.getEvent());
@@ -460,7 +439,7 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processSendCloseRequested(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processSendCloseRequested(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlClose ctx = (CAMQPControlClose) contextToProcess.getContext();
         CAMQPControlClose.encode(encoder, ctx);
@@ -484,7 +463,7 @@ class CAMQPConnectionStateActor {
             }
             else if (currentState == State.CLOSE_RCVD) {
                 currentState = State.END;
-                queuedGeneratedEvents.add(new QueuedContext(Event.CLOSED, null));
+                queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.CLOSED, null));
             }
             else {
                 log.fatal("Incorrect state detected: currentState: " + currentState + " Event to be processed: " + contextToProcess.getEvent());
@@ -494,20 +473,20 @@ class CAMQPConnectionStateActor {
     }
 
     @GuardedBy("this")
-    private void processPreconditionCloseReceived(QueuedContext contextToProcess) {
+    private void processPreconditionCloseReceived(CAMQPQueuedContext<Event> contextToProcess) {
         if (currentState == State.OPENED) {
             currentState = State.CLOSE_RCVD;
         }
         else if (currentState == State.CLOSE_SENT) {
             currentState = State.END;
-            queuedGeneratedEvents.add(new QueuedContext(Event.CLOSED, null));
+            queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.CLOSED, null));
         }
         else {
             log.fatal("Incorrect state detected: currentState: " + currentState + " Event to be processed: " + contextToProcess.getEvent());
         }
     }
 
-    private QueuedContext processClosed(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processClosed(CAMQPQueuedContext<Event> contextToProcess) {
         cancelHeartbeat();
         sender.close();
         if (isOpenExchangeComplete()) {
@@ -518,14 +497,14 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processCloseReceived(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processCloseReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPConnectionManager.connectionCloseInitiatedByRemotePeer(key);
         synchronized (this) {
             return getNextEvent();
         }
     }
 
-    private QueuedContext processConnectionAborted(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processConnectionAborted(CAMQPQueuedContext<Event> contextToProcess) {
         cancelHeartbeat();
         if (isOpenExchangeComplete()) {
             CAMQPConnectionManager.connectionAborted(key);
@@ -535,7 +514,7 @@ class CAMQPConnectionStateActor {
         }
     }
 
-    private QueuedContext processHeartbeatDelayed(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processHeartbeatDelayed(CAMQPQueuedContext<Event> contextToProcess) {
         cancelHeartbeat();
         if (isOpenExchangeComplete()) {
             CAMQPConnectionManager.connectionAborted(key);
@@ -554,9 +533,9 @@ class CAMQPConnectionStateActor {
      * @return
      */
     @GuardedBy("this")
-    private QueuedContext getNextEvent() {
+    private CAMQPQueuedContext<Event> getNextEvent() {
         while (true) {
-            QueuedContext contextToProcess = null;
+            CAMQPQueuedContext<Event> contextToProcess = null;
             if (!queuedGeneratedEvents.isEmpty()) {
                 contextToProcess = queuedGeneratedEvents.remove();
             }
@@ -611,7 +590,7 @@ class CAMQPConnectionStateActor {
     }
 
     @GuardedBy("this")
-    private boolean processPreCondition(QueuedContext contextToProcess) {
+    private boolean processPreCondition(CAMQPQueuedContext<Event> contextToProcess) {
         Event eventToBeProcessed = contextToProcess.getEvent();
         boolean processingComplete = false;
         if (eventToBeProcessed == Event.CONN_HEADER_RECEIVED) {

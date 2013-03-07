@@ -208,7 +208,7 @@
 			<sleep seconds="5" />
 
 			<delete>
-				<fileset dir="." includes="**/foo*"/>
+				<fileset dir="." includes="**/foo*" />
 			</delete>
 
 			<antcall target="RunSessionClient">
@@ -334,7 +334,7 @@
 		</sequential>
 	</target>
 
-	<target name="LinkTestPerformance" description="running all link tests">
+	<target name="LinkPerfTest" description="running link perf tests">
 		<parallel>
 			<antcall target="RunDoveMQBroker" />
 			<sequential>
@@ -383,7 +383,6 @@
 	</target>
 
 	<target name="RunProducerFailTest">
-		<echo>...Run DoveMQ Link client</echo>
 		<java fork="true" classname="net.dovemq.api.ProducerAlreadyConnectedTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -394,7 +393,7 @@
 	</target>
 
 	<target name="RunProducer">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ Producer</echo>
 		<java fork="true" classname="net.dovemq.api.ProducerTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -402,21 +401,21 @@
 			<jvmarg value="-XX:+UseParNewGC" />
 			<jvmarg value="-Xss256k" />
 			<jvmarg value="-Xmx2048M" />
-			<jvmarg value="-Xms1536M" />			
+			<jvmarg value="-Xms1536M" />
 			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
 			<arg value="${queueNamePrefix}" />
 			<arg value="${numProducers}" />
-			<arg value="${numConsumersPerQueue}" />			
+			<arg value="${numConsumersPerQueue}" />
 			<arg value="${numIterations}" />
-			<arg value="${waitForAcks}" />			
+			<arg value="${waitForAcks}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
 
 	<target name="RunConsumer">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ Consumer</echo>
 		<java fork="true" classname="net.dovemq.api.ConsumerTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -437,7 +436,7 @@
 	</target>
 
 	<target name="RunPublisher">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ Publisher</echo>
 		<java fork="true" classname="net.dovemq.api.PublisherTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -445,7 +444,7 @@
 			<jvmarg value="-XX:+UseParNewGC" />
 			<jvmarg value="-Xss256k" />
 			<jvmarg value="-Xmx2048M" />
-			<jvmarg value="-Xms1536M" />			
+			<jvmarg value="-Xms1536M" />
 			<sysproperty key="dovemq.log" value="${basedir}/producer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
@@ -456,9 +455,9 @@
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="RunPublisherWithLessMemory">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ Publisher</echo>
 		<java fork="true" classname="net.dovemq.api.PublisherTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -473,10 +472,10 @@
 			<arg value="${numPublishers}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
-	</target>	
+	</target>
 
 	<target name="RunMTSubscriber">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ Subscriber</echo>
 		<java fork="true" classname="net.dovemq.api.SubscriberMTTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -484,7 +483,7 @@
 			<jvmarg value="-XX:+UseParNewGC" />
 			<jvmarg value="-Xss256k" />
 			<jvmarg value="-Xmx2048M" />
-			<jvmarg value="-Xms1536M" />			
+			<jvmarg value="-Xms1536M" />
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<arg value="${endpointName}" />
@@ -494,9 +493,9 @@
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="RunMTSubscriberWithLessMemory">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ Subscriber</echo>
 		<java fork="true" classname="net.dovemq.api.SubscriberMTTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -510,10 +509,10 @@
 			<arg value="${sharedSession}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
-	</target>	
+	</target>
 
 	<target name="PerMessageTopicHierarchyTest">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ PerMessageTopicHierarchyTest</echo>
 		<java fork="true" classname="net.dovemq.api.PerMessageTopicHierarchyTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -521,16 +520,16 @@
 			<jvmarg value="-XX:+UseParNewGC" />
 			<jvmarg value="-Xss256k" />
 			<jvmarg value="-Xmx2048M" />
-			<jvmarg value="-Xms1536M" />			
+			<jvmarg value="-Xms1536M" />
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
-			<arg value="10000" />			
+			<arg value="10000" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="TopicHierarchyTest">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ TopicHierarchyTest</echo>
 		<java fork="true" classname="net.dovemq.api.TopicHierarchyTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -538,16 +537,16 @@
 			<jvmarg value="-XX:+UseParNewGC" />
 			<jvmarg value="-Xss256k" />
 			<jvmarg value="-Xmx2048M" />
-			<jvmarg value="-Xms1536M" />			
+			<jvmarg value="-Xms1536M" />
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
-			<arg value="10000" />			
+			<arg value="10000" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-	
+
 	<target name="TopicRoutingTagTest">
-		<echo>...Run DoveMQ Link client</echo>
+		<echo>...Run DoveMQ TopicRoutingTagTest</echo>
 		<java fork="true" classname="net.dovemq.api.TopicTagFilterTest" maxmemory="2048M" failonerror="true">
 			<jvmarg value="-XX:+HeapDumpOnOutOfMemoryError" />
 			<jvmarg value="-XX:HeapDumpPath=${basedir}" />
@@ -555,18 +554,26 @@
 			<jvmarg value="-XX:+UseParNewGC" />
 			<jvmarg value="-Xss256k" />
 			<jvmarg value="-Xmx2048M" />
-			<jvmarg value="-Xms1536M" />			
+			<jvmarg value="-Xms1536M" />
 			<sysproperty key="dovemq.log" value="${basedir}/consumer.log" />
 			<arg value="${broker.ip}" />
 			<classpath refid="dovemq-functest-classpath" />
 		</java>
 	</target>
-				
-	<target name="TopicSimpleTest" description="running topic test">
+
+	<target name="cleanFilesForTopicTest" description="clean up">
 		<delete>
 			<fileset dir="." includes="**/sub*.txt" />
 		</delete>
+	</target>
 
+	<target name="cleanFilesForQueueTest" description="clean up">
+		<delete>
+			<fileset dir="." includes="**/consumer*.txt" />
+		</delete>
+	</target>
+
+	<target name="TopicSimpleTest" description="running topic simple test" depends="cleanFilesForTopicTest">
 		<parallel>
 			<antcall target="RunMTSubscriberWithLessMemory">
 				<param name="endpointName" value="sub1" />
@@ -643,11 +650,7 @@
 		</parallel>
 	</target>
 
-	<target name="QueueTestProducerBeforeConsumer" description="run MT queue test">
-		<delete>
-			<fileset dir="." includes="**/consumer*.txt" />
-		</delete>
-
+	<target name="QueueTestProducerBeforeConsumer" description="run QueueTestProducerBeforeConsumer" depends="cleanFilesForQueueTest">
 		<sequential>
 			<antcall target="RunProducer">
 				<param name="endpointName" value="producer" />
@@ -655,30 +658,47 @@
 				<param name="numProducers" value="1" />
 				<param name="numConsumersPerQueue" value="2" />
 				<param name="numIterations" value="1" />
-				<param name="waitForAcks" value="false" />				
+				<param name="waitForAcks" value="false" />
 			</antcall>
 
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
 				<param name="queueNamePrefix" value="first" />
-				<param name="numProducers" value="1" />				
-				<param name="numConsumersPerQueue" value="2" />				
+				<param name="numProducers" value="1" />
+				<param name="numConsumersPerQueue" value="2" />
 				<param name="ackExplicit" value="false" />
 			</antcall>
 		</sequential>
 	</target>
-		
-	<target name="QueueMTTest" description="run MT queue test">
-		<delete>
-			<fileset dir="." includes="**/consumer*.txt" />
-		</delete>
 
+	<target name="QueueMTTest" description="runQueueMTTest" depends="cleanFilesForQueueTest">
 		<parallel>
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
 				<param name="queueNamePrefix" value="first" />
-				<param name="numProducers" value="16" />				
-				<param name="numConsumersPerQueue" value="1" />				
+				<param name="numProducers" value="4" />
+				<param name="numConsumersPerQueue" value="1" />
+				<param name="ackExplicit" value="false" />
+			</antcall>
+
+			<antcall target="RunProducer">
+				<param name="endpointName" value="producer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="4" />
+				<param name="numConsumersPerQueue" value="1" />
+				<param name="numIterations" value="10" />
+				<param name="waitForAcks" value="true" />
+			</antcall>
+		</parallel>
+	</target>
+
+	<target name="QueueMTPerfTest" description="runQueueMTPerfTest" depends="cleanFilesForQueueTest">
+		<parallel>
+			<antcall target="RunConsumer">
+				<param name="endpointName" value="consumer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="16" />
+				<param name="numConsumersPerQueue" value="1" />
 				<param name="ackExplicit" value="false" />
 			</antcall>
 
@@ -688,22 +708,39 @@
 				<param name="numProducers" value="16" />
 				<param name="numConsumersPerQueue" value="1" />
 				<param name="numIterations" value="40" />
-				<param name="waitForAcks" value="true" />				
+				<param name="waitForAcks" value="true" />
 			</antcall>
 		</parallel>
 	</target>
-	
-	<target name="QueueMTRoundRobinTest" description="run MT queue test">
-		<delete>
-			<fileset dir="." includes="**/consumer*.txt" />
-		</delete>
 
+	<target name="QueueMTRoundRobinTest" description="run QueueMTRoundRobinTest" depends="cleanFilesForQueueTest">
 		<parallel>
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
 				<param name="queueNamePrefix" value="first" />
-				<param name="numProducers" value="8" />		
-				<param name="numConsumersPerQueue" value="8" />					
+				<param name="numProducers" value="4" />
+				<param name="numConsumersPerQueue" value="4" />
+				<param name="ackExplicit" value="false" />
+			</antcall>
+
+			<antcall target="RunProducer">
+				<param name="endpointName" value="producer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="4" />
+				<param name="numConsumersPerQueue" value="4" />
+				<param name="numIterations" value="10" />
+				<param name="waitForAcks" value="true" />
+			</antcall>
+		</parallel>
+	</target>
+
+	<target name="QueueMTRoundRobinPerfTest" description="run QueueMTRoundRobinPerfTest" depends="cleanFilesForQueueTest">
+		<parallel>
+			<antcall target="RunConsumer">
+				<param name="endpointName" value="consumer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="8" />
+				<param name="numConsumersPerQueue" value="8" />
 				<param name="ackExplicit" value="false" />
 			</antcall>
 
@@ -711,24 +748,41 @@
 				<param name="endpointName" value="producer" />
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="8" />
-				<param name="numConsumersPerQueue" value="8" />	
+				<param name="numConsumersPerQueue" value="8" />
 				<param name="numIterations" value="40" />
-				<param name="waitForAcks" value="true" />				
+				<param name="waitForAcks" value="true" />
 			</antcall>
 		</parallel>
-	</target>	
-	
-	<target name="QueueMTAckExplicitTest" description="run MT queue test">
-		<delete>
-			<fileset dir="." includes="**/consumer*.txt" />
-		</delete>
+	</target>
 
+	<target name="QueueMTAckExplicitTest" description="run QueueMTAckExplicitTest" depends="cleanFilesForQueueTest">
 		<parallel>
 			<antcall target="RunConsumer">
 				<param name="endpointName" value="consumer" />
 				<param name="queueNamePrefix" value="first" />
-				<param name="numProducers" value="16" />		
-				<param name="numConsumersPerQueue" value="1" />					
+				<param name="numProducers" value="4" />
+				<param name="numConsumersPerQueue" value="1" />
+				<param name="ackExplicit" value="true" />
+			</antcall>
+
+			<antcall target="RunProducer">
+				<param name="endpointName" value="producer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="4" />
+				<param name="numConsumersPerQueue" value="1" />
+				<param name="numIterations" value="10" />
+				<param name="waitForAcks" value="true" />
+			</antcall>
+		</parallel>
+	</target>
+
+	<target name="QueueMTAckExplicitPerfTest" description="run QueueMTAckExplicitPerfTest" depends="cleanFilesForQueueTest">
+		<parallel>
+			<antcall target="RunConsumer">
+				<param name="endpointName" value="consumer" />
+				<param name="queueNamePrefix" value="first" />
+				<param name="numProducers" value="16" />
+				<param name="numConsumersPerQueue" value="1" />
 				<param name="ackExplicit" value="true" />
 			</antcall>
 
@@ -736,18 +790,33 @@
 				<param name="endpointName" value="producer" />
 				<param name="queueNamePrefix" value="first" />
 				<param name="numProducers" value="16" />
-				<param name="numConsumersPerQueue" value="1" />	
+				<param name="numConsumersPerQueue" value="1" />
 				<param name="numIterations" value="20" />
-				<param name="waitForAcks" value="true" />				
+				<param name="waitForAcks" value="true" />
 			</antcall>
 		</parallel>
 	</target>
-		
-	<target name="TopicMTTest" description="running MT topic test">
-		<delete>
-			<fileset dir="." includes="**/sub*.txt" />
-		</delete>
 
+	<target name="TopicMTTest" description="running TopicMTTest" depends="cleanFilesForTopicTest">
+		<parallel>
+			<antcall target="RunMTSubscriber">
+				<param name="endpointName" value="sub1" />
+				<param name="topicName" value="first" />
+				<param name="numThreads" value="4" />
+				<param name="sharedSession" value="false" />
+			</antcall>
+
+			<antcall target="RunPublisher">
+				<param name="endpointName" value="pub" />
+				<param name="topicName" value="first" />
+				<param name="fileName" value="build.xml" />
+				<param name="numIterations" value="4" />
+				<param name="numPublishers" value="4" />
+			</antcall>
+		</parallel>
+	</target>
+
+	<target name="TopicMTPerfTest" description="running TopicMTPerfTest" depends="cleanFilesForTopicTest">
 		<parallel>
 			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub1" />
@@ -766,11 +835,26 @@
 		</parallel>
 	</target>
 
-	<target name="TopicMTSharedSessionTest" description="running MT topic test">
-		<delete>
-			<fileset dir="." includes="**/sub*.txt"/>
-		</delete>
+	<target name="TopicMTSharedSessionTest" description="running TopicMTSharedSessionTest" depends="cleanFilesForTopicTest">
+		<parallel>
+			<antcall target="RunMTSubscriber">
+				<param name="endpointName" value="sub1" />
+				<param name="topicName" value="first" />
+				<param name="numThreads" value="8" />
+				<param name="sharedSession" value="true" />
+			</antcall>
 
+			<antcall target="RunPublisher">
+				<param name="endpointName" value="pub" />
+				<param name="topicName" value="first" />
+				<param name="fileName" value="build.xml" />
+				<param name="numIterations" value="10" />
+				<param name="numPublishers" value="4" />
+			</antcall>
+		</parallel>
+	</target>
+
+	<target name="TopicMTSharedSessionPerfTest" description="running TopicMTSharedSessionPerfTest" depends="cleanFilesForTopicTest">
 		<parallel>
 			<antcall target="RunMTSubscriber">
 				<param name="endpointName" value="sub1" />
@@ -788,25 +872,40 @@
 			</antcall>
 		</parallel>
 	</target>
-	
-	<target name="TopicTest" description="running topic tests">
+
+	<target name="TopicTest" description="running all topic tests">
 		<sequential>
-			<antcall target="TopicSimpleTest"/>
-			<antcall target="TopicMTTest"/>
-			<antcall target="TopicMTSharedSessionTest"/>
-			<antcall target="TopicHierarchyTest"/>
-			<antcall target="PerMessageTopicHierarchyTest"/>
-			<antcall target="TopicRoutingTagTest"/>			
+			<antcall target="TopicSimpleTest" />
+			<antcall target="TopicMTTest" />
+			<antcall target="TopicMTSharedSessionTest" />
+			<antcall target="TopicHierarchyTest" />
+			<antcall target="PerMessageTopicHierarchyTest" />
+			<antcall target="TopicRoutingTagTest" />
 		</sequential>
 	</target>
-	
-	<target name="QueueTest" description="running queue tests">
+
+	<target name="TopicPerfTest" description="running all topic perf tests">
 		<sequential>
-			<antcall target="RunProducerFailTest"/>
-			<antcall target="QueueTestProducerBeforeConsumer"/>			
-			<antcall target="QueueMTTest"/>
-			<antcall target="QueueMTRoundRobinTest"/>
-			<antcall target="QueueMTAckExplicitTest"/>
+			<antcall target="TopicMTPerfTest" />
+			<antcall target="TopicMTSharedSessionPerfTest" />
+		</sequential>
+	</target>
+
+	<target name="QueueTest" description="running all queue tests">
+		<sequential>
+			<antcall target="RunProducerFailTest" />
+			<antcall target="QueueTestProducerBeforeConsumer" />
+			<antcall target="QueueMTTest" />
+			<antcall target="QueueMTRoundRobinTest" />
+			<antcall target="QueueMTAckExplicitTest" />
+		</sequential>
+	</target>
+
+	<target name="QueuePerfTest" description="running all queue perf tests">
+		<sequential>
+			<antcall target="QueueMTPerfTest" />
+			<antcall target="QueueMTRoundRobinPerfTest" />
+			<antcall target="QueueMTAckExplicitPerfTest" />
 		</sequential>
 	</target>
 </project>

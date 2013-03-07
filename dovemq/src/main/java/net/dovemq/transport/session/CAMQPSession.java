@@ -154,7 +154,7 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
     private boolean sendInProgress = false;
 
     @GuardedBy("this")
-    private ConcurrentLinkedQueue<Transfer> unsentTransfers = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Transfer> unsentTransfers = new ConcurrentLinkedQueue<>();
 
     /*
      * Flow control state

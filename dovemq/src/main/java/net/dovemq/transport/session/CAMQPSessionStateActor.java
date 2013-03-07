@@ -24,6 +24,7 @@ import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.protocol.CAMQPEncoder;
 import net.dovemq.transport.protocol.data.CAMQPControlBegin;
 import net.dovemq.transport.protocol.data.CAMQPControlEnd;
+import net.dovemq.transport.utils.CAMQPQueuedContext;
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
@@ -43,26 +44,6 @@ enum Event {
     // From Connection layer
 }
 
-class QueuedContext {
-    Event getEvent() {
-        return event;
-    }
-
-    Object getContext() {
-        return context;
-    }
-
-    QueuedContext(Event event, Object context) {
-        super();
-        this.event = event;
-        this.context = context;
-    }
-
-    private final Event event;
-
-    private final Object context;
-}
-
 /**
  * Acts on various state changes in AMQP session.
  *
@@ -76,7 +57,7 @@ class CAMQPSessionStateActor {
 
     private boolean processingQueuedEvents = false;
 
-    private final Queue<QueuedContext> queuedEvents = new ConcurrentLinkedQueue<>();
+    private final Queue<CAMQPQueuedContext<Event>> queuedEvents = new ConcurrentLinkedQueue<>();
 
     private State currentState = State.UNMAPPED;
 
@@ -93,7 +74,7 @@ class CAMQPSessionStateActor {
     }
 
     void sendBegin(CAMQPSessionControlWrapper beginContext) {
-        queuedEvents.add(new QueuedContext(Event.SEND_BEGIN, beginContext));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_BEGIN, beginContext));
         processEvents();
     }
 
@@ -109,7 +90,7 @@ class CAMQPSessionStateActor {
     }
 
     void sendEnd(CAMQPSessionControlWrapper endContext) {
-        queuedEvents.add(new QueuedContext(Event.SEND_END, endContext));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.SEND_END, endContext));
         processEvents();
     }
 
@@ -125,28 +106,28 @@ class CAMQPSessionStateActor {
     }
 
     void beginReceived(CAMQPSessionControlWrapper data) {
-        queuedEvents.add(new QueuedContext(Event.RECEIVED_BEGIN, data));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.RECEIVED_BEGIN, data));
         processEvents();
     }
 
     void endReceived(CAMQPControlEnd data) {
-        queuedEvents.add(new QueuedContext(Event.RECEIVED_END, new CAMQPSessionControlWrapper(data)));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.RECEIVED_END, new CAMQPSessionControlWrapper(data)));
         processEvents();
     }
 
     void channelAbruptlyDetached() {
-        queuedEvents.add(new QueuedContext(Event.CHANNEL_DETACHED, null));
+        queuedEvents.add(new CAMQPQueuedContext<Event>(Event.CHANNEL_DETACHED, null));
         processEvents();
     }
 
     @GuardedBy("this")
-    private void preProcessBeginReceived(QueuedContext contextToProcess) {
+    private void preProcessBeginReceived(CAMQPQueuedContext<Event> contextToProcess) {
         if (currentState == State.UNMAPPED) {
             currentState = State.BEGIN_RCVD;
         }
     }
 
-    private QueuedContext processBeginReceived(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processBeginReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPSessionControlWrapper beginContext = (CAMQPSessionControlWrapper) contextToProcess.getContext();
         CAMQPControlBegin beginControl = (CAMQPControlBegin) beginContext.getSessionControl();
         boolean isInitiator = isSessionInitiator(beginControl);
@@ -165,7 +146,7 @@ class CAMQPSessionStateActor {
         }
     }
 
-    private QueuedContext processSendBegin(QueuedContext contextToProcess, CAMQPConnectionInterface attachedConnection) {
+    private CAMQPQueuedContext<Event> processSendBegin(CAMQPQueuedContext<Event> contextToProcess, CAMQPConnectionInterface attachedConnection) {
         CAMQPSessionControlWrapper beginContext = (CAMQPSessionControlWrapper) contextToProcess.getContext();
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
 
@@ -193,7 +174,7 @@ class CAMQPSessionStateActor {
     }
 
     @GuardedBy("this")
-    private void preProcessEndReceived(QueuedContext contextToProcess) {
+    private void preProcessEndReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPSessionControlWrapper data = (CAMQPSessionControlWrapper) contextToProcess.getContext();
         if (currentState == State.END_SENT) {
             data.setControlInitiator(true);
@@ -203,7 +184,7 @@ class CAMQPSessionStateActor {
         }
     }
 
-    QueuedContext processEndReceived(QueuedContext contextToProcess) {
+    CAMQPQueuedContext<Event> processEndReceived(CAMQPQueuedContext<Event> contextToProcess) {
         CAMQPSessionControlWrapper dataWrapper = (CAMQPSessionControlWrapper) contextToProcess.getContext();
         CAMQPControlEnd data = (CAMQPControlEnd) dataWrapper.getSessionControl();
         if (dataWrapper.isControlInitiator()) {
@@ -223,14 +204,14 @@ class CAMQPSessionStateActor {
     }
 
     @GuardedBy("this")
-    private void preProcessSendEnd(QueuedContext contextToProcess) {
+    private void preProcessSendEnd(CAMQPQueuedContext<Event> contextToProcess) {
         if (currentState == State.MAPPED) {
             CAMQPSessionControlWrapper data = (CAMQPSessionControlWrapper) contextToProcess.getContext();
             data.setControlInitiator(true);
         }
     }
 
-    private QueuedContext processSendEnd(QueuedContext contextToProcess, CAMQPConnectionInterface attachedConnection) {
+    private CAMQPQueuedContext<Event> processSendEnd(CAMQPQueuedContext<Event> contextToProcess, CAMQPConnectionInterface attachedConnection) {
         CAMQPSessionControlWrapper data = (CAMQPSessionControlWrapper) contextToProcess.getContext();
         CAMQPEncoder encoder = CAMQPEncoder.createCAMQPEncoder();
         CAMQPControlEnd.encode(encoder, (CAMQPControlEnd) data.getSessionControl());
@@ -252,21 +233,21 @@ class CAMQPSessionStateActor {
     }
 
     @GuardedBy("this")
-    private void preProcessChannelDetached(QueuedContext contextToProcess) {
+    private void preProcessChannelDetached(CAMQPQueuedContext<Event> contextToProcess) {
         log.debug("Session: + detached abruptly");
         processingQueuedEvents = false;
         queuedEvents.clear();
         currentState = State.UNMAPPED;
     }
 
-    private QueuedContext processChannelDetached(QueuedContext contextToProcess) {
+    private CAMQPQueuedContext<Event> processChannelDetached(CAMQPQueuedContext<Event> contextToProcess) {
         session.unmapped();
         return null;
     }
 
     private void processEvents() {
         boolean firstPass = true;
-        QueuedContext contextToProcess = null;
+        CAMQPQueuedContext<Event> contextToProcess = null;
         CAMQPConnectionInterface attachedConnection = null;
         while (true) {
             if (firstPass) {
@@ -293,7 +274,7 @@ class CAMQPSessionStateActor {
     /*
      * Process current event and return next event off the queue
      */
-    private QueuedContext processEvent(QueuedContext contextToProcess, CAMQPConnectionInterface attachedConnection) {
+    private CAMQPQueuedContext<Event> processEvent(CAMQPQueuedContext<Event> contextToProcess, CAMQPConnectionInterface attachedConnection) {
         if (contextToProcess == null) {
             return null;
         }
@@ -332,14 +313,14 @@ class CAMQPSessionStateActor {
     }
 
     @GuardedBy("this")
-    private QueuedContext getNextEvent() {
+    private CAMQPQueuedContext<Event> getNextEvent() {
         while (true) {
             if (queuedEvents.isEmpty()) {
                 processingQueuedEvents = false;
                 return null;
             }
 
-            QueuedContext contextToProcess = queuedEvents.remove();
+            CAMQPQueuedContext<Event> contextToProcess = queuedEvents.remove();
             if (checkCurrentState(contextToProcess.getEvent())) {
                 processPreCondition(contextToProcess);
                 return contextToProcess;
@@ -376,7 +357,7 @@ class CAMQPSessionStateActor {
     }
 
     @GuardedBy("this")
-    private void processPreCondition(QueuedContext contextToProcess) {
+    private void processPreCondition(CAMQPQueuedContext<Event> contextToProcess) {
         Event eventToBeProcessed = contextToProcess.getEvent();
         if (eventToBeProcessed == Event.RECEIVED_BEGIN) {
             preProcessBeginReceived(contextToProcess);
