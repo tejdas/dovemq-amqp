@@ -25,8 +25,6 @@ import net.dovemq.api.Session;
 public class Responder {
     private static final String LISTEN_TO_ADDRESS = "requestQueue";
 
-    private static volatile boolean doShutdown = false;
-
     /*
      * A map of Producer keyed by the replyTo queue name.
      */
@@ -159,6 +157,7 @@ public class Responder {
             Consumer consumer = session.createConsumer(LISTEN_TO_ADDRESS);
             consumer.registerMessageReceiver(new SampleMessageReceiver(requestProcessor));
 
+            System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
             /*
              * Register a shutdown hook to perform graceful shutdown.
              */
@@ -175,19 +174,8 @@ public class Responder {
                      * Shutdown DoveMQ runtime.
                      */
                     ConnectionFactory.shutdown();
-                    doShutdown = true;
                 }
             });
-
-            System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
-            while (!doShutdown) {
-                try {
-                    Thread.sleep(1000);
-                }
-                catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
         }
         catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());

@@ -15,8 +15,6 @@ import net.dovemq.api.Subscriber;
 public class TopicSubscriber {
     private static final String TOPIC_NAME = "sports.cricket";
 
-    private static volatile boolean doShutdown = false;
-
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
      * with the Subscriber.
@@ -74,6 +72,8 @@ public class TopicSubscriber {
             SampleMessageReceiver messageReceiver = new SampleMessageReceiver();
             subscriber.registerMessageReceiver(messageReceiver);
 
+
+            System.out.println("waiting for messages. Press Ctl-C to shut down subscriber.");
             /*
              * Register a shutdown hook to perform graceful shutdown.
              */
@@ -89,19 +89,8 @@ public class TopicSubscriber {
                      * Shutdown DoveMQ runtime.
                      */
                     ConnectionFactory.shutdown();
-                    doShutdown = true;
                 }
             });
-
-            System.out.println("waiting for messages. Press Ctl-C to shut down subscriber.");
-            while (!doShutdown) {
-                try {
-                    Thread.sleep(1000);
-                }
-                catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
         }
         catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());

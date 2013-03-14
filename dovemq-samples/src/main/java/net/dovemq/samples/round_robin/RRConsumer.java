@@ -25,8 +25,6 @@ public class RRConsumer {
 
     private static final ExecutorService executor = Executors.newFixedThreadPool(NUM_CONSUMERS);
 
-    private static volatile boolean doShutdown = false;
-
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
      * with the Consumer.
@@ -108,6 +106,7 @@ public class RRConsumer {
                 executor.submit(sampleConsumer);
             }
 
+            System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
             /*
              * Register a shutdown hook to perform graceful shutdown.
              */
@@ -132,19 +131,8 @@ public class RRConsumer {
                      * Shutdown DoveMQ runtime.
                      */
                     ConnectionFactory.shutdown();
-                    doShutdown = true;
                 }
             });
-
-            System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
-            while (!doShutdown) {
-                try {
-                    Thread.sleep(1000);
-                }
-                catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
         }
         catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());

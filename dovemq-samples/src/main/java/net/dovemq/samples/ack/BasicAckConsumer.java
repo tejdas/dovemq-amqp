@@ -17,8 +17,6 @@ import net.dovemq.api.Session;
 public class BasicAckConsumer {
     private static final String QUEUE_NAME = "SampleQueue";
 
-    private static volatile boolean doShutdown = false;
-
     /**
      * Implementation of a sample MessageReceiver callback, that is registered
      * with the Consumer.
@@ -77,6 +75,7 @@ public class BasicAckConsumer {
             SampleMessageReceiver messageReceiver = new SampleMessageReceiver(consumer);
             consumer.registerMessageReceiver(messageReceiver);
 
+            System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
             /*
              * Register a shutdown hook to perform graceful shutdown.
              */
@@ -92,19 +91,8 @@ public class BasicAckConsumer {
                      * Shutdown DoveMQ runtime.
                      */
                     ConnectionFactory.shutdown();
-                    doShutdown = true;
                 }
             });
-
-            System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
-            while (!doShutdown) {
-                try {
-                    Thread.sleep(1000);
-                }
-                catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
         }
         catch (Exception ex) {
             System.out.println("Caught Exception: " + ex.toString());
