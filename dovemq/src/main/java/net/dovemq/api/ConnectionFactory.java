@@ -29,7 +29,7 @@ import org.apache.commons.lang.StringUtils;
 
 /**
  * This class is used to initialize and shutdown DoveMQ runtime.
- * Also used as a factory to create AMQP sessions.
+ * Also used as a factory to create AMQP connections and sessions.
  *
  * @author tejdas
  */
@@ -70,9 +70,16 @@ public final class ConnectionFactory {
         endpointId = null;
     }
 
+    /**
+     * Creates a new Connection to the target DoveMQ broker. Internally, it creates
+     * an AMQP connection.
+     *
+     * @param targetDoveMQBrokerAddress
+     * @return Connection, that encapsulates an AMQP connection
+     */
     public static Connection createConnection(String targetDoveMQBrokerAddress) {
         if (StringUtils.isEmpty(targetDoveMQBrokerAddress)) {
-            throw new IllegalArgumentException("Null DoveMQ Broker address specified");
+            throw new IllegalArgumentException("DoveMQ Broker address must be specified");
         }
         if (endpointId == null) {
             throw new IllegalStateException("DoveMQ Runtime has not been initialized yet");
@@ -86,14 +93,14 @@ public final class ConnectionFactory {
 
     /**
      * Creates a new Session to the target DoveMQ broker. Internally, it creates
-     * an AMQP connection.. It then creates an AMQP session over it.
+     * an AMQP connection. It then creates an AMQP session over it.
      *
      * @param targetDoveMQBrokerAddress
-     * @return newly created Session
+     * @return Session, that encapsulates an AMQP session
      */
     public static Session createSession(String targetDoveMQBrokerAddress) {
         if (StringUtils.isEmpty(targetDoveMQBrokerAddress)) {
-            throw new IllegalArgumentException("Null DoveMQ Broker address specified");
+            throw new IllegalArgumentException("DoveMQ Broker address must be specified");
         }
         if (endpointId == null) {
             throw new IllegalStateException("DoveMQ Runtime has not been initialized yet");

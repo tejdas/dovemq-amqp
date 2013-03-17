@@ -20,29 +20,19 @@ package net.dovemq.broker.driver;
 import net.dovemq.broker.endpoint.DoveMQEndpointDriver;
 
 public final class DoveMQBrokerDriver {
-    private static volatile boolean doShutdown = false;
 
     static void shutdown() {
         System.out.println("DoveMQ broker shutting down");
         boolean isBroker = true;
         DoveMQEndpointDriver.shutdown(isBroker);
         System.out.println("DoveMQ broker shut down");
-        doShutdown = true;
     }
 
     public static void main(String[] args) {
-        final DoveMQBrokerShutdownHook sh = new DoveMQBrokerShutdownHook();
-        Runtime.getRuntime().addShutdownHook(sh);
-
         boolean isBroker = true;
         DoveMQEndpointDriver.initialize(isBroker, "DoveMQBroker");
-        while (!doShutdown) {
-            try {
-                Thread.sleep(1000);
-            }
-            catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+
+        final DoveMQBrokerShutdownHook sh = new DoveMQBrokerShutdownHook();
+        Runtime.getRuntime().addShutdownHook(sh);
     }
 }

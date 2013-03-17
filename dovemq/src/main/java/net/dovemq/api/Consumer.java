@@ -18,7 +18,6 @@
 package net.dovemq.api;
 
 import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
-import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
@@ -29,35 +28,8 @@ import net.dovemq.transport.endpoint.DoveMQMessageImpl;
  *
  * @author tejdas
  */
-public final class Consumer implements CAMQPMessageReceiver {
+public final class Consumer extends BaseMessageReceiver {
     private final DoveMQEndpointPolicy endpointPolicy;
-
-    private final CAMQPTargetInterface targetEndpoint;
-
-    private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;
-
-    /**
-     * Receives an AMQP message, and dispatches it to the registered
-     * DoveMQMessageReceiver.
-     */
-    @Override
-    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target) {
-        doveMQMessageReceiver.messageReceived(message);
-    }
-
-    /**
-     * Register a DoveMQMessageReceiver with the Consumer, so that the receiver
-     * will asynchronously receive AMQP messages.
-     *
-     * @param messageReceiver
-     */
-    public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver) {
-        if (messageReceiver == null) {
-            throw new IllegalArgumentException("Null messageReceiver specified");
-        }
-        this.doveMQMessageReceiver = messageReceiver;
-        targetEndpoint.registerMessageReceiver(this);
-    }
 
     public void stop() {
     }
@@ -77,16 +49,13 @@ public final class Consumer implements CAMQPMessageReceiver {
     }
 
     Consumer(String targetName, CAMQPTargetInterface targetEndpoint) {
-        super();
+        super(targetName, targetEndpoint);
         this.endpointPolicy = new DoveMQEndpointPolicy();
-        this.targetEndpoint = targetEndpoint;
     }
 
-    Consumer(String targetName,
-            CAMQPTargetInterface targetEndpoint,
+    Consumer(String targetName, CAMQPTargetInterface targetEndpoint,
             DoveMQEndpointPolicy endpointPolicy) {
-        super();
+        super(targetName, targetEndpoint);
         this.endpointPolicy = endpointPolicy;
-        this.targetEndpoint = targetEndpoint;
     }
 }

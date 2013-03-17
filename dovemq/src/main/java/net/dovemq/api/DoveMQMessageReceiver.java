@@ -18,7 +18,8 @@
 package net.dovemq.api;
 
 /**
- * An AMQP message receiver must implement this interface
+ * An AMQP message receiver(queue consumer or topic subscriber)
+ * must implement this interface
  * to asynchronously receive incoming messages.
  *
  * @author tejdas

@@ -18,7 +18,8 @@
 package net.dovemq.api;
 
 /**
- * An AMQP message sender must implement this interface
+ * An AMQP message sender (queue producer or topic publisher)
+ * must implement this interface
  * to asynchronously receive acknowledgment indication
  * for a message that has been received and acknowledged
  * by a DoveMQMessageReceiver.

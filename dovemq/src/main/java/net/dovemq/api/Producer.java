@@ -17,7 +17,6 @@
 
 package net.dovemq.api;
 
-import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 
 /**
@@ -26,23 +25,8 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
  *
  * @author tejdas
  */
-public final class Producer implements CAMQPMessageDispositionObserver {
-    private volatile DoveMQMessageAckReceiver ackReceiver = null;
-
+public final class Producer extends BaseAckReceiver {
     private final CAMQPSourceInterface sourceEndpoint;
-
-    /**
-     * Register a DoveMQMessageAckReceiver with the Producer, so that the sender
-     * will be asynchronously notified of a message acknowledgment.
-     *
-     * @param ackReceiver
-     */
-    public void registerMessageAckReceiver(DoveMQMessageAckReceiver ackReceiver) {
-        if (ackReceiver == null) {
-            throw new IllegalArgumentException("Null ackReceiver specified");
-        }
-        this.ackReceiver = ackReceiver;
-    }
 
     /**
      * Send an AMQP message.
@@ -74,16 +58,5 @@ public final class Producer implements CAMQPMessageDispositionObserver {
         super();
         this.sourceEndpoint = sourceEndpoint;
         sourceEndpoint.registerDispositionObserver(this);
-    }
-
-    /**
-     * Receives the message acknowledgment and forwards it to the registered
-     * DoveMQMessageAckReceiver.
-     */
-    @Override
-    public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source) {
-        if (ackReceiver != null) {
-            ackReceiver.messageAcknowledged(message);
-        }
     }
 }

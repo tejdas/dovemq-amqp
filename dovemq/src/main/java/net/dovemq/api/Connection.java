@@ -21,20 +21,30 @@ import net.dovemq.transport.connection.CAMQPConnectionInterface;
 import net.dovemq.transport.session.CAMQPSessionFactory;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
+/**
+ * This class encapsulates an AMQP connection. It also acts as a factory
+ * to create Session objects.
+ *
+ * @author tdas
+ *
+ */
 public final class Connection {
 
     /**
-     * Creates a new Session to the target DoveMQ broker over this
+     * Creates a new AMQP session to the target DoveMQ broker over this
      * AMQP connection
      *
      * @return
-     *      Session
+     *      Session, that encapsulates an AMQP session
      */
     public Session createSession() {
         CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(amqpConnection);
         return new Session(ConnectionFactory.getEndpointId(), camqpSession);
     }
 
+    /**
+     * Closes the underlying AMQP connection
+     */
     public void close() {
         amqpConnection.close();
     }
@@ -44,5 +54,8 @@ public final class Connection {
         this.amqpConnection = amqpConnection;
     }
 
+    /**
+     * AMQP connection
+     */
     private final CAMQPConnectionInterface amqpConnection;
 }

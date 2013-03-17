@@ -25,7 +25,9 @@ public final class DoveMQEndpointPolicy {
     /**
      * AUTO: the message is automatically acknowledged by the runtime after it
      * has been delivered to the consumer via
-     * {@link DoveMQMessageReceiver#messageReceived()} CONSUMER_ACKS: the
+     * {@link DoveMQMessageReceiver#messageReceived()}
+     *
+     * CONSUMER_ACKS: the
      * message recipient needs to explicitly acknowledge the receipt of the
      * message via {@link Consumer#acknowledge(DoveMQMessage)}
      */

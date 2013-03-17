@@ -17,7 +17,6 @@
 
 package net.dovemq.api;
 
-import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 /**
@@ -27,35 +26,8 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
  *
  * @author tejdas
  */
-public final class Subscriber implements CAMQPMessageReceiver {
-    private final CAMQPTargetInterface targetEndpoint;
-
-    private volatile DoveMQMessageReceiver doveMQMessageReceiver = null;
-
-    /**
-     * Receives an AMQP message and forwards it to a registered
-     * DoveMQMessageReceiver;
-     */
-    @Override
-    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target) {
-        doveMQMessageReceiver.messageReceived(message);
-    }
-
-    /**
-     * Register a DoveMQMessageReceiver to asynchronously receive AMQP messages.
-     *
-     * @param messageReceiver
-     */
-    public void registerMessageReceiver(DoveMQMessageReceiver messageReceiver) {
-        if (messageReceiver == null) {
-            throw new IllegalArgumentException("Null messageReceiver specified");
-        }
-        this.doveMQMessageReceiver = messageReceiver;
-        targetEndpoint.registerMessageReceiver(this);
-    }
-
+public final class Subscriber extends BaseMessageReceiver {
     public Subscriber(String targetName, CAMQPTargetInterface targetEndpoint) {
-        super();
-        this.targetEndpoint = targetEndpoint;
+        super(targetName, targetEndpoint);
     }
 }

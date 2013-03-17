@@ -32,5 +32,5 @@ public final class CAMQPConnectionConstants {
 
     protected static final int MAX_CHANNELS_SUPPORTED = 256;
 
-    protected static final long HEARTBEAT_PERIOD = 10000L;
+    protected static final long HEARTBEAT_PERIOD = 30000L;
 }
