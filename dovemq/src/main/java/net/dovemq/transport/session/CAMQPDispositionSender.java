@@ -245,7 +245,7 @@ final class CAMQPDispositionSender implements Runnable {
             return;
         }
 
-        if (isUpdate(transferId, settled, newOutcome, dispositionRanges))
+        if (isDispositionUpdated(transferId, settled, newOutcome, dispositionRanges))
             return;
 
         Iterator<DispositionRange> iter = dispositionRanges.iterator();
@@ -329,7 +329,7 @@ final class CAMQPDispositionSender implements Runnable {
      * @param dispositionRanges
      * @return
      */
-    private static boolean isUpdate(long transferId, boolean settled, Object newOutcome, List<DispositionRange> dispositionRanges) {
+    private static boolean isDispositionUpdated(long transferId, boolean settled, Object newOutcome, List<DispositionRange> dispositionRanges) {
         Iterator<DispositionRange> iter = dispositionRanges.iterator();
         DispositionRange range = iter.next();
         DispositionRange nextRange = null;

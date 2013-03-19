@@ -327,7 +327,7 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
     private void closeInternal(CAMQPDefinitionError error) {
         synchronized (stateActor) {
             if (!isSessionActive()) {
-                log.info("Session already closed or closing in progress");
+                log.warn("Session already closed or closing in progress");
                 return;
             }
 
@@ -427,7 +427,7 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
     public void sendTransfer(CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload, CAMQPLinkSenderInterface linkSender) {
         CAMQPChannel channel = getChannel();
         if (channel == null) {
-            throw new CAMQPSessionClosedException("Underlying channel is detached");
+            throw new CAMQPSessionException("Cannot send transfer frame as the underlying channel is detached: SessionID: " + sessionId);
         }
 
         /*
@@ -635,8 +635,10 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
             if (isSessionActive()) {
                 return new CAMQPChannel(connection, outgoingChannelNumber);
             }
-            return null;
         }
+        log.warn("Session not active any more; ConnectionKey: "
+                + connection.getKey().toString());
+        return null;
     }
 
     @GuardedBy("stateActor")
@@ -664,6 +666,11 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
             }
             else if (isTransferFrame(controlName)) {
                 processTransferFrame(controlName, frame);
+            }
+            else {
+                log.error("Unknown control frame " + controlName
+                        + " received at CAMQPSession.frameReceived().  ConnectionKey: "
+                        + connection.getKey().toString());
             }
         }
     }
@@ -928,6 +935,10 @@ final class CAMQPSession implements CAMQPIncomingChannelHandler, CAMQPSessionInt
         if (controlName.equalsIgnoreCase(CAMQPControlEnd.descriptor)) {
             CAMQPControlEnd data = CAMQPControlEnd.decode(decoder);
             stateActor.endReceived(data);
+        } else {
+            log.error("Unknown control frame " + controlName
+                    + " received at CAMQPSession.processSessionControlFrame().  ConnectionKey: "
+                    + connection.getKey().toString());
         }
     }
 

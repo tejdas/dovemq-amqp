@@ -41,7 +41,9 @@ public final class CAMQPSessionFrameHandler {
         sessionsHandshakeInProgress.put(sendChannelNumber, (CAMQPSession) session);
     }
 
-    public void frameReceived(int channelNumber, CAMQPFrame frame, CAMQPConnectionInterface connection) {
+    public void frameReceived(int channelNumber,
+            CAMQPFrame frame,
+            CAMQPConnectionInterface connection) {
         CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
         decoder.take(frame.getBody());
         String controlName = decoder.readSymbol();
@@ -55,26 +57,27 @@ public final class CAMQPSessionFrameHandler {
                 CAMQPSession sessionHIP = sessionsHandshakeInProgress.remove(remoteChannelNumber);
                 if (sessionHIP != null) {
                     sessionHIP.beginResponse(beginControl, frame.getHeader());
+                } else {
+                    log.error("Could not find session with channelNumber: " + remoteChannelNumber
+                            + " in the list of sessions for which handshake is pending. ConnectionKey: "
+                            + connection.getKey().toString());
                 }
-                else {
-                    // TODO handle error
-                    log.error("Could not find session with channelNumber: " + remoteChannelNumber +
-                            " in the list of sessions for which handshake is pending");
-                }
-            }
-            else {
+            } else {
                 /*
                  * session acceptor
                  */
                 CAMQPSessionStateActor stateActor = new CAMQPSessionStateActor(connection);
-                CAMQPSessionControlWrapper beginContext = new CAMQPSessionControlWrapper(channelNumber, beginControl);
+                CAMQPSessionControlWrapper beginContext = new CAMQPSessionControlWrapper(channelNumber,
+                        beginControl);
                 stateActor.beginReceived(beginContext);
             }
-        }
-        else if (controlName.equalsIgnoreCase(CAMQPControlEnd.descriptor)) {
-            log.error("No CAMQPSessionHandler found for Session DETACH control");
-            log.error("Session DETACH control should have been dispatched directly to CAMQPSessionHandler");
-            // TODO handle error
+        } else if (controlName.equalsIgnoreCase(CAMQPControlEnd.descriptor)) {
+            log.error("No CAMQPSessionHandler found for Session DETACH control. Session DETACH control should have been dispatched directly to CAMQPSessionHandler. ConnectionKey: " + connection.getKey()
+                    .toString());
+        } else {
+            log.error("Unknown control frame " + controlName
+                    + " received at CAMQPSessionFrameHandler.  ConnectionKey: "
+                    + connection.getKey().toString());
         }
     }
 }

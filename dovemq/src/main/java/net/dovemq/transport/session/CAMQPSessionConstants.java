@@ -26,7 +26,9 @@ public final class CAMQPSessionConstants {
 
     protected static final long BATCHED_DISPOSITION_SEND_INTERVAL = 500L; // milliseconds
 
-    static final long FLOW_SENDER_INTERVAL = 1000L;
+    static final long FLOW_SENDER_INTERVAL = 1000L; // milliseconds
 
-    static final int SESSION_SENDER_REQUEST_CREDIT_TIMER_INTERVAL = 1000;
+    static final int SESSION_SENDER_REQUEST_CREDIT_TIMER_INTERVAL = 1000; // milliseconds
+
+    static final int DEFAULT_SESSION_DISPOSITION_SENDER_THREAD_COUNT = 8;
 }

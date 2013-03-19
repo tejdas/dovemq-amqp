@@ -17,17 +17,17 @@
 
 package net.dovemq.transport.session;
 
-final class CAMQPSessionClosedException extends RuntimeException {
+final class CAMQPSessionException extends RuntimeException {
     /**
      *
      */
     private static final long serialVersionUID = 1L;
 
-    CAMQPSessionClosedException(String message) {
+    CAMQPSessionException(String message) {
         super(message);
     }
 
-    CAMQPSessionClosedException(String message, Throwable cause) {
+    CAMQPSessionException(String message, Throwable cause) {
         super(message, cause);
     }
 }

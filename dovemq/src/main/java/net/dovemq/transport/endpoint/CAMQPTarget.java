@@ -67,7 +67,9 @@ final class CAMQPTarget implements CAMQPTargetInterface {
     public void messageReceived(long deliveryId, String deliveryTag, CAMQPMessagePayload message, boolean settledBySender, int receiverSettleMode) {
         boolean settled = false;
         if (receiverSettleMode == CAMQPConstants.RECEIVER_SETTLE_MODE_FIRST) {
-            // settle the message and send disposition with the settled state
+            /*
+             * settle the message and send disposition with the settled state
+             */
             settled = true;
         }
         else {
@@ -98,7 +100,6 @@ final class CAMQPTarget implements CAMQPTargetInterface {
          */
         if (!settledBySender) {
             if (!expectAck()) {
-                // send the disposition
                 sendDisposition(deliveryId, settled, new CAMQPDefinitionAccepted());
             }
         }
@@ -150,7 +151,6 @@ final class CAMQPTarget implements CAMQPTargetInterface {
         if (expectAck()) {
             Boolean settled = deliveriesWaitingExplicitAck.remove(deliveryId);
             if (settled != null) {
-                // send the disposition
                 sendDisposition(deliveryId, settled, new CAMQPDefinitionAccepted());
             }
         }

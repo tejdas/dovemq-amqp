@@ -43,8 +43,6 @@ import org.apache.log4j.Logger;
 public final class CAMQPSessionManager {
     private static final Logger log = Logger.getLogger(CAMQPSessionManager.class);
 
-    private static final int DEFAULT_SESSION_DISPOSITION_SENDER_THREAD_COUNT = 8;
-
     private static volatile CAMQPSessionManager _sessionManager;
 
     private static volatile CAMQPSessionSendFlowScheduler sessionSendFlowScheduler;
@@ -57,7 +55,7 @@ public final class CAMQPSessionManager {
 
     private static final ScheduledExecutorService sessionSendDispositionScheduler =
             Executors.newScheduledThreadPool(
-                    DEFAULT_SESSION_DISPOSITION_SENDER_THREAD_COUNT,
+                    CAMQPSessionConstants.DEFAULT_SESSION_DISPOSITION_SENDER_THREAD_COUNT,
                     new CAMQPThreadFactory("DoveMQSessionCumulativeDispositionSender"));
 
     static ScheduledExecutorService getSessionSendDispositionScheduler() {
@@ -226,6 +224,9 @@ public final class CAMQPSessionManager {
         return sessionList;
     }
 
+    /*
+     * Used only by CAMQP functional tests
+     */
     protected static List<CAMQPSession> getAllSessions(String amqpContainerId) {
         List<CAMQPSession> sessionList = new ArrayList<>();
         Set<CAMQPConnectionKey> amqpRemoteConnectionKeys = _sessionManager.mappedSessions.keySet();
