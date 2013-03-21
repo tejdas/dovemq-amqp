@@ -15,5 +15,6 @@
         <module>dovemq</module>
         <module>functional-test</module>
         <module>dovemq-samples</module>
+        <module>dovemq-scala-samples</module>
     </modules>
 </project>
