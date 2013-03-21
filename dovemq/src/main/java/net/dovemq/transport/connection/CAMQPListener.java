@@ -32,7 +32,7 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 public final class CAMQPListener {
     private static final Logger log = Logger.getLogger(CAMQPListener.class);
 
-    private boolean hasShutdown = false;
+    private volatile boolean hasShutdown = false;
 
     private final String listenAddress = "0.0.0.0";
 
@@ -67,12 +67,10 @@ public final class CAMQPListener {
     }
 
     public void shutdown() {
-        synchronized (this) {
-            if (hasShutdown) {
-                return;
-            }
-            hasShutdown = true;
+        if (hasShutdown) {
+            return;
         }
+        hasShutdown = true;
 
         ChannelFuture future = serverChannel.close();
         future.awaitUninterruptibly();

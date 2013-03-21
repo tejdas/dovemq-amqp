@@ -81,7 +81,7 @@ public class SessionSysTestCmdDriver
             {
                 return true;
             }
-            CAMQPSessionFactory.createCAMQPSession(argList[1]);
+            CAMQPSessionFactory.createCAMQPSessionOverExistingConnection(argList[1]);
             System.out.println("Session opened");
             return true;
         }

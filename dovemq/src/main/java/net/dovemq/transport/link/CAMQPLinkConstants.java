@@ -29,4 +29,8 @@ public final class CAMQPLinkConstants {
     static final long LINK_CREDIT_VIOLATION_LIMIT = 10L;
 
     static final int MAX_LINK_CREDIT_ISSUANCE_INTERVAL = 1000; // milliseconds
+
+    protected static final long LINK_HANDSHAKE_TIMEOUT = 10000L; // milliseconds
+
+    protected static final long LINK_WAIT_TIME_FOR_CREDIT = 30000L; // milliseconds
 }

@@ -82,8 +82,7 @@ class CAMQPConnectionStateActor {
         int ephemeralPort;
         if (isInitiator) {
             ephemeralPort = ((InetSocketAddress) channel.getLocalAddress()).getPort();
-        }
-        else {
+        } else {
             ephemeralPort = ((InetSocketAddress) channel.getRemoteAddress()).getPort();
         }
         sender = new CAMQPSender(channel);
@@ -132,11 +131,13 @@ class CAMQPConnectionStateActor {
     synchronized void waitForOpenExchange() {
         try {
             while (!openExchangeComplete) {
-                wait();
+                wait(CAMQPConnectionConstants.CONNECTION_HANDSHAKE_TIMEOUT);
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+        if (!openExchangeComplete) {
+            throw new CAMQPConnectionException("Timed out waitig for connection handshaked to complete");
         }
     }
 
@@ -257,8 +258,7 @@ class CAMQPConnectionStateActor {
                 currentState = State.HDR_SENT;
             }
             else {
-                log.error("Connection was expected to be in State.START, but in state: " + currentState);
-                // TODO BAD state
+                log.error("Connection was expected to be in State.START, but in bad state: " + currentState + " Connection key: " + key.toString());
             }
             return getNextEvent();
         }
@@ -279,8 +279,7 @@ class CAMQPConnectionStateActor {
                 queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.CLOSED, null));
             }
             else {
-                log.error("Connection is in bad state: " + currentState);
-                // TODO BAD state
+                log.error("Connection is in bad state: " + currentState + " Connection key: " + key.toString());
             }
             return getNextEvent();
         }
@@ -325,8 +324,7 @@ class CAMQPConnectionStateActor {
 
         }
         else {
-            log.error("Connection is in bad state: " + currentState);
-            // TODO BAD state
+            log.error("Connection is in bad state: " + currentState + " Connection key: " + key.toString());
         }
     }
 
@@ -358,8 +356,7 @@ class CAMQPConnectionStateActor {
                 currentState = State.OPEN_PIPE;
             }
             else {
-                log.error("Connection is in bad state: " + currentState);
-                // TODO BAD state
+                log.error("Connection is in bad state: " + currentState + " Connection key: " + key.toString());
             }
             return getNextEvent();
         }
@@ -385,8 +382,7 @@ class CAMQPConnectionStateActor {
                 queuedGeneratedEvents.add(new CAMQPQueuedContext<Event>(Event.OPENED, null));
             }
             else {
-                log.error("Connection is in bad state: " + currentState);
-                // TODO BAD state
+                log.error("Connection is in bad state: " + currentState + " Connection key: " + key.toString());
             }
             return getNextEvent();
         }
@@ -515,6 +511,7 @@ class CAMQPConnectionStateActor {
     }
 
     private CAMQPQueuedContext<Event> processHeartbeatDelayed(CAMQPQueuedContext<Event> contextToProcess) {
+        log.warn("Heartbeat delayed from peer. Closing AMQP connection: " + key.toString());
         cancelHeartbeat();
         if (isOpenExchangeComplete()) {
             CAMQPConnectionManager.connectionAborted(key);

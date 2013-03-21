@@ -150,7 +150,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
         }
 
         linkStateActor.sendAttach(data);
-        linkStateActor.waitForAttached();
+        linkStateActor.waitForAttached(targetAddress);
     }
 
     /**
@@ -161,7 +161,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
         data.setClosed(true);
         data.setHandle(linkHandle);
         linkStateActor.sendDetach(data);
-        linkStateActor.waitForDetached();
+        linkStateActor.waitForDetached(targetAddress);
     }
 
     /**
@@ -176,7 +176,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
         data.setHandle(linkHandle);
         linkStateActor.sendDetach(data);
         if (waitForLinkClosure) {
-            linkStateActor.waitForDetached();
+            linkStateActor.waitForDetached(targetAddress);
         }
     }
 

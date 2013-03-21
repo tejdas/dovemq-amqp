@@ -43,6 +43,11 @@ final class CAMQPSender implements ChannelFutureListener {
 
     private SenderState state = SenderState.ACTIVE;
 
+    /**
+     * Keeps track of the outstanding write count.
+     * Incremented in {@link CAMQPSender#sendBuffer()}
+     * Decremented in {@link ChannelFutureListener#operationComplete() }
+     */
     private int outstandingWrites = 0;
 
     CAMQPSender(Channel channel) {
@@ -79,9 +84,7 @@ final class CAMQPSender implements ChannelFutureListener {
     }
 
     /**
-     * When this method is called concurrently, one thread assumes the role of
-     * sender and the other threads just enqueue the outgoing frame. Gives
-     * connection frames higher priority that session/link frames.
+     * Sends the buffer on the underlying Netty channel.
      *
      * @param data
      * @param frameType

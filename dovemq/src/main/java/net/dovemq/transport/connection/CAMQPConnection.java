@@ -154,7 +154,7 @@ final class CAMQPConnection implements CAMQPConnectionInterface {
         synchronized (stateActor) {
             int maxChannels = stateActor.getConnectionProps().getMaxChannels();
             if (!stateActor.canAttachChannels()) {
-                return -1; // TODO
+                throw new IllegalStateException("Not connected anymore; connection key: " + stateActor.key.toString());
             }
             /*
              * ChannelID 0 is reserved for Connection control
@@ -165,8 +165,8 @@ final class CAMQPConnection implements CAMQPConnectionInterface {
                     return i;
                 }
             }
+            throw new CAMQPConnectionException("All channels on this connection are in use; connection key: " + stateActor.key.toString());
         }
-        return -1;
     }
 
     /**
@@ -181,6 +181,8 @@ final class CAMQPConnection implements CAMQPConnectionInterface {
         synchronized (stateActor) {
             if (stateActor.canAttachChannels()) {
                 incomingChannels.put(receiveChannelNumber, channelHandler);
+            } else {
+                throw new IllegalStateException("Not connected anymore; connection key: " + stateActor.key.toString());
             }
         }
     }
@@ -229,8 +231,9 @@ final class CAMQPConnection implements CAMQPConnectionInterface {
         Collection<CAMQPIncomingChannelHandler> channelsToDetach = new ArrayList<>();
 
         synchronized (stateActor) {
-            if (incomingChannels.size() > 0)
+            if (incomingChannels.size() > 0) {
                 channelsToDetach.addAll(incomingChannels.values());
+            }
         }
         for (CAMQPIncomingChannelHandler channelHandler : channelsToDetach) {
             channelHandler.channelAbruptlyDetached();

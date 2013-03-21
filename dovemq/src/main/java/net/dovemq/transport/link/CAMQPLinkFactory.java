@@ -26,6 +26,9 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
  * @author tejdas
  */
 public final class CAMQPLinkFactory {
+    /*
+     * Used for API functional tests
+     */
     public static CAMQPLinkSenderInterface createLinkSender(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPSessionInterface session = CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
         if (session != null) {
@@ -42,6 +45,9 @@ public final class CAMQPLinkFactory {
         return sender;
     }
 
+    /*
+     * Used for API functional tests
+     */
     public static CAMQPLinkReceiverInterface createLinkReceiver(String targetContainerId, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPSessionInterface session = CAMQPSessionFactory.getOrCreateCAMQPSession(targetContainerId);
         if (session != null) {

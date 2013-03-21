@@ -106,7 +106,7 @@ public final class ConnectionFactory {
             throw new IllegalStateException("DoveMQ Runtime has not been initialized yet");
         }
         String brokerContainerId = String.format("broker@%s", targetDoveMQBrokerAddress);
-        CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId, true);
+        CAMQPSessionInterface camqpSession = CAMQPSessionFactory.createCAMQPSession(brokerContainerId);
         return new Session(endpointId, camqpSession);
     }
 }

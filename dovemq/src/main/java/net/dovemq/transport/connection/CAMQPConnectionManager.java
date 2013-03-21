@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.dovemq.transport.session.CAMQPSessionManager;
 import net.dovemq.transport.utils.CAMQPThreadFactory;
@@ -41,13 +42,11 @@ import org.apache.log4j.Logger;
 public final class CAMQPConnectionManager {
     private static final Logger log = Logger.getLogger(CAMQPConnectionManager.class);
 
-    private static final int DEFAULT_HEARTBEAT_PROCESSOR_THREAD_COUNT = 4;
-
     private static volatile CAMQPConnectionObserver connectionObserver = null;
 
     private static volatile String containerId = null;
 
-    private static volatile boolean shutdownInProgress = false;
+    private static AtomicBoolean shutdownInProgress = new AtomicBoolean(false);;
 
     private static final ConcurrentMap<CAMQPConnectionKey, CAMQPConnection> openConnections =
             new ConcurrentHashMap<>();
@@ -55,7 +54,7 @@ public final class CAMQPConnectionManager {
     private static final Object shutdownLock = new Object();
 
     private static final ScheduledExecutorService connectionHeartbeatScheduler =
-            Executors.newScheduledThreadPool(DEFAULT_HEARTBEAT_PROCESSOR_THREAD_COUNT,
+            Executors.newScheduledThreadPool(CAMQPConnectionConstants.DEFAULT_HEARTBEAT_PROCESSOR_THREAD_COUNT,
                     new CAMQPThreadFactory("DoveMQConnectionHeartbeatProcessor"));
 
     static ScheduledExecutorService getConnectionHeartbeatScheduler() {
@@ -71,12 +70,15 @@ public final class CAMQPConnectionManager {
                 log.debug("hostName: " + hostName);
             }
             catch (java.net.UnknownHostException uhe) {
-                log.error("Caught UnknownHostException while resolving canonicalHostName: " + uhe.getMessage());
-                // handle exception
+                String errorMessage = "Caught UnknownHostException while resolving canonicalHostName: " + uhe.getMessage();
+                log.error(errorMessage);
+                throw new CAMQPConnectionException(errorMessage);
             }
             CAMQPConnectionManager.containerId = String.format("%s@%s", containerId, hostName);
             log.info("Initialized DoveMQ endpoint ID: " + CAMQPConnectionManager.containerId);
             System.out.println("Initialized DoveMQ endpoint ID: " + CAMQPConnectionManager.containerId);
+        } else {
+            throw new IllegalStateException("CAMQPConnectionManager already initialized: containerId: " + CAMQPConnectionManager.containerId);
         }
     }
 
@@ -93,6 +95,9 @@ public final class CAMQPConnectionManager {
         return null;
     }
 
+    /*
+     * Used only for functional tests
+     */
     public static CAMQPConnection getAnyCAMQPConnection(String targetContainerId) {
         return getCAMQPConnection(targetContainerId);
     }
@@ -130,7 +135,7 @@ public final class CAMQPConnectionManager {
     private static CAMQPConnection connectionClosedInternal(CAMQPConnectionKey key) {
         CAMQPConnection connection = openConnections.remove(key);
         synchronized (shutdownLock) {
-            if ((openConnections.size() == 0) && shutdownInProgress) {
+            if ((openConnections.size() == 0) && shutdownInProgress.get()) {
                 shutdownLock.notifyAll();
             }
         }
@@ -142,7 +147,7 @@ public final class CAMQPConnectionManager {
     }
 
     private static void connectionCreatedInternal(CAMQPConnectionKey key, CAMQPConnection connection) {
-        if (shutdownInProgress) {
+        if (shutdownInProgress.get()) {
             log.error("Shutdown is already in progress: cannot add CAMQPConnection to ConnectionManager's openConnectionsList");
             return; // TODO handle error
         }
@@ -152,9 +157,6 @@ public final class CAMQPConnectionManager {
     static void connectionAccepted(CAMQPConnectionStateActor stateActor, CAMQPConnectionKey key) {
         CAMQPConnection amqpConnection = new CAMQPConnection(stateActor);
         connectionCreatedInternal(key, amqpConnection);
-        if (connectionObserver != null) {
-            connectionObserver.connectionAccepted(amqpConnection);
-        }
     }
 
     public static void connectionCloseInitiatedByRemotePeer(CAMQPConnectionKey key) {
@@ -170,10 +172,9 @@ public final class CAMQPConnectionManager {
     }
 
     public static void shutdown() {
-        if (shutdownInProgress) {
+        if (!shutdownInProgress.compareAndSet(false, true)) {
             return;
         }
-        shutdownInProgress = true;
 
         Collection<CAMQPConnectionKey> connectionKeys = openConnections.keySet();
         for (CAMQPConnectionKey connectionKey : connectionKeys) {

@@ -139,35 +139,34 @@ final class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler {
      * @param frame
      */
     private void frameReceived(CAMQPFrame frame) {
-        ChannelBuffer frameBody = frame.getBody();
-        if (frameBody == null) {
-            /*
-             * Heart-Beat control frame
-             */
-            stateActor.heartbeatReceived();
-            return;
-        }
-
         CAMQPFrameHeader frameHeader = frame.getHeader();
         int channelNumber = frameHeader.getChannelNumber();
         if (channelNumber == 0) {
             /*
              * connection frame
              */
+            ChannelBuffer frameBody = frame.getBody();
+            if (frameBody == null) {
+                /*
+                 * Heart-Beat control frame
+                 */
+                stateActor.heartbeatReceived();
+                return;
+            }
             CAMQPSyncDecoder decoder = CAMQPSyncDecoder.createCAMQPSyncDecoder();
             decoder.take(frameBody);
             String controlName = decoder.readSymbol();
             if (controlName.equalsIgnoreCase(CAMQPControlOpen.descriptor)) {
                 CAMQPControlOpen peerConnectionProps = CAMQPControlOpen.decode(decoder);
-
                 stateActor.openControlReceived(peerConnectionProps);
             }
             else if (controlName.equalsIgnoreCase(CAMQPControlClose.descriptor)) {
                 CAMQPControlClose closeContext = CAMQPControlClose.decode(decoder);
                 stateActor.closeControlReceived(closeContext);
+            } else {
+                log.error("Unknown control frame " + controlName + " received on connection: " + stateActor.key.toString());
             }
         }
-
         else {
             /*
              * session/link frame

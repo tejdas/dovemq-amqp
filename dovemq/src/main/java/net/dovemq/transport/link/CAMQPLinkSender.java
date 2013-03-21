@@ -292,7 +292,7 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
                 log.warn(errorDetails);
                 warnMessage += errorDetails;
             }
-            throw new RuntimeException(warnMessage);
+            throw new CAMQPLinkException(warnMessage);
         }
     }
 
@@ -476,11 +476,14 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
         synchronized (this) {
             while (!receivedFirstFlowCredit || (linkCredit <= 0)) {
                 try {
-                    wait();
+                    wait(CAMQPLinkConstants.LINK_WAIT_TIME_FOR_CREDIT);
                 }
                 catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
+            }
+            if (!receivedFirstFlowCredit || (linkCredit <= 0)) {
+                throw new CAMQPLinkException("Link Sender timed out waiting to get link credit after link establishment");
             }
         }
     }

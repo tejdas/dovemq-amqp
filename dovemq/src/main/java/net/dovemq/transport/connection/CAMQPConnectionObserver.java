@@ -18,7 +18,5 @@
 package net.dovemq.transport.connection;
 
 public interface CAMQPConnectionObserver {
-    public void connectionAccepted(CAMQPConnectionInterface connection);
-
     public void connectionCloseInitiatedByRemotePeer(CAMQPConnectionInterface connection);
 }

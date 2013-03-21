@@ -38,7 +38,7 @@ import net.dovemq.transport.session.CAMQPSessionManager;
 import org.apache.log4j.Logger;
 
 /**
- * This class is used
+ * This class is used as a manager for AMQP links.
  * @author tejdas
  *
  */
@@ -134,6 +134,9 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
         }
     }
 
+    /*
+     * Used for API functional tests
+     */
     public CAMQPTargetInterface attachLinkTargetEndpoint(String linkSource, String linkTarget) {
         CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager()
                 .getLinkEndpoint(linkSource, linkTarget);
@@ -150,7 +153,10 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
         return null;
     }
 
-    public CAMQPLinkEndpoint getLinkEndpoint(String source, String target) {
+    /*
+     * Used for API functional tests
+     */
+     CAMQPLinkEndpoint getLinkEndpoint(String source, String target) {
         CAMQPLinkKey linkKey = new CAMQPLinkKey(source, target);
 
         String linkName = null;
@@ -170,6 +176,9 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
         return null;
     }
 
+    /*
+     * Used for API functional tests
+     */
     public CAMQPLinkEndpoint getLinkEndpoint(String linkName) {
         return openLinks.get(linkName);
     }

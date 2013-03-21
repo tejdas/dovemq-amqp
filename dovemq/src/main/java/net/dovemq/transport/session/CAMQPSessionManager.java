@@ -122,6 +122,9 @@ public final class CAMQPSessionManager {
         return _sessionManager.linkReceiverFactory;
     }
 
+    /*
+     * Used only for functional tests
+     */
     protected static CAMQPConnectionInterface getCAMQPConnection(String targetContainerId) {
         CAMQPConnectionInterface connection = CAMQPConnectionManager.getAnyCAMQPConnection(targetContainerId);
         if (connection == null) {

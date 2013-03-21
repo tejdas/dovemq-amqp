@@ -17,12 +17,17 @@
 
 package net.dovemq.transport.link;
 
-import net.dovemq.transport.connection.CAMQPConnectionInterface;
-import net.dovemq.transport.connection.CAMQPConnectionObserver;
+public final class CAMQPLinkException extends RuntimeException {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-final class CAMQPConnectionReaper implements CAMQPConnectionObserver {
-    @Override
-    public void connectionCloseInitiatedByRemotePeer(CAMQPConnectionInterface connection) {
-        connection.closeAsync();
+    CAMQPLinkException(String message) {
+        super(message);
+    }
+
+    CAMQPLinkException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

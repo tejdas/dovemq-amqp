@@ -30,7 +30,7 @@ public class SessionCommand implements SessionCommandMBean {
 
     @Override
     public void sessionCreate(String targetContainerId) {
-        CAMQPSessionFactory.createCAMQPSession(targetContainerId);
+        CAMQPSessionFactory.createCAMQPSessionOverExistingConnection(targetContainerId);
     }
 
     @Override

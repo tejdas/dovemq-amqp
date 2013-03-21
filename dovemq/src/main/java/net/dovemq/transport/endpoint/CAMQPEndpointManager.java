@@ -41,6 +41,9 @@ public final class CAMQPEndpointManager {
         CAMQPEndpointManager.defaultEndpointPolicy = defaultEndpointPolicy;
     }
 
+    /*
+     * Used for API functional tests
+     */
     public static CAMQPSourceInterface createSource(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
         CAMQPLinkSenderInterface linkSender = CAMQPLinkFactory.createLinkSender(containerId, source, target, endpointPolicy);
         CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
@@ -53,14 +56,6 @@ public final class CAMQPEndpointManager {
         CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
         linkSender.registerSource(dovemqSource);
         return dovemqSource;
-    }
-
-    public static CAMQPTargetInterface createTarget(String containerId, String source, String target, CAMQPEndpointPolicy endpointPolicy) {
-        CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(containerId, source, target, endpointPolicy);
-        CAMQPTarget dovemqTarget = new CAMQPTarget(linkReceiver, endpointPolicy);
-        linkReceiver.registerTarget(dovemqTarget);
-        linkReceiver.provideLinkCredit();
-        return dovemqTarget;
     }
 
     public static CAMQPTargetInterface createTarget(CAMQPSessionInterface session, String source, String target, CAMQPEndpointPolicy endpointPolicy) {

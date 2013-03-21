@@ -19,6 +19,7 @@ package net.dovemq.transport.connection;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.dovemq.transport.utils.CAMQPThreadFactory;
 
@@ -38,6 +39,8 @@ public final class CAMQPConnectionFactory {
 
     private static final CAMQPConnectionFactory connectionFactory = new CAMQPConnectionFactory();
 
+    private static final AtomicBoolean doShutdown = new AtomicBoolean(false);
+
     private final ClientBootstrap bootstrap;
 
     public static CAMQPConnectionInterface createCAMQPConnection(String targetHostName, CAMQPConnectionProperties connectionProps) {
@@ -45,11 +48,20 @@ public final class CAMQPConnectionFactory {
     }
 
     public static void shutdown() {
-        connectionFactory.shutdownFactory();
+        if (doShutdown.compareAndSet(false, true)) {
+            connectionFactory.shutdownFactory();
+        }
+        else {
+            throw new IllegalArgumentException("CAMQPConnectionFactory already shutdown");
+        }
     }
 
     private CAMQPConnectionFactory() {
-        bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyBossThread")), Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyWorkerThread"))));
+        bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(
+                Executors.newCachedThreadPool(new CAMQPThreadFactory(
+                        "DoveMQNettyBossThread")),
+                Executors.newCachedThreadPool(new CAMQPThreadFactory(
+                        "DoveMQNettyWorkerThread"))));
 
         bootstrap.setPipelineFactory(new CAMQPConnectionPipelineFactory(true, null));
     }

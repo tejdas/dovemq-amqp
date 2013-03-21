@@ -32,5 +32,9 @@ public final class CAMQPConnectionConstants {
 
     protected static final int MAX_CHANNELS_SUPPORTED = 256;
 
-    protected static final long HEARTBEAT_PERIOD = 30000L;
+    protected static final long HEARTBEAT_PERIOD = 30000L; // milliseconds
+
+    protected static final int DEFAULT_HEARTBEAT_PROCESSOR_THREAD_COUNT = 4;
+
+    protected static final long CONNECTION_HANDSHAKE_TIMEOUT = 10000L; // milliseconds
 }

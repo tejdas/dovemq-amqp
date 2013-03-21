@@ -36,6 +36,8 @@ public final class CAMQPSessionFactory {
      * If a session already exists to the AMQP target, return it. Otherwise,
      * create a new session.
      *
+     * Used only for API functional tests.
+     *
      * @param targetContainerId
      * @return
      */
@@ -52,12 +54,16 @@ public final class CAMQPSessionFactory {
         return sessionFactory.createSession(connection);
     }
 
-    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId) {
+    /*
+     * Used only for functional tests
+     */
+    public static CAMQPSessionInterface createCAMQPSessionOverExistingConnection(String targetContainerId) {
         return sessionFactory.createSession(targetContainerId, false);
     }
 
-    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId, boolean exclusiveConnection) {
-        return sessionFactory.createSession(targetContainerId, true);
+    public static CAMQPSessionInterface createCAMQPSession(String targetContainerId) {
+        boolean exclusiveConnection = true;
+        return sessionFactory.createSession(targetContainerId, exclusiveConnection);
     }
 
     private CAMQPSession createSession(String targetContainerId, boolean exclusiveConnection) {
@@ -66,6 +72,9 @@ public final class CAMQPSessionFactory {
             connection = CAMQPSessionManager.createCAMQPConnection(targetContainerId);
         }
         else {
+            /*
+             * Used only for functional tests
+             */
             connection = CAMQPSessionManager.getCAMQPConnection(targetContainerId);
         }
         return createSession(connection);

@@ -37,7 +37,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
  */
 final class CAMQPHeartbeatProcessor implements Runnable {
     @GuardedBy("this")
-    private Date lastReceivedHeartBeatTime = null;
+    private Date lastReceivedHeartBeatTime = new Date();
 
     private CAMQPConnectionStateActor stateActor = null;
 
@@ -100,9 +100,7 @@ final class CAMQPHeartbeatProcessor implements Runnable {
                 return;
             }
 
-            if (lastReceivedHeartBeatTime != null) {
-                heartBeatDelayed = (now.getTime() - lastReceivedHeartBeatTime.getTime() > 2 * CAMQPConnectionConstants.HEARTBEAT_PERIOD);
-            }
+            heartBeatDelayed = ((now.getTime() - lastReceivedHeartBeatTime.getTime()) > (2 * CAMQPConnectionConstants.HEARTBEAT_PERIOD));
             localStateActor = this.stateActor;
             localSender = this.sender;
         }
