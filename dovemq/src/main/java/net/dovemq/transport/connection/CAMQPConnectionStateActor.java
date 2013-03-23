@@ -129,15 +129,21 @@ class CAMQPConnectionStateActor {
     }
 
     synchronized void waitForOpenExchange() {
-        try {
-            while (!openExchangeComplete) {
-                wait(CAMQPConnectionConstants.CONNECTION_HANDSHAKE_TIMEOUT);
+        long now = System.currentTimeMillis();
+        long expiryTime = now + CAMQPConnectionConstants.CONNECTION_HANDSHAKE_TIMEOUT;
+
+        while (!openExchangeComplete && (now < expiryTime)) {
+            try {
+                wait(expiryTime - now);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            now = System.currentTimeMillis();
         }
+
         if (!openExchangeComplete) {
-            throw new CAMQPConnectionException("Timed out waitig for connection handshaked to complete");
+            throw new CAMQPConnectionException("Timed out waiting for connection handshake to complete");
         }
     }
 

@@ -31,4 +31,6 @@ public final class CAMQPSessionConstants {
     static final int SESSION_SENDER_REQUEST_CREDIT_TIMER_INTERVAL = 1000; // milliseconds
 
     static final int DEFAULT_SESSION_DISPOSITION_SENDER_THREAD_COUNT = 8;
+
+    protected static final long SESSION_HANDSHAKE_TIMEOUT = 10000L; // milliseconds
 }

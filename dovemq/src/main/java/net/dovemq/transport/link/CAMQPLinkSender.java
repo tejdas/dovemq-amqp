@@ -473,14 +473,17 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     @Override
     void createLink(String sourceName, String targetName, CAMQPEndpointPolicy endpointPolicy) {
         super.createLink(sourceName, targetName, endpointPolicy);
+        long now = System.currentTimeMillis();
+        long expiryTime = now + CAMQPLinkConstants.LINK_WAIT_TIME_FOR_CREDIT;
         synchronized (this) {
-            while (!receivedFirstFlowCredit || (linkCredit <= 0)) {
+            while ((!receivedFirstFlowCredit || (linkCredit <= 0)) && (now < expiryTime)) {
                 try {
-                    wait(CAMQPLinkConstants.LINK_WAIT_TIME_FOR_CREDIT);
+                    wait(expiryTime - now);
                 }
                 catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
+                now = System.currentTimeMillis();
             }
             if (!receivedFirstFlowCredit || (linkCredit <= 0)) {
                 throw new CAMQPLinkException("Link Sender timed out waiting to get link credit after link establishment");

@@ -83,17 +83,30 @@ final class CAMQPLinkStateActor {
         processEvents();
     }
 
-    synchronized void waitForAttached(String targetAddress) {
-        try {
-            while (currentState != State.ATTACHED) {
-                wait(CAMQPLinkConstants.LINK_HANDSHAKE_TIMEOUT);
+    void waitForAttached(String targetAddress) {
+        waitForDesiredState(State.ATTACHED, targetAddress);
+    }
+
+    void waitForDetached(String targetAddress) {
+        waitForDesiredState(State.DETACHED, targetAddress);
+    }
+
+    private synchronized void waitForDesiredState(State desiredState, String targetAddress) {
+        long now = System.currentTimeMillis();
+        long expiryTime = now + CAMQPLinkConstants.LINK_HANDSHAKE_TIMEOUT;
+
+        while ((currentState != desiredState) && (now < expiryTime)) {
+            try {
+                wait(expiryTime - now);
             }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            now = System.currentTimeMillis();
         }
-        catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        if (currentState != State.ATTACHED) {
-            String errorMessage = "Timed out waiting for link to be attached to target address: " + targetAddress;
+
+        if (currentState != desiredState) {
+            String errorMessage = "Timed out waiting for link to be in the desired state: " + desiredState + " target address: " + targetAddress;
             log.warn(errorMessage);
             throw new CAMQPLinkException(errorMessage);
         }
@@ -106,22 +119,6 @@ final class CAMQPLinkStateActor {
 
     void sessionClosed() {
         preProcessSessionUnmapped(null);
-    }
-
-    synchronized void waitForDetached(String targetAddress) {
-        try {
-            while (currentState != State.DETACHED) {
-                wait(CAMQPLinkConstants.LINK_HANDSHAKE_TIMEOUT);
-            }
-        }
-        catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        if (currentState != State.DETACHED) {
-            String errorMessage = "Timed out waiting for link to be detached from target address: " + targetAddress;
-            log.warn(errorMessage);
-            throw new CAMQPLinkException(errorMessage);
-        }
     }
 
     void attachReceived(CAMQPControlAttach data) {

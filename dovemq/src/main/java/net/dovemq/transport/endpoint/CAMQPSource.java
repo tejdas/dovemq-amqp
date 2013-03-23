@@ -218,18 +218,15 @@ final class CAMQPSource implements CAMQPSourceInterface {
     private void checkUnsentMessageCountThresholdAtLink() {
         synchronized (unsentCountLock) {
             if (unsentDeliveryCount >= maxUnsentDeliveries) {
-                long startTime = System.currentTimeMillis();
-                long endTime = startTime;
-                while (unsentDeliveryCount > minUnsentDeliveryThreshold) {
+                long now = System.currentTimeMillis();
+                long expiryTime = now + maxWaitPeriodForUnsentDeliveryThreshold;
+                while ((unsentDeliveryCount > minUnsentDeliveryThreshold) && (now < expiryTime)) {
                     try {
-                        if (endTime-startTime >= maxWaitPeriodForUnsentDeliveryThreshold) {
-                            break;
-                        }
-                        unsentCountLock.wait(maxWaitPeriodForUnsentDeliveryThreshold -(endTime-startTime));
+                        unsentCountLock.wait(expiryTime - now);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
-                    endTime = System.currentTimeMillis();
+                    now = System.currentTimeMillis();
                 }
 
                 if (unsentDeliveryCount > minUnsentDeliveryThreshold) {

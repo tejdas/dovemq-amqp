@@ -78,15 +78,29 @@ class CAMQPSessionStateActor {
         processEvents();
     }
 
-    synchronized void waitForMapped() {
-        try {
-            while (currentState != State.MAPPED) {
-                wait();
+    private synchronized void waitForDesiredState(State desiredState) {
+        long now = System.currentTimeMillis();
+        long expiryTime = now + CAMQPSessionConstants.SESSION_HANDSHAKE_TIMEOUT;
+
+        while ((currentState != desiredState) && (now < expiryTime)) {
+            try {
+                wait(expiryTime - now);
             }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            now = System.currentTimeMillis();
         }
-        catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+
+        if (currentState != desiredState) {
+            String errorMessage = "Timed out waiting for link to be in the desired state: " + desiredState;
+            log.warn(errorMessage);
+            throw new CAMQPSessionException(errorMessage);
         }
+    }
+
+    void waitForMapped() {
+        waitForDesiredState(State.MAPPED);
     }
 
     void sendEnd(CAMQPSessionControlWrapper endContext) {
@@ -94,15 +108,8 @@ class CAMQPSessionStateActor {
         processEvents();
     }
 
-    synchronized void waitForUnmapped() {
-        try {
-            while (currentState != State.UNMAPPED) {
-                wait();
-            }
-        }
-        catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+    void waitForUnmapped() {
+        waitForDesiredState(State.UNMAPPED);
     }
 
     void beginReceived(CAMQPSessionControlWrapper data) {
