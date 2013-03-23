@@ -33,7 +33,7 @@ object BasicAckConsumer {
     println("created session to DoveMQ broker running at: " + brokerIp)
 
     /*
-     * Create a consumer that binds to a transient queue on the broker.
+     * Create a consumer that binds to a queue on the broker.
      * Also set the MessageAcknowledgementPolicy to CONSUMER_ACKS.
      */
     val endpointPolicy = new DoveMQEndpointPolicy(MessageAcknowledgementPolicy.CONSUMER_ACKS)
@@ -51,7 +51,7 @@ object BasicAckConsumer {
      * Register a shutdown hook to perform graceful shutdown.
      */
     Runtime.getRuntime().addShutdownHook(new Thread() {
-      override def run() {
+      override def run() = {
         session.close()
         ConnectionFactory.shutdown()
       }

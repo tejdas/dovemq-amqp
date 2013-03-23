@@ -1,10 +1,10 @@
-package net.dovemq.samples.basic
+package net.dovemq.samples.pubsub
 
 import net.dovemq.api.{DoveMQMessageReceiver, DoveMQMessage, ConnectionFactory}
 
 /**
  * Implementation of a sample MessageReceiver callback, that is registered
- * with the Consumer.
+ * with the Subscriber.
  */
 class SampleMessageReceiver extends DoveMQMessageReceiver {
   override def messageReceived(message: DoveMQMessage) = {
@@ -14,15 +14,10 @@ class SampleMessageReceiver extends DoveMQMessageReceiver {
   }
 }
 
-/**
- * This sample shows how to create a DoveMQ consumer that creates a
- * queue in the DoveMQ broker, and waits for incoming messages.
- */
-object BasicConsumer {
+object TopicSubscriber {
+ def main(args: Array[String]): Unit = {
 
-  def main(args: Array[String]): Unit = {
-
-    val queueName = "SampleQueue"
+    val topicName = "SampleTopic"
     val brokerIp = System.getProperty("dovemq.broker", "localhost")
 
     ConnectionFactory.initialize("producer")
@@ -30,16 +25,16 @@ object BasicConsumer {
     val session = ConnectionFactory.createSession(brokerIp)
     println("created session to DoveMQ broker running at: " + brokerIp)
 
-    val consumer = session.createConsumer(queueName)
+    val subscriber = session.createSubscriber(topicName)
 
     /*
-     * Register a message receiver with the consumer to asynchronously
+     * Register a message receiver with the subscriber to asynchronously
      * receive messages.
      */
     val messageReceiver = new SampleMessageReceiver()
-    consumer.registerMessageReceiver(messageReceiver)
+    subscriber.registerMessageReceiver(messageReceiver)
 
-    println("waiting for messages. Press Ctl-C to shut down consumer.")
+    println("waiting for messages. Press Ctl-C to shut down subscriber.")
     /*
      * Register a shutdown hook to perform graceful shutdown.
      */

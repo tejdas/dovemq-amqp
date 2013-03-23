@@ -7,7 +7,7 @@ import net.dovemq.api.Producer;
 import net.dovemq.api.Session;
 
 /**
- * This sample shows how to create a DoveMQ producer that creates a transient
+ * This sample shows how to create a DoveMQ producer that creates a
  * queue in the DoveMQ broker, and sends messages.
  */
 public class BasicProducer {
@@ -33,7 +33,7 @@ public class BasicProducer {
             System.out.println("created session to DoveMQ broker running at: " + brokerIp);
 
             /*
-             * Create a producer that binds to a transient queue on the broker.
+             * Create a producer that binds to a queue on the broker.
              */
             Producer producer = session.createProducer(QUEUE_NAME);
 

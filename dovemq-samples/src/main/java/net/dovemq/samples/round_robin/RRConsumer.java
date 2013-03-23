@@ -11,7 +11,7 @@ import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.api.Session;
 
 /**
- * This sample shows how to create a DoveMQ consumer that creates a transient
+ * This sample shows how to create a DoveMQ consumer that creates a
  * queue in the DoveMQ broker, and waits for incoming messages. It creates
  * multiple consumers attached to the queue. When Producer sends messages to the
  * queue, it is routed to all the consumers in a round-robin fashion.
@@ -56,7 +56,7 @@ public class RRConsumer {
         public void run() {
             try {
                 /*
-                 * Create a consumer that binds to a transient queue on the
+                 * Create a consumer that binds to a queue on the
                  * broker.
                  */
                 Consumer consumer = session.createConsumer(QUEUE_NAME);

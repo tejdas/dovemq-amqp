@@ -1,13 +1,14 @@
 package net.dovemq.samples.round_robin
 
 import net.dovemq.api.{ConnectionFactory, Session, DoveMQMessageReceiver, DoveMQMessage, Consumer, DoveMQEndpointPolicy}
-import java.util.concurrent.{CountDownLatch, Executors}
+import scala.actors.Actor
+import scala.collection.mutable.ListBuffer
 
 /**
  * Implementation of a sample MessageReceiver callback, that is registered
  * with the Consumer.
  */
-class SampleMessageReceiver(val id: Integer) extends DoveMQMessageReceiver {
+private class SampleMessageReceiver(val id: Integer) extends DoveMQMessageReceiver {
   override def messageReceived(message: DoveMQMessage) = {
     val body = message.getPayload()
     val payload = new String(body)
@@ -15,26 +16,34 @@ class SampleMessageReceiver(val id: Integer) extends DoveMQMessageReceiver {
   }
 }
 
-class SampleConsumer(session: Session, id: Integer, queueName: String, beginSignal: CountDownLatch, doneSignal: CountDownLatch) extends Runnable {
-  override def run() {
-    try {
-      beginSignal.await()
-      /*
-       * Create a consumer that binds to a transient queue on the
-       * broker.
-       */
-      val consumer = session.createConsumer(queueName)
+abstract class Command
+case class RegisterMessageReceiver extends Command
+case class Shutdown extends Command
 
-      /*
-       * Register a message receiver with the consumer to
-       * asynchronously receive messages.
-       */
-      val messageReceiver = new SampleMessageReceiver(id)
-      consumer.registerMessageReceiver(messageReceiver)
+class ConsumerActor(session: Session, id: Integer, queueName: String) extends Actor {
+  def act() = {
+    while (true) {
+      receive {
+        case RegisterMessageReceiver =>
+          /*
+           * Create a consumer that binds to a queue on the
+           * broker.
+           */
+          val consumer = session.createConsumer(queueName)
 
-      println("created consumer: id(" + id + ") , waiting for messages")
-      doneSignal.await()
-      println("consumer: " + id + " done")
+          /*
+           * Register a message receiver with the consumer to
+           * asynchronously receive messages.
+           */
+          val messageReceiver = new SampleMessageReceiver(id)
+          consumer.registerMessageReceiver(messageReceiver)
+
+          println("created consumer: id(" + id + ") , waiting for messages")
+
+        case Shutdown =>
+          println("consumer: " + id + " done")
+          exit
+      }
     }
   }
 }
@@ -43,9 +52,6 @@ object RRConsumer {
   def main(args: Array[String]): Unit = {
 
     val numConsumers = 4;
-    val beginSignal = new CountDownLatch(1);
-    val doneSignal = new CountDownLatch(1);
-    val executor = Executors.newFixedThreadPool(numConsumers);
     val queueName = "SampleQueue"
     val brokerIp = System.getProperty("dovemq.broker", "localhost")
 
@@ -54,22 +60,24 @@ object RRConsumer {
     val session = ConnectionFactory.createSession(brokerIp)
     println("created session to DoveMQ broker running at: " + brokerIp)
 
+    val consumers = ListBuffer[ConsumerActor]()
+
     for (i <- 0 until numConsumers) {
-      val sampleConsumer = new SampleConsumer(session, i, queueName, beginSignal, doneSignal)
-      executor.submit(sampleConsumer)
+      consumers += new ConsumerActor(session, i, queueName)
     }
 
-    beginSignal.countDown()
+    consumers.foreach(consumer => consumer.start)
+    consumers.foreach(consumer => consumer !  RegisterMessageReceiver)
+
     println("waiting for messages. Press Ctl-C to shut down consumer.")
     /*
      * Register a shutdown hook to perform graceful shutdown.
      */
     Runtime.getRuntime().addShutdownHook(new Thread() {
-      override def run() {
-        doneSignal.countDown()
+      override def run() = {
+        consumers.foreach(consumer => consumer !  Shutdown)
 
         Thread.sleep(2000);
-        executor.shutdown();
         session.close()
         ConnectionFactory.shutdown()
       }
