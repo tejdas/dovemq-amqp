@@ -22,7 +22,27 @@ import net.dovemq.api.Session;
  */
 public class Requester {
     private static final class MessageSynchronizer {
-        public DoveMQMessage replyMessage = null;
+        private DoveMQMessage replyMessage = null;
+
+        synchronized void update(DoveMQMessage reply) {
+            replyMessage = reply;
+            notify();
+        }
+
+        synchronized DoveMQMessage getResponse(long timeout) {
+            long now = System.currentTimeMillis();
+            long expiryTime = now + timeout;
+            while ((replyMessage == null) && (now < expiryTime)) {
+                try {
+                    wait(expiryTime - now);
+                }
+                catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                now = System.currentTimeMillis();
+            }
+            return replyMessage;
+        }
     }
     /*
      * Outgoing request messages are stored until a response message has been
@@ -47,11 +67,7 @@ public class Requester {
             final MessageSynchronizer requestMessageSynchronizer = outstandingRequests.remove(correlationId);
             if (requestMessageSynchronizer != null) {
                 System.out.println("received response for requestId: " + correlationId);
-
-                synchronized (requestMessageSynchronizer) {
-                    requestMessageSynchronizer.replyMessage = message;
-                    requestMessageSynchronizer.notify();
-                }
+                requestMessageSynchronizer.update(message);
             }
         }
     }
@@ -118,19 +134,15 @@ public class Requester {
             producer.sendMessage(message);
 
             System.out.println("waiting for response");
-            synchronized (requestMessageSynchronizer) {
-                while (requestMessageSynchronizer.replyMessage == null) {
-                    requestMessageSynchronizer.wait(5000);
-                    break;
-                }
-
-                if (requestMessageSynchronizer.replyMessage != null) {
-                    byte[] body = requestMessageSynchronizer.replyMessage.getPayload();
-                    String payload = new String(body);
-                    System.out.println("Response payload: " + payload);
-                } else {
-                    System.out.println("Timed out waiting for response");
-                }
+            DoveMQMessage response = requestMessageSynchronizer
+                    .getResponse(5000);
+            if (response != null) {
+                byte[] body = response.getPayload();
+                String payload = new String(body);
+                System.out.println("Response payload: " + payload);
+            }
+            else {
+                System.out.println("Timed out waiting for response");
             }
 
             /*

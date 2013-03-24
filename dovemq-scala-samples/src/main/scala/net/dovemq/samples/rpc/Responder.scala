@@ -10,6 +10,9 @@ case class Shutdown extends Command
 case class CreateProducer() extends Command
 case class ReceiveRequest(val messageId: String) extends Command
 
+/**
+ * Actor that represents a message sender
+ */
 private class ResponseSender(replyToAddress : String, session : Session) extends Actor {
   var producer: Producer = null
   override def act() = {
@@ -41,15 +44,19 @@ private class ResponseSender(replyToAddress : String, session : Session) extends
     }
   }
 }
-case class MessageWrapper(val request: DoveMQMessage) extends Command
+case class IncomingRequestMessage(val request: DoveMQMessage) extends Command
 
+/**
+ * Actor that processes incoming requests and forwards to other
+ * actors that acts as responders.
+ */
 private class RequestProcessor(session: Session) extends Actor {
   private val responseSenderMap = Map.empty[String, ResponseSender]
 
   override def act() = {
     while (true) {
       receive {
-        case MessageWrapper(request) =>
+        case IncomingRequestMessage(request) =>
           val body = request.getPayload()
           val payload = if (body != null) new String(body) else null
           val replyToAddress = request.getMessageProperties().getReplyToAddress()
@@ -76,10 +83,18 @@ private class RequestProcessor(session: Session) extends Actor {
 
 private class SampleMessageReceiver(val requestProcessor : RequestProcessor) extends DoveMQMessageReceiver {
   override def messageReceived(message: DoveMQMessage) = {
-    requestProcessor ! MessageWrapper(message)
+    requestProcessor ! IncomingRequestMessage(message)
   }
 }
 
+/**
+ * This sample demonstrates how to simulate RPC style communication by using a
+ * pair of queues, one for sending request and another for receiving response.
+ * The incoming request message is tagged with a messageId. The Responder sends
+ * a response message that is tagged with a correlationId that is the same as
+ * the messageId. The requester uses the correlationId to match the incoming
+ * response for the outgoing request.
+ */
 object Responder {
   def main(args: Array[String]): Unit = {
 

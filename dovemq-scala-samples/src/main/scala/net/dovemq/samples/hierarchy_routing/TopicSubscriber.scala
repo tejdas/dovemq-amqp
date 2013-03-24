@@ -1,4 +1,4 @@
-package net.dovemq.samples.pubsub
+package net.dovemq.samples.hierarchy_routing
 
 import net.dovemq.api.{DoveMQMessageReceiver, DoveMQMessage, ConnectionFactory}
 
@@ -15,24 +15,39 @@ class SampleMessageReceiver extends DoveMQMessageReceiver {
 }
 
 /**
- * This sample shows how to create a DoveMQ subscriber that creates or binds to
- * a topic on the DoveMQ broker, and waits for incoming messages.
+ * This sample shows how to create a DoveMQ Hierarchical subscriber that creates
+ * or binds to a certain hierarchy under the root topic and waits for incoming
+ * messages. It only gets messages that are published at or below that
+ * hierarchy.
  */
 object TopicSubscriber {
- def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {
 
-    val topicName = "SampleTopic"
+    val topicName = "sports.cricket"
     val brokerIp = System.getProperty("dovemq.broker", "localhost")
 
-    ConnectionFactory.initialize("producer")
+    ConnectionFactory.initialize("subscriber")
 
     val session = ConnectionFactory.createSession(brokerIp)
     println("created session to DoveMQ broker running at: " + brokerIp)
 
     /*
-     * Create a subscriber that creates/binds to a topic on the broker.
+     * Create a subscriber that creates/binds to a hierarchical-scoped
+     * topic on the broker.Only those messages that
+     * are published at/below this hierarchy are routed to the
+     * subscriber.
+     *
+     * e.g.
+     * sports.cricket.test
+     * sports.cricket.india
+     *
+     * but not
+     *
+     * sports.baseball
+     * sports
      */
-    val subscriber = session.createSubscriber(topicName)
+    val subscriber = session.createHierarchicalTopicSubscriber(topicName);
+    System.out.println("Created TopicSubscriber at hierarchy scope: " + topicName);
 
     /*
      * Register a message receiver with the subscriber to asynchronously

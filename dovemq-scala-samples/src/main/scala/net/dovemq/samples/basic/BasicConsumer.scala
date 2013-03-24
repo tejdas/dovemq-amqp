@@ -26,10 +26,15 @@ object BasicConsumer {
     val brokerIp = System.getProperty("dovemq.broker", "localhost")
 
     ConnectionFactory.initialize("producer")
-
+    /*
+     * Create an AMQP session.
+     */
     val session = ConnectionFactory.createSession(brokerIp)
     println("created session to DoveMQ broker running at: " + brokerIp)
 
+    /*
+     * Create a consumer that binds to a queue on the broker.
+     */
     val consumer = session.createConsumer(queueName)
 
     /*

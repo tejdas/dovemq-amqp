@@ -17,14 +17,17 @@ private class SampleTopicReceiver(val id: Integer) extends DoveMQMessageReceiver
 }
 
 abstract class Command
-case class RegisterMessageReceiver extends Command
+case class Initialize extends Command
 case class Shutdown extends Command
 
+/**
+ * Actor that represents a subscriber
+ */
 class SubscriberActor(session: Session, id: Integer, topicName: String) extends Actor {
   def act() = {
     while (true) {
       receive {
-        case RegisterMessageReceiver =>
+        case Initialize =>
           /*
            * Create a subscriber that binds to a topic on the
            * broker.
@@ -48,6 +51,12 @@ class SubscriberActor(session: Session, id: Integer, topicName: String) extends 
   }
 }
 
+/**
+ * This sample shows how to create a DoveMQ subscriber that creates a Topic in
+ * the DoveMQ broker, and waits for incoming messages. It creates multiple
+ * subscribers attached to the Topic. When Publisher publishes messages on the
+ * topic, it is multi-casted to all Subscribers.
+ */
 object TopicMultipleSubscribers {
  def main(args: Array[String]): Unit = {
 
@@ -67,7 +76,7 @@ object TopicMultipleSubscribers {
     }
 
     subscribers.foreach(subscriber => subscriber.start)
-    subscribers.foreach(subscriber => subscriber !  RegisterMessageReceiver)
+    subscribers.foreach(subscriber => subscriber !  Initialize)
 
     println("waiting for messages. Press Ctl-C to shut down subscriber.")
     /*

@@ -17,14 +17,17 @@ private class SampleMessageReceiver(val id: Integer) extends DoveMQMessageReceiv
 }
 
 abstract class Command
-case class RegisterMessageReceiver extends Command
+case class Initialize extends Command
 case class Shutdown extends Command
 
+/**
+ * Actor that represents a consumer
+ */
 class ConsumerActor(session: Session, id: Integer, queueName: String) extends Actor {
   def act() = {
     while (true) {
       receive {
-        case RegisterMessageReceiver =>
+        case Initialize =>
           /*
            * Create a consumer that binds to a queue on the
            * broker.
@@ -48,6 +51,12 @@ class ConsumerActor(session: Session, id: Integer, queueName: String) extends Ac
   }
 }
 
+/**
+ * This sample shows how to create a DoveMQ consumer that creates a
+ * queue in the DoveMQ broker, and waits for incoming messages. It creates
+ * multiple consumers attached to the queue. When Producer sends messages to the
+ * queue, it is routed to all the consumers in a round-robin fashion.
+ */
 object RRConsumer {
   def main(args: Array[String]): Unit = {
 
@@ -67,7 +76,7 @@ object RRConsumer {
     }
 
     consumers.foreach(consumer => consumer.start)
-    consumers.foreach(consumer => consumer !  RegisterMessageReceiver)
+    consumers.foreach(consumer => consumer !  Initialize)
 
     println("waiting for messages. Press Ctl-C to shut down consumer.")
     /*
