@@ -40,10 +40,13 @@ final class CAMQPFrameDecoder extends FrameDecoder {
      */
     private CAMQPFrameHeader header = null;
 
-    private volatile CAMQPConnectionStateActor connectionStateActor = null;
+    private volatile boolean receivedConnectionHeaderBytes = false;
 
-    void setConnectionStateActor(CAMQPConnectionStateActor connectionStateActor) {
-        this.connectionStateActor = connectionStateActor;
+    /*
+     * For junit testing only
+     */
+    void setReceivedConnectionHeaderBytes(boolean receivedConnectionHeaderBytes) {
+        this.receivedConnectionHeaderBytes = receivedConnectionHeaderBytes;
     }
 
     private CAMQPFrameHeader getHeaderAndReset() {
@@ -58,7 +61,7 @@ final class CAMQPFrameDecoder extends FrameDecoder {
             throw new IllegalArgumentException("null argument(s) to CAMQPFrameDecoder.decode()");
         }
 
-        if (!connectionStateActor.hasReceivedConnectionHeaderBytes()) {
+        if (!receivedConnectionHeaderBytes) {
             if (buffer.readableBytes() < CAMQPConnectionConstants.HEADER_LENGTH) {
                 /*
                  * Insufficient bytes available to read the frame header. Wait
@@ -68,6 +71,7 @@ final class CAMQPFrameDecoder extends FrameDecoder {
             }
 
             ChannelBuffer handshakeHeader = buffer.readBytes(CAMQPConnectionConstants.HEADER_LENGTH);
+            receivedConnectionHeaderBytes = true;
             return new CAMQPHandshakeFrame(handshakeHeader);
         }
 

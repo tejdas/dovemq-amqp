@@ -92,12 +92,6 @@ class CAMQPConnectionStateActor {
 
     private boolean processingQueuedEvents = false;
 
-    private volatile boolean receivedConnectionHeaderBytes = false;
-
-    boolean hasReceivedConnectionHeaderBytes() {
-        return receivedConnectionHeaderBytes;
-    }
-
     private final Queue<CAMQPQueuedContext<Event>> queuedEvents = new ConcurrentLinkedQueue<>();
 
     private final Queue<CAMQPQueuedContext<Event>> queuedGeneratedEvents = new ConcurrentLinkedQueue<>();
@@ -177,7 +171,6 @@ class CAMQPConnectionStateActor {
     }
 
     void connectionHeaderBytesReceived(ChannelBuffer buffer) {
-        receivedConnectionHeaderBytes = true;
         queuedEvents.add(new CAMQPQueuedContext<Event>(Event.CONN_HDR_BYTES_RECEIVED, buffer));
         processEvents();
     }

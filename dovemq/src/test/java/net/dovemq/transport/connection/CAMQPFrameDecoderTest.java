@@ -18,8 +18,6 @@
 package net.dovemq.transport.connection;
 
 import junit.framework.TestCase;
-import net.dovemq.transport.connection.CAMQPConnectionStateActor;
-import net.dovemq.transport.connection.CAMQPFrameDecoder;
 import net.dovemq.transport.connection.mockjetty.MockJettyChannel;
 import net.dovemq.transport.frame.CAMQPFrame;
 import net.dovemq.transport.frame.CAMQPFrameConstants;
@@ -30,7 +28,6 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Test;
@@ -65,16 +62,8 @@ public class CAMQPFrameDecoderTest extends TestCase
     public void testDecodeInsufficientHeader() throws Exception
     {
         final ChannelHandlerContext ctx = mockContext.mock(ChannelHandlerContext.class);
-        final CAMQPConnectionStateActor mockActor = mockContext.mock(CAMQPConnectionStateActor.class);
-        mockContext.checking(new Expectations() {
-            {
-                ignoring(mockActor).hasReceivedConnectionHeaderBytes();will(returnValue(true));
-            }
-        });
-
         Channel channel = new MockJettyChannel(false);
         CAMQPFrameDecoder decoder = new CAMQPFrameDecoder();
-        decoder.setConnectionStateActor(mockActor);
         ChannelBuffer buffer = ChannelBuffers.dynamicBuffer(CAMQPFrameConstants.FRAME_HEADER_SIZE - 2);
         assertEquals(null, decoder.decode(ctx, channel, buffer));
     }
@@ -84,16 +73,9 @@ public class CAMQPFrameDecoderTest extends TestCase
     {
         final ChannelHandlerContext ctx = mockContext.mock(ChannelHandlerContext.class);
         Channel channel = new MockJettyChannel(false);
-        final CAMQPConnectionStateActor mockActor = mockContext.mock(CAMQPConnectionStateActor.class);
-        mockContext.checking(new Expectations() {
-            {
-                ignoring(mockActor).hasReceivedConnectionHeaderBytes();will(returnValue(true));
-            }
-        });
-
         int frameSize = 1024;
         CAMQPFrameDecoder decoder = new CAMQPFrameDecoder();
-        decoder.setConnectionStateActor(mockActor);
+        decoder.setReceivedConnectionHeaderBytes(true);
         CAMQPFrameHeader inputFrameHeader = new CAMQPFrameHeader();
         inputFrameHeader.setChannelNumber((short) 12);
         inputFrameHeader.setFrameSize(frameSize);
@@ -127,16 +109,9 @@ public class CAMQPFrameDecoderTest extends TestCase
     {
         final ChannelHandlerContext ctx = mockContext.mock(ChannelHandlerContext.class);
         Channel channel = new MockJettyChannel(false);
-        final CAMQPConnectionStateActor mockActor = mockContext.mock(CAMQPConnectionStateActor.class);
-        mockContext.checking(new Expectations() {
-            {
-                ignoring(mockActor).hasReceivedConnectionHeaderBytes();will(returnValue(true));
-            }
-        });
-
         int frameSize = 1024;
         CAMQPFrameDecoder decoder = new CAMQPFrameDecoder();
-        decoder.setConnectionStateActor(mockActor);
+        decoder.setReceivedConnectionHeaderBytes(true);
         CAMQPFrameHeader inputFrameHeader = new CAMQPFrameHeader();
         inputFrameHeader.setChannelNumber((short) 12);
         inputFrameHeader.setFrameSize(frameSize);

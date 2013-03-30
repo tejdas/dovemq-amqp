@@ -81,10 +81,6 @@ final class CAMQPConnectionHandler extends SimpleChannelUpstreamHandler {
         assert (channel != null);
         stateActor.setChannel(channel);
         ctx.sendUpstream(e);
-
-        CAMQPFrameDecoder frameDecoder = channel.getPipeline()
-                .get(CAMQPFrameDecoder.class);
-        frameDecoder.setConnectionStateActor(stateActor);
     }
 
     @Override
