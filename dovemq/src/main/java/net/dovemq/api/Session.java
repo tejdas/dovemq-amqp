@@ -52,7 +52,7 @@ public final class Session {
     }
 
     /**
-     * Create a Producer and bind it to a transient queue on the DoveMQ broker.
+     * Create a Producer and bind it to a queue on the DoveMQ broker.
      *
      * @param queueName
      * @return
@@ -67,7 +67,7 @@ public final class Session {
     }
 
     /**
-     * Create a Consumer and bind it to a transient queue on the DoveMQ broker.
+     * Create a Consumer and bind it to a queue on the DoveMQ broker.
      *
      * @param queueName
      * @return
@@ -82,7 +82,7 @@ public final class Session {
     }
 
     /**
-     * Create a Consumer and bind it to a transient queue on the DoveMQ broker.
+     * Create a Consumer and bind it to a queue on the DoveMQ broker.
      *
      * @param queueName
      * @return

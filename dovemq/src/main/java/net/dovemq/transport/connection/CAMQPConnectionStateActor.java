@@ -17,7 +17,6 @@
 
 package net.dovemq.transport.connection;
 
-import java.net.InetSocketAddress;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -79,14 +78,8 @@ class CAMQPConnectionStateActor {
     volatile CAMQPSender sender = null;
 
     void setChannel(Channel channel) {
-        int ephemeralPort;
-        if (isInitiator) {
-            ephemeralPort = ((InetSocketAddress) channel.getLocalAddress()).getPort();
-        } else {
-            ephemeralPort = ((InetSocketAddress) channel.getRemoteAddress()).getPort();
-        }
         sender = new CAMQPSender(channel);
-        key.setEphemeralPort(ephemeralPort);
+        key.setAddress(channel);
         heartbeatProcessor = new CAMQPHeartbeatProcessor(this, sender);
     }
 

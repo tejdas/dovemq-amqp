@@ -17,16 +17,13 @@
 
 package net.dovemq.transport.connection;
 
+import java.net.InetSocketAddress;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.jboss.netty.channel.Channel;
 
 public final class CAMQPConnectionKey {
-    public CAMQPConnectionKey(String remoteContainerId, int ephemeralPort) {
-        super();
-        this.remoteContainerId = remoteContainerId;
-        this.ephemeralPort = ephemeralPort;
-    }
-
     public String getRemoteContainerId() {
         return remoteContainerId;
     }
@@ -35,31 +32,21 @@ public final class CAMQPConnectionKey {
         this.remoteContainerId = remoteContainerId;
     }
 
-    int getEphemeralPort() {
-        return ephemeralPort;
-    }
-
-    void setEphemeralPort(int ephemeralPort) {
-        this.ephemeralPort = ephemeralPort;
-    }
-
-    CAMQPConnectionKey() {
+    void setAddress(Channel channel) {
+        this.remoteHostAddress = ((InetSocketAddress) channel.getRemoteAddress()).getHostString();
+        this.remotePort = ((InetSocketAddress) channel.getRemoteAddress()).getPort();
+        this.localHostAddress = ((InetSocketAddress) channel.getLocalAddress()).getHostString();
+        this.localPort = ((InetSocketAddress) channel.getLocalAddress()).getPort();
     }
 
     private String remoteContainerId;
-
-    private int ephemeralPort = 0;
+    private String remoteHostAddress;
+    private int remotePort = 0;
+    private String localHostAddress;
+    private int localPort = 0;
 
     @Override
     public boolean equals(Object obj) {
-        if ((obj == null) || (!(obj instanceof CAMQPConnectionKey)))
-            return false;
-
-        CAMQPConnectionKey otherKey = (CAMQPConnectionKey) obj;
-
-        if ((ephemeralPort == 0) || (otherKey.ephemeralPort == 0))
-            return (remoteContainerId.equalsIgnoreCase(otherKey.remoteContainerId));
-
         return EqualsBuilder.reflectionEquals(this, obj);
     }
 
@@ -70,6 +57,7 @@ public final class CAMQPConnectionKey {
 
     @Override
     public String toString() {
-        return remoteContainerId + "." + ephemeralPort;
+        return String.format("%s@%s:%d-%s:%d", remoteContainerId,
+                remoteHostAddress, remotePort, localHostAddress, localPort);
     }
 }

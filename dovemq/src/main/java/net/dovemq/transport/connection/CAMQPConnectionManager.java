@@ -166,7 +166,7 @@ public final class CAMQPConnectionManager {
                 connectionObserver.connectionCloseInitiatedByRemotePeer(connection);
             }
             else {
-                log.warn("Connection not found in the openConnections list: " + key.getRemoteContainerId() + "  " + key.getEphemeralPort());
+                log.warn("Connection not found in the openConnections list: " + key.toString());
             }
         }
     }
