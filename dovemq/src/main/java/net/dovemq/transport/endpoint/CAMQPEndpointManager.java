@@ -18,7 +18,6 @@
 package net.dovemq.transport.endpoint;
 
 import net.dovemq.broker.endpoint.DoveMQEndpointManager;
-import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.EndpointType;
 import net.dovemq.transport.link.CAMQPLinkFactory;
 import net.dovemq.transport.link.CAMQPLinkReceiverInterface;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
@@ -70,12 +69,7 @@ public final class CAMQPEndpointManager {
         CAMQPSource dovemqSource = new CAMQPSource(linkSender, endpointPolicy);
         linkSender.registerSource(dovemqSource);
         if (doveMQEndpointManager != null) {
-            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
-                doveMQEndpointManager.consumerAttached(source, dovemqSource, endpointPolicy);
-            }
-            else {
-                doveMQEndpointManager.subscriberAttached(source, dovemqSource, endpointPolicy);
-            }
+            doveMQEndpointManager.sourceEndpointAttached(source, dovemqSource, endpointPolicy);
         }
         return dovemqSource;
     }
@@ -85,35 +79,20 @@ public final class CAMQPEndpointManager {
         linkReceiver.registerTarget(dovemqTarget);
         linkReceiver.provideLinkCredit();
         if (doveMQEndpointManager != null) {
-            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
-                doveMQEndpointManager.producerAttached(target, dovemqTarget, endpointPolicy);
-            }
-            else {
-                doveMQEndpointManager.publisherAttached(target, dovemqTarget, endpointPolicy);
-            }
+            doveMQEndpointManager.targetEndpointAttached(target, dovemqTarget, endpointPolicy);
         }
         return dovemqTarget;
     }
 
     public static void sourceEndpointDetached(String sourceName, CAMQPSourceInterface source, CAMQPEndpointPolicy endpointPolicy) {
         if (doveMQEndpointManager != null) {
-            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
-                doveMQEndpointManager.consumerDetached(sourceName, source);
-            }
-            else {
-                doveMQEndpointManager.subscriberDetached(sourceName, source, endpointPolicy);
-            }
+            doveMQEndpointManager.sourceEndpointDetached(sourceName, source, endpointPolicy);
         }
     }
 
     public static void targetEndpointDetached(String targetName, CAMQPTargetInterface target, CAMQPEndpointPolicy endpointPolicy) {
         if (doveMQEndpointManager != null) {
-            if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
-                doveMQEndpointManager.producerDetached(targetName, target);
-            }
-            else {
-                doveMQEndpointManager.publisherDetached(targetName, target, endpointPolicy);
-            }
+            doveMQEndpointManager.targetEndpointDetached(targetName, target, endpointPolicy);
         }
     }
 }

@@ -93,7 +93,7 @@ class CAMQPSessionStateActor {
         }
 
         if (currentState != desiredState) {
-            String errorMessage = "Timed out waiting for link to be in the desired state: " + desiredState;
+            String errorMessage = "Timed out waiting for session to be in the desired state: " + desiredState;
             log.warn(errorMessage);
             throw new CAMQPSessionException(errorMessage);
         }

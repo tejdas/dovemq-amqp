@@ -21,48 +21,68 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
+import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.EndpointType;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
-import net.dovemq.transport.utils.CAMQPThreadFactory;
 
 import org.apache.log4j.Logger;
 
-public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
-    private static final Logger log = Logger.getLogger(DoveMQEndpointManagerImpl.class);
+public final class DoveMQBrokerEndpointManagerImpl extends DoveMQAbstractEndpointManager {
+    private static final Logger log = Logger.getLogger(DoveMQBrokerEndpointManagerImpl.class);
 
     private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<>();
 
     private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap = new HashMap<>();
 
-    private final ExecutorService executor = Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQEndpointManagerThread"));
-
-    ExecutorService getExecutor() {
-        return executor;
-    }
-
-    public void shutdown() {
-        executor.shutdown();
-        try {
-            executor.awaitTermination(300, TimeUnit.SECONDS);
-        }
-        catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public DoveMQEndpointManagerImpl() {
+    public DoveMQBrokerEndpointManagerImpl() {
         topicRoutersMap.put(TopicRouterType.Basic, new ConcurrentHashMap<String, TopicRouter>());
         topicRoutersMap.put(TopicRouterType.MessageTagFilter, new ConcurrentHashMap<String, TopicRouter>());
         topicRoutersMap.put(TopicRouterType.Hierarchical, new ConcurrentHashMap<String, TopicRouter>());
     }
 
     @Override
-    public void producerAttached(String queueName, CAMQPTargetInterface producer, CAMQPEndpointPolicy endpointPolicy) {
+    public void sourceEndpointAttached(String endpointName, CAMQPSourceInterface sourceEndpoint, CAMQPEndpointPolicy endpointPolicy) {
+        if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
+            consumerAttached(endpointName, sourceEndpoint, endpointPolicy);
+        }
+        else {
+            subscriberAttached(endpointName, sourceEndpoint, endpointPolicy);
+        }
+    }
+
+    @Override
+    public void sourceEndpointDetached(String endpointName, CAMQPSourceInterface sourceEndpoint, CAMQPEndpointPolicy endpointPolicy) {
+        if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
+            consumerDetached(endpointName, sourceEndpoint);
+        }
+        else {
+            subscriberDetached(endpointName, sourceEndpoint, endpointPolicy);
+        }
+    }
+
+    @Override
+    public void targetEndpointAttached(String endpointName, CAMQPTargetInterface targetEndpoint, CAMQPEndpointPolicy endpointPolicy) {
+        if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
+            producerAttached(endpointName, targetEndpoint, endpointPolicy);
+        }
+        else {
+            publisherAttached(endpointName, targetEndpoint, endpointPolicy);
+        }
+    }
+
+    @Override
+    public void targetEndpointDetached(String endpointName, CAMQPTargetInterface targetEndpoint, CAMQPEndpointPolicy endpointPolicy) {
+        if (endpointPolicy.getEndpointType() == EndpointType.QUEUE) {
+            producerDetached(endpointName, targetEndpoint);
+        }
+        else {
+            publisherDetached(endpointName, targetEndpoint, endpointPolicy);
+        }
+    }
+
+    void producerAttached(String queueName, CAMQPTargetInterface producer, CAMQPEndpointPolicy endpointPolicy) {
         QueueRouter queueRouter = new QueueRouter(queueName);
         QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
         if (queueRouterInMap == null) {
@@ -74,8 +94,7 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
         }
     }
 
-    @Override
-    public void producerDetached(String queueName, CAMQPTargetInterface producer) {
+    void producerDetached(String queueName, CAMQPTargetInterface producer) {
         QueueRouter queueRouter = queueRouters.get(queueName);
         if (queueRouter != null) {
             queueRouter.producerDetached(producer);
@@ -87,8 +106,7 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
         log.debug("Producer detached from queue: " + queueName);
     }
 
-    @Override
-    public void consumerAttached(String queueName, CAMQPSourceInterface consumer, CAMQPEndpointPolicy endpointPolicy) {
+    void consumerAttached(String queueName, CAMQPSourceInterface consumer, CAMQPEndpointPolicy endpointPolicy) {
         QueueRouter queueRouter = new QueueRouter(queueName);
         QueueRouter queueRouterInMap = queueRouters.putIfAbsent(queueName, queueRouter);
         if (queueRouterInMap == null) {
@@ -99,8 +117,7 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
         }
     }
 
-    @Override
-    public void consumerDetached(String queueName, CAMQPSourceInterface consumer) {
+    void consumerDetached(String queueName, CAMQPSourceInterface consumer) {
         QueueRouter queueRouter = queueRouters.get(queueName);
         if (queueRouter != null) {
             queueRouter.consumerDetached(consumer);
@@ -112,8 +129,7 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
         log.debug("Consumer detached from queue: " + queueName);
     }
 
-    @Override
-    public void publisherAttached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy) {
+    void publisherAttached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
         TopicRouter topicRouter = new TopicRouter(topicName, routerType);
 
@@ -128,8 +144,7 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
         log.debug("publisher attached to topic: " + topicName);
     }
 
-    @Override
-    public void publisherDetached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy) {
+    void publisherDetached(String topicName, CAMQPTargetInterface publisher, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
 
@@ -144,8 +159,7 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
         log.debug("Publisher detached from topic: " + topicName);
     }
 
-    @Override
-    public void subscriberAttached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy) {
+    void subscriberAttached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
 
         if (routerType == TopicRouterType.Hierarchical) {
@@ -165,8 +179,7 @@ public final class DoveMQEndpointManagerImpl implements DoveMQEndpointManager {
         log.debug("subscriber attached to topic: " + topicName);
     }
 
-    @Override
-    public void subscriberDetached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy) {
+    void subscriberDetached(String topicName, CAMQPSourceInterface subscriber, CAMQPEndpointPolicy endpointPolicy) {
         TopicRouterType routerType = endpointPolicy.getTopicRouterType();
         ConcurrentMap<String, TopicRouter> topicRouters = topicRoutersMap.get(routerType);
 

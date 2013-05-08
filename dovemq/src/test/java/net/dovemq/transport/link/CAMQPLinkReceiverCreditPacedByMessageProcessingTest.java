@@ -217,6 +217,12 @@ public class CAMQPLinkReceiverCreditPacedByMessageProcessingTest {
             // TODO Auto-generated method stub
 
         }
+
+        @Override
+        public CAMQPSessionInterface getSession() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     /**

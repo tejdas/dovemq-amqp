@@ -18,62 +18,47 @@
 package net.dovemq.api;
 
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
-import net.dovemq.transport.endpoint.DoveMQMessageImpl;
-
-import org.apache.commons.lang.StringUtils;
 
 /**
- * This class is used by publishers to publish an AMQP message
- * to a Topic.
- * It encapsulates an AMQP Link Sender.
+ * AMQP is a peer-peer transport protocol. DoveMQ provides
+ * a programming model that allows a DoveMQ Sender endpoint
+ * to talk to an AMQP link receiver, without the DoveMQ Broker.
  *
- * @author tejdas
+ * This class provides the functionality of a DoveMQ Sender
+ * that encapsulates an AMQP link sender.
  */
-public final class Publisher extends BaseAckReceiver {
-    private final boolean isHierarchicalPublisher;
-    private final String topicHierarchy;
-
+public final class Sender extends BaseAckReceiver {
     private final CAMQPSourceInterface sourceEndpoint;
 
     /**
-     * Publish a message.
+     * Send an AMQP message.
      *
      * @param message
      */
-    public void publishMessage(DoveMQMessage message) {
+    public void sendMessage(DoveMQMessage message) {
         if (message == null) {
             throw new IllegalArgumentException("mesage cannot be null");
-        }
-        if (isHierarchicalPublisher) {
-            if (StringUtils.isEmpty(message.getApplicationProperty(DoveMQMessageImpl.TOPIC_PUBLISH_HIERARCHY_KEY))) {
-                message.setTopicPublishHierarchy(topicHierarchy);
-            }
         }
         sourceEndpoint.sendMessage(message);
     }
 
     /**
-     * Publish a binary payload as an AMQP message.
+     * Send a binary payload as an AMQP message.
      *
      * @param payload
      */
-    public void publishMessage(byte[] payload) {
+    public void sendMessage(byte[] payload) {
         if (payload == null) {
             throw new IllegalArgumentException("payload cannot be null");
         }
         DoveMQMessage message = MessageFactory.createMessage();
         message.addPayload(payload);
-        if (isHierarchicalPublisher) {
-            message.setTopicPublishHierarchy(topicHierarchy);
-        }
         sourceEndpoint.sendMessage(message);
     }
 
-    Publisher(String topicHierarchy, CAMQPSourceInterface sourceEndpoint) {
+    Sender(String sourceName, CAMQPSourceInterface sourceEndpoint) {
         super();
-        this.topicHierarchy = topicHierarchy;
         this.sourceEndpoint = sourceEndpoint;
-        isHierarchicalPublisher = !(StringUtils.isEmpty(topicHierarchy));
         sourceEndpoint.registerDispositionObserver(this);
     }
 }

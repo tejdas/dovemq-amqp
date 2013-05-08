@@ -25,6 +25,7 @@ import net.dovemq.transport.utils.CAMQPThreadFactory;
 import org.apache.log4j.Logger;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelException;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
@@ -40,7 +41,7 @@ public final class CAMQPListener {
 
     private ChannelFactory factory = null;
 
-    private Channel serverChannel = null;
+    private volatile Channel serverChannel = null;
 
     private CAMQPConnectionPipelineFactory pipelineFactory = null;
 
@@ -53,6 +54,10 @@ public final class CAMQPListener {
     }
 
     public void start() {
+        start(CAMQPConnectionConstants.AMQP_IANA_PORT);
+    }
+
+    public void start(int listenPort) {
         factory = new NioServerSocketChannelFactory(
                 Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyBossThread")),
                         Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQNettyWorkerThread")));
@@ -61,9 +66,13 @@ public final class CAMQPListener {
 
         pipelineFactory = new CAMQPConnectionPipelineFactory(false, defaultConnectionProps);
         bootstrap.setPipelineFactory(pipelineFactory);
-        serverChannel = bootstrap.bind(new InetSocketAddress(listenAddress, CAMQPConnectionConstants.AMQP_IANA_PORT));
-        log.info("CAMQP Listener on port: " + CAMQPConnectionConstants.AMQP_IANA_PORT);
-        System.out.println("DoveMQ Listener on port: " + CAMQPConnectionConstants.AMQP_IANA_PORT);
+        try {
+        serverChannel = bootstrap.bind(new InetSocketAddress(listenAddress, listenPort));
+        } catch (ChannelException e) {
+            throw new CAMQPConnectionException("Failed to start AMQP listener on port: " + listenPort + " error details: " + e.getMessage());
+        }
+        log.info("CAMQP Listener on port: " + listenPort);
+        System.out.println("DoveMQ Listener on port: " + listenPort);
     }
 
     public void shutdown() {
@@ -72,8 +81,10 @@ public final class CAMQPListener {
         }
         hasShutdown = true;
 
-        ChannelFuture future = serverChannel.close();
-        future.awaitUninterruptibly();
+        if (serverChannel != null) {
+            ChannelFuture future = serverChannel.close();
+            future.awaitUninterruptibly();
+        }
         factory.releaseExternalResources();
         log.info("DoveMQ Listener shut down");
         System.out.println("DoveMQ Listener shut down");

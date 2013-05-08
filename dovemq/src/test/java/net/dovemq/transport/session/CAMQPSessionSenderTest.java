@@ -82,6 +82,12 @@ class MockLinkSender implements CAMQPLinkSenderInterface
         // TODO Auto-generated method stub
         return 0;
     }
+
+    @Override
+    public CAMQPSessionInterface getSession() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
 
 public class CAMQPSessionSenderTest

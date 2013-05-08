@@ -130,6 +130,12 @@ public class CAMQPLinkAsyncSenderTest
             // TODO Auto-generated method stub
             return 0;
         }
+
+        @Override
+        public CAMQPSessionInterface getSession() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     private static class MockLinkReceiverFactory implements CAMQPLinkMessageHandlerFactory

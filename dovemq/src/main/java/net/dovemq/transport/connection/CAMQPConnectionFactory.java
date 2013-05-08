@@ -47,6 +47,10 @@ public final class CAMQPConnectionFactory {
         return connectionFactory.createConnection(targetHostName, connectionProps);
     }
 
+    public static CAMQPConnectionInterface createCAMQPConnectionToEndpoint(String targetHostName, int port, CAMQPConnectionProperties connectionProps) {
+        return connectionFactory.createConnection(targetHostName, port, connectionProps);
+    }
+
     public static void shutdown() {
         if (doShutdown.compareAndSet(false, true)) {
             connectionFactory.shutdownFactory();
@@ -67,6 +71,10 @@ public final class CAMQPConnectionFactory {
     }
 
     private CAMQPConnection createConnection(String targetContainerId, CAMQPConnectionProperties connectionProps) {
+        return createConnection(targetContainerId, CAMQPConnectionConstants.AMQP_IANA_PORT, connectionProps);
+    }
+
+    private CAMQPConnection createConnection(String targetContainerId, int port, CAMQPConnectionProperties connectionProps) {
         if (-1 == targetContainerId.indexOf('@')) {
             String errorInfo = String.format("Malformed containerID (%s), target Host could not be determined", targetContainerId);
             log.fatal(errorInfo);
@@ -75,10 +83,10 @@ public final class CAMQPConnectionFactory {
         String targetHostName = targetContainerId.split("@")[1];
 
         ChannelFuture connectFuture = null;
-        InetSocketAddress remoteAddress = new InetSocketAddress(targetHostName, CAMQPConnectionConstants.AMQP_IANA_PORT);
+        InetSocketAddress remoteAddress = new InetSocketAddress(targetHostName, port);
         if (remoteAddress.isUnresolved()) {
             String targetHostNameUnqualified = targetHostName.split("\\.")[0];
-            remoteAddress = new InetSocketAddress(targetHostNameUnqualified, CAMQPConnectionConstants.AMQP_IANA_PORT);
+            remoteAddress = new InetSocketAddress(targetHostNameUnqualified, port);
             if (remoteAddress.isUnresolved()) {
                 String errorMessage = String.format("Could not resolve remote address to endpoint: %s", targetHostName);
                 log.error(errorMessage);

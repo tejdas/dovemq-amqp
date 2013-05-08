@@ -15,23 +15,19 @@
  *
  */
 
-package net.dovemq.broker.driver;
+package net.dovemq.api;
 
-import net.dovemq.broker.endpoint.DoveMQEndpointDriver;
+import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
-public final class DoveMQBrokerDriver {
-
-    static void shutdown() {
-        System.out.println("DoveMQ broker shutting down");
-        boolean isBroker = true;
-        DoveMQEndpointDriver.shutdown(isBroker);
-        System.out.println("DoveMQ broker shut down");
+public final class RecvEndpoint extends BaseMessageReceiver {
+    public RecvEndpoint(String targetEndpointName, CAMQPTargetInterface targetEndpoint) {
+        super(targetEndpointName, targetEndpoint);
+        this.session = new Session(targetEndpointName, targetEndpoint.getSession());
     }
 
-    public static void main(String[] args) {
-        DoveMQEndpointDriver.initializeBrokerEndpoint("DoveMQBroker");
-
-        final DoveMQBrokerShutdownHook sh = new DoveMQBrokerShutdownHook();
-        Runtime.getRuntime().addShutdownHook(sh);
+    public Session getSession() {
+        return session;
     }
+
+    private final Session session;
 }

@@ -28,7 +28,7 @@ import net.dovemq.transport.session.CAMQPSessionInterface;
  * @author tejdas
  *
  */
-public interface CAMQPLinkSenderInterface {
+public interface CAMQPLinkSenderInterface extends CAMQPLinkInterface {
     /**
      * Called by end-point layer to register a {@link CAMQPSourceInterface}.
      *
@@ -53,6 +53,4 @@ public interface CAMQPLinkSenderInterface {
      * @param transferFrame
      */
     public void messageSent(CAMQPControlTransfer transferFrame);
-
-    public long getHandle();
 }

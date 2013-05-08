@@ -52,8 +52,88 @@ public final class ConnectionFactory {
             if (StringUtils.isEmpty(endpointID)) {
                 throw new IllegalArgumentException("Null EndpointID specified");
             }
-            boolean isBroker = false;
-            DoveMQEndpointDriver.initialize(isBroker, endpointID);
+
+            DoveMQEndpointDriver.initialize(endpointID);
+            endpointId = CAMQPConnectionManager.getContainerId();
+        }
+    }
+
+    /**
+     * AMQP is a peer-to-peer messaging transport protocol. DoveMQ
+     * provides capability for AMQP to be used in a peer-to-peer manner. In this
+     * case, there is no Broker involved. Messages are sent between two AMQP
+     * peers.
+     *
+     * For DoveMQ to work in the peer-to-peer manner, one endpoint acts
+     * as a DoveMQ listener, listening on a TCP port. This method provides the
+     * capability to initialize DoveMQ runtime for an AMQP (listener) endpoint
+     * in a Broker-less (peer-to-peer) interaction.
+     *
+     * This method lets the user register a RecvEndpointListener with the endpoint.
+     * When a DoveMQ peer creates an AMQP link to this endpoint, the
+     * RecvEndpointListener is called back with a RecvEndpoint, that encapsulate
+     * an AMQP link receiver.
+     *
+     * @param endpointID: allows the runtime to be distinguishable from other
+     * DoveMQ endpoints on the same machine, and also uniquely addressable.
+     *
+     * @param listenPort: TCP port that the DoveMQ endpoint listens on.
+     *
+     * @param endpointListener: RecvEndpointListener registered to receive
+     * callback when an AMQP link is created.
+     */
+    public static void initializeEndpoint(String endpointID, int listenPort, RecvEndpointListener endpointListener) {
+        if (endpointId == null) {
+            if (StringUtils.isEmpty(endpointID)) {
+                throw new IllegalArgumentException("Null EndpointID specified");
+            }
+
+            if (endpointListener == null) {
+                throw new IllegalArgumentException("Null endpointListener specified");
+            }
+
+            DoveMQEndpointDriver.initializeEndpoint(listenPort, endpointID, endpointListener);
+            endpointId = CAMQPConnectionManager.getContainerId();
+        }
+    }
+
+    /**
+     * AMQP is a peer-to-peer messaging transport protocol. DoveMQ
+     * provides capability for AMQP to be used in a peer-to-peer manner. In this
+     * case, there is no Broker involved. Messages are sent between two AMQP
+     * peers.
+     *
+     * For DoveMQ to work in the peer-to-peer manner, one endpoint acts
+     * as a DoveMQ listener, an another endpoint acts as a client. After
+     * an AMQP session is established, there is no distinction between the
+     * client, and listener, i.e, they become peers and either endpoint can
+     * initiate an AMQP link on the underlying (bidirectional) AMQP session.
+     *
+     * This method provides the capability to initialize DoveMQ runtime for an
+     * AMQP client endpoint in a Broker-less (peer-to-peer) interaction.
+     *
+     * This method lets the user register a RecvEndpointListener with the endpoint.
+     * When a DoveMQ peer creates an AMQP link to this endpoint, the
+     * RecvEndpointListener is called back with a RecvEndpoint, that encapsulate
+     * an AMQP link receiver.
+     *
+     * @param endpointID: allows the runtime to be distinguishable from other
+     * DoveMQ endpoints on the same machine, and also uniquely addressable.
+     *
+     * @param endpointListener: RecvEndpointListener registered to receive
+     * callback when an AMQP link is created.
+     */
+    public static void initializeClientEndpoint(String endpointID, RecvEndpointListener endpointListener) {
+        if (endpointId == null) {
+            if (StringUtils.isEmpty(endpointID)) {
+                throw new IllegalArgumentException("Null EndpointID specified");
+            }
+
+            if (endpointListener == null) {
+                throw new IllegalArgumentException("Null endpointListener specified");
+            }
+
+            DoveMQEndpointDriver.initializeClientEndpoint(endpointID, endpointListener);
             endpointId = CAMQPConnectionManager.getContainerId();
         }
     }
@@ -88,6 +168,20 @@ public final class ConnectionFactory {
         CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
 
         CAMQPConnectionInterface connection = CAMQPConnectionFactory.createCAMQPConnection(brokerContainerId, connectionProps);
+        return new Connection(connection);
+    }
+
+    public static Connection createConnectionToAMQPEndpoint(String targetDoveMQEndpointAddress, int port) {
+        if (StringUtils.isEmpty(targetDoveMQEndpointAddress)) {
+            throw new IllegalArgumentException("AMQP Endpoint address must be specified");
+        }
+        if (endpointId == null) {
+            throw new IllegalStateException("DoveMQ Runtime has not been initialized yet");
+        }
+        String endpointContainerId = String.format("broker@%s", targetDoveMQEndpointAddress);
+        CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
+
+        CAMQPConnectionInterface connection = CAMQPConnectionFactory.createCAMQPConnectionToEndpoint(endpointContainerId, port, connectionProps);
         return new Connection(connection);
     }
 

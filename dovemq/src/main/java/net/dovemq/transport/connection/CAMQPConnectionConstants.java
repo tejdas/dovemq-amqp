@@ -18,7 +18,7 @@
 package net.dovemq.transport.connection;
 
 public final class CAMQPConnectionConstants {
-    protected static final int AMQP_IANA_PORT = 5672;
+    public static final int AMQP_IANA_PORT = 5672;
 
     protected static final int PROTOCOL_ID = 0;
 

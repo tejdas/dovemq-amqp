@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public class LinkTestSource implements CAMQPSourceInterface
 {
@@ -81,5 +82,11 @@ public class LinkTestSource implements CAMQPSourceInterface
     {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    @Override
+    public CAMQPSessionInterface getSession() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

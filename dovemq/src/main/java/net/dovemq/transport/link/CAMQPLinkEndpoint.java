@@ -48,7 +48,7 @@ import org.apache.log4j.Logger;
  *
  * @author tejdas
  */
-public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
+public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler, CAMQPLinkInterface {
     private static final Logger log = Logger.getLogger(CAMQPLinkEndpoint.class);
 
     private final String roleAsString;
@@ -95,6 +95,16 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
         this.session = session;
         this.roleAsString = (getRole() == LinkRole.LinkSender) ? "LinkSender" : "LinkReceiver";
         linkStateActor = new CAMQPLinkStateActor(this);
+    }
+
+    @Override
+    public long getHandle() {
+        return linkHandle;
+    }
+
+    @Override
+    public CAMQPSessionInterface getSession() {
+        return session;
     }
 
     /**
@@ -252,10 +262,6 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler {
         }
         String initiatedBy = isInitiator ? "self" : "peer";
         log.debug(roleAsString + " destroyed between source: " + sourceAddress + " and target: " + targetAddress + " . Initiated by: " + initiatedBy);
-    }
-
-    CAMQPSessionInterface getSession() {
-        return session;
     }
 
     /**

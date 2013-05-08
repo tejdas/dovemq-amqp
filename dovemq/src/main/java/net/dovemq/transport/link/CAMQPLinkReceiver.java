@@ -423,9 +423,4 @@ final class CAMQPLinkReceiver extends CAMQPLinkEndpoint implements CAMQPLinkRece
     Object getEndpoint() {
         return target;
     }
-
-    @Override
-    public long getHandle() {
-        return linkHandle;
-    }
 }

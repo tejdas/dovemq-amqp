@@ -17,13 +17,11 @@
 
 package net.dovemq.transport.link;
 
-public final class CAMQPLinkSenderFlowControlException extends RuntimeException {
-    /**
-     *
-     */
-    private static final long serialVersionUID = 8215116235911942105L;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
-    CAMQPLinkSenderFlowControlException(String message) {
-        super(message);
-    }
+public interface CAMQPLinkInterface {
+
+    public long getHandle();
+
+    public CAMQPSessionInterface getSession();
 }

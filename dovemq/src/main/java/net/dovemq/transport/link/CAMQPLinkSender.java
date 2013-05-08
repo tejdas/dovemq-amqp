@@ -242,8 +242,9 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
 
         synchronized (this) {
             if (available >= maxAvailableLimit) {
-                log.warn("Reached available limit threshold: " + maxAvailableLimit);
-                throw new CAMQPLinkSenderFlowControlException("Reached available limit threshold: " + maxAvailableLimit);
+                String warnMessage = String.format("Link %d Reached maximum unsent message threshold: %d", getLinkName(), maxAvailableLimit);
+                log.warn(warnMessage);
+                throw new CAMQPLinkException(warnMessage);
             }
             available++;
 
@@ -432,11 +433,6 @@ class CAMQPLinkSender extends CAMQPLinkEndpoint implements CAMQPLinkSenderInterf
     @Override
     Object getEndpoint() {
         return source;
-    }
-
-    @Override
-    public long getHandle() {
-        return linkHandle;
     }
 
     @Override

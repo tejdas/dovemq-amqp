@@ -15,19 +15,11 @@
  *
  */
 
-package net.dovemq.api;
+package net.dovemq.transport.endpoint;
 
-import net.dovemq.transport.endpoint.CAMQPTargetInterface;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
-/**
- * This class is used by subscribers to receive an
- * AMQP message from a Topic.
- * It encapsulates an AMQP Link Receiver.
- *
- * @author tejdas
- */
-public final class Subscriber extends BaseMessageReceiver {
-    Subscriber(String targetName, CAMQPTargetInterface targetEndpoint) {
-        super(targetName, targetEndpoint);
-    }
+public interface CAMQPEndpointInterface {
+    public long getId();
+    public CAMQPSessionInterface getSession();
 }

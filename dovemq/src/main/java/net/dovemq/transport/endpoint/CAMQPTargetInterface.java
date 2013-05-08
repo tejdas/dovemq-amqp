@@ -30,7 +30,7 @@ import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
  * @author tdas
  *
  */
-public interface CAMQPTargetInterface {
+public interface CAMQPTargetInterface extends CAMQPEndpointInterface {
     /**
      * Used by Broker and Consumer/Subscriber to register a
      * {@link CAMQPMessageReceiver} to receive messages.
@@ -75,8 +75,6 @@ public interface CAMQPTargetInterface {
      * @param deliveryId
      */
     public void acknowledgeMessageProcessingComplete(long deliveryId);
-
-    public long getId();
 
     /**
      * Closes the underlying AMQP link with the error message

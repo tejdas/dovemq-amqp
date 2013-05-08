@@ -37,6 +37,7 @@ import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -176,6 +177,12 @@ public class QueueRouterTest {
         public long getId() {
             return id;
         }
+
+        @Override
+        public CAMQPSessionInterface getSession() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     private static class MockProducerSink implements CAMQPTargetInterface {
@@ -235,6 +242,12 @@ public class QueueRouterTest {
         @Override
         public void closeUnderlyingLink(CAMQPDefinitionError errorDetails) {
             // TODO Auto-generated method stub
+        }
+
+        @Override
+        public CAMQPSessionInterface getSession() {
+            // TODO Auto-generated method stub
+            return null;
         }
     }
 
@@ -360,7 +373,7 @@ public class QueueRouterTest {
     @BeforeClass
     public static void setupBeforeClass() throws Exception
     {
-        DoveMQEndpointDriver.setManager(new DoveMQEndpointManagerImpl());
+        DoveMQEndpointDriver.setManager(new DoveMQBrokerEndpointManagerImpl());
     }
 
     @Before

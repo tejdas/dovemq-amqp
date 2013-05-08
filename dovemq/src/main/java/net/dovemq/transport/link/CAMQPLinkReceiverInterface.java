@@ -27,7 +27,7 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
  * @author tejdas
  *
  */
-public interface CAMQPLinkReceiverInterface {
+public interface CAMQPLinkReceiverInterface extends CAMQPLinkInterface {
     /**
      * Called by end-point layer to register a {@link CAMQPTargetInterface}.
      *
@@ -106,6 +106,4 @@ public interface CAMQPLinkReceiverInterface {
      * link-credit, if needed.
      */
     public void provideLinkCredit();
-
-    public long getHandle();
 }

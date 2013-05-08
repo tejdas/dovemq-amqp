@@ -21,28 +21,58 @@ import java.util.concurrent.ExecutorService;
 
 import net.dovemq.api.DoveMQEndpointPolicy;
 import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
+import net.dovemq.api.RecvEndpointListener;
+import net.dovemq.transport.connection.CAMQPConnectionConstants;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.link.CAMQPLinkManager;
 import net.dovemq.transport.link.ReceiverLinkCreditPolicy;
 
 public final class DoveMQEndpointDriver {
+    private static volatile DoveMQAbstractEndpointManager manager = null;
 
-    private static volatile DoveMQEndpointManagerImpl manager = null;
+    public static void initialize(String containerId) {
+        CAMQPLinkManager.initialize(containerId);
+    }
 
-    public static void initialize(boolean isBroker, String containerId) {
-        CAMQPLinkManager.initialize(isBroker, containerId);
+    public static void initializeBrokerEndpoint(String containerId) {
+        CAMQPLinkManager.initializeEndpoint(CAMQPConnectionConstants.AMQP_IANA_PORT, containerId);
 
-        if (isBroker) {
-            CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
-            defaultEndpointPolicy.setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
-            defaultEndpointPolicy.setDoveMQEndpointPolicy(new DoveMQEndpointPolicy(MessageAcknowledgementPolicy.CONSUMER_ACKS));
+        CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
+        defaultEndpointPolicy
+                .setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
+        defaultEndpointPolicy.setDoveMQEndpointPolicy(new DoveMQEndpointPolicy(
+                MessageAcknowledgementPolicy.CONSUMER_ACKS));
 
-            CAMQPEndpointManager.setDefaultEndpointPolicy(defaultEndpointPolicy);
+        CAMQPEndpointManager.setDefaultEndpointPolicy(defaultEndpointPolicy);
 
-            manager = new DoveMQEndpointManagerImpl();
-            CAMQPEndpointManager.registerDoveMQEndpointManager(manager);
-        }
+        manager = new DoveMQBrokerEndpointManagerImpl();
+        CAMQPEndpointManager.registerDoveMQEndpointManager(manager);
+    }
+
+    public static void initializeEndpoint(int listenerPort, String containerId, RecvEndpointListener endpointListener) {
+        CAMQPLinkManager.initializeEndpoint(listenerPort, containerId);
+
+        CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
+        defaultEndpointPolicy
+                .setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
+        CAMQPEndpointManager.setDefaultEndpointPolicy(defaultEndpointPolicy);
+
+        manager = new DoveMQPeerEndpointManagerImpl(containerId, endpointListener);
+        CAMQPEndpointManager.registerDoveMQEndpointManager(manager);
+    }
+
+    public static void initializeClientEndpoint(String containerId, RecvEndpointListener endpointListener) {
+        CAMQPLinkManager.initialize(containerId);
+
+        CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
+        defaultEndpointPolicy
+                .setLinkCreditPolicy(ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
+        CAMQPEndpointManager.setDefaultEndpointPolicy(defaultEndpointPolicy);
+
+        manager = new DoveMQPeerEndpointManagerImpl(containerId,
+                endpointListener);
+        CAMQPEndpointManager.registerDoveMQEndpointManager(manager);
     }
 
     public static void shutdown(boolean isBroker) {
@@ -63,7 +93,7 @@ public final class DoveMQEndpointDriver {
     /*
      * For junit testing
      */
-    static void setManager(DoveMQEndpointManagerImpl manager) {
+    static void setManager(DoveMQBrokerEndpointManagerImpl manager) {
         DoveMQEndpointDriver.manager = manager;
     }
 

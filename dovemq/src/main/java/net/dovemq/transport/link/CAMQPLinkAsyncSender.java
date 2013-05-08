@@ -245,9 +245,4 @@ final class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkS
     Object getEndpoint() {
         return source;
     }
-
-    @Override
-    public long getHandle() {
-        return linkHandle;
-    }
 }

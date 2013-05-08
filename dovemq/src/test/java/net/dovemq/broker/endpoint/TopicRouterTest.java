@@ -32,13 +32,14 @@ import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 import org.junit.Test;
 
 public class TopicRouterTest extends TestCase {
     private static final AtomicLong linkIds = new AtomicLong(0L);
 
-    private static DoveMQEndpointManagerImpl endpointManager = null;
+    private static DoveMQBrokerEndpointManagerImpl endpointManager = null;
 
     private static class MockSubscriberProxy implements CAMQPSourceInterface {
         private final long id = linkIds.getAndIncrement();
@@ -99,6 +100,12 @@ public class TopicRouterTest extends TestCase {
             return messageCount.get();
         }
 
+        @Override
+        public CAMQPSessionInterface getSession() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
     }
 
     private static class MockPublisherSink implements CAMQPTargetInterface {
@@ -139,12 +146,18 @@ public class TopicRouterTest extends TestCase {
             // TODO Auto-generated method stub
 
         }
+
+        @Override
+        public CAMQPSessionInterface getSession() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        endpointManager = new DoveMQEndpointManagerImpl();
+        endpointManager = new DoveMQBrokerEndpointManagerImpl();
     }
 
     @Override

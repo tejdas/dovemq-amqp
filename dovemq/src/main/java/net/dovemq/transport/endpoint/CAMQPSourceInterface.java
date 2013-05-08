@@ -29,7 +29,7 @@ import net.dovemq.transport.link.CAMQPMessage;
  * @author tdas
  *
  */
-public interface CAMQPSourceInterface {
+public interface CAMQPSourceInterface extends CAMQPEndpointInterface {
     /**
      * Called by Broker and (optionally) Producer/Publisher to register an
      * observer, to be notified when a message transitions to a terminal state.
@@ -87,6 +87,4 @@ public interface CAMQPSourceInterface {
      *         this end-point.
      */
     public Collection<Long> processDisposition(Collection<Long> deliveryIds, boolean isMessageSettledByPeer, Object newState);
-
-    public long getId();
 }

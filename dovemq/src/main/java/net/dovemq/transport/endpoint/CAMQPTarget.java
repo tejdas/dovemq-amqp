@@ -32,6 +32,7 @@ import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 /**
  * This class implements CAMQPTargetInterface and is responsible for keeping
@@ -170,5 +171,10 @@ final class CAMQPTarget implements CAMQPTargetInterface {
     public void closeUnderlyingLink(CAMQPDefinitionError errorDetails) {
         CAMQPLinkEndpoint linkEndpoint = (CAMQPLinkEndpoint) linkReceiver;
         linkEndpoint.destroyLink(errorDetails, false);
+    }
+
+    @Override
+    public CAMQPSessionInterface getSession() {
+        return linkReceiver.getSession();
     }
 }

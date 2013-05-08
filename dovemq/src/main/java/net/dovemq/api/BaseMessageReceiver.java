@@ -14,7 +14,7 @@ abstract class BaseMessageReceiver implements CAMQPMessageReceiver {
         this.targetEndpoint = targetEndpoint;
     }
 
-    String getTargetName() {
+    public String getTargetName() {
         return targetName;
     }
 

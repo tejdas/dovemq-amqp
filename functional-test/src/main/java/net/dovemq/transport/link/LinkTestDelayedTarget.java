@@ -31,6 +31,7 @@ import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.frame.CAMQPMessagePayload;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public class LinkTestDelayedTarget implements CAMQPTargetInterface {
     public LinkTestDelayedTarget(CAMQPLinkReceiverInterface linkReceiver,
@@ -136,5 +137,11 @@ public class LinkTestDelayedTarget implements CAMQPTargetInterface {
     @Override
     public void closeUnderlyingLink(CAMQPDefinitionError errorDetails) {
         // TODO Auto-generated method stub
+    }
+
+    @Override
+    public CAMQPSessionInterface getSession() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

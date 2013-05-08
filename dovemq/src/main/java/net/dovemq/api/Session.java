@@ -67,6 +67,22 @@ public final class Session {
     }
 
     /**
+     * Create a Sender to the remote AMQP peer. This encapsulates
+     * an AMQP link sender.
+     *
+     * @param endpointName
+     * @return
+     */
+    public Sender createSender(String endpointName) {
+        if (StringUtils.isEmpty(endpointName)) {
+            throw new IllegalArgumentException("Null queue name specified");
+        }
+        String source = String.format("%s.%s", endpointId, endpointName);
+        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, endpointName, new CAMQPEndpointPolicy());
+        return new Sender(source, sender);
+    }
+
+    /**
      * Create a Consumer and bind it to a queue on the DoveMQ broker.
      *
      * @param queueName
@@ -113,7 +129,7 @@ public final class Session {
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy();
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, topicName, endpointPolicy);
-        return new Publisher(sender);
+        return new Publisher(topicName, sender);
     }
 
     /**
@@ -145,7 +161,7 @@ public final class Session {
         endpointPolicy.setEndpointType(EndpointType.TOPIC);
         endpointPolicy.setTopicRouterType(TopicRouterType.MessageTagFilter);
         CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, topicName, endpointPolicy);
-        return new Publisher(sender);
+        return new Publisher(topicName, sender);
     }
 
     /**

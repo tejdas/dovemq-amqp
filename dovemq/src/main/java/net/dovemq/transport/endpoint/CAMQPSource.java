@@ -31,6 +31,7 @@ import net.dovemq.transport.link.CAMQPLinkEndpoint;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 import org.apache.log4j.Logger;
 
@@ -241,5 +242,10 @@ final class CAMQPSource implements CAMQPSourceInterface {
     @Override
     public long getId() {
         return linkSender.getHandle();
+    }
+
+    @Override
+    public CAMQPSessionInterface getSession() {
+        return linkSender.getSession();
     }
 }

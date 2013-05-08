@@ -113,6 +113,12 @@ public class CAMQPLinkReceiverTest {
             // TODO Auto-generated method stub
 
         }
+
+        @Override
+        public CAMQPSessionInterface getSession() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     /**

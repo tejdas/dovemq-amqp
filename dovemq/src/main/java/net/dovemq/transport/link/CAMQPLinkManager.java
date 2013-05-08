@@ -25,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import net.dovemq.transport.connection.CAMQPConnectionConstants;
+import net.dovemq.transport.connection.CAMQPConnectionException;
 import net.dovemq.transport.connection.CAMQPConnectionFactory;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.CAMQPConnectionProperties;
@@ -105,21 +107,37 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
         return nextLinkHandle.getAndIncrement();
     }
 
+    /*
+     * Used by API functional tests
+     */
     public static void initialize(boolean isBroker, String containerId) {
-        CAMQPConnectionManager.initialize(containerId);
-        CAMQPConnectionManager.registerConnectionObserver(new CAMQPConnectionReaper());
-        log.info("container ID: " + CAMQPConnectionManager.getContainerId());
-
         if (isBroker) {
-            CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties.createConnectionProperties();
-            listener = CAMQPListener.createCAMQPListener(defaultConnectionProps);
+            initializeEndpoint(CAMQPConnectionConstants.AMQP_IANA_PORT, containerId);
+        } else {
+            initialize(containerId);
         }
-        CAMQPSessionManager.initialize();
-        CAMQPSessionManager.registerLinkReceiverFactory(linkManager);
+    }
+
+    public static void initialize(String containerId) {
+        initializeConnectionManager(containerId);
+        initializeSessionManager();
+        linkManager.flowScheduler.start();
+    }
+
+    public static void initializeEndpoint(int listenPort, String containerId) {
+        initializeConnectionManager(containerId);
+
+        CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties
+                .createConnectionProperties();
+        listener = CAMQPListener.createCAMQPListener(defaultConnectionProps);
+        initializeSessionManager();
         linkManager.flowScheduler.start();
 
-        if (isBroker) {
-            listener.start();
+        try {
+            listener.start(listenPort);
+        } catch (CAMQPConnectionException ex) {
+            shutdown();
+            throw ex;
         }
     }
 
@@ -132,6 +150,18 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
         if (listener != null) {
             listener.shutdown();
         }
+    }
+
+    private static void initializeSessionManager() {
+        CAMQPSessionManager.initialize();
+        CAMQPSessionManager.registerLinkReceiverFactory(linkManager);
+    }
+
+    private static void initializeConnectionManager(String containerId) {
+        CAMQPConnectionManager.initialize(containerId);
+        CAMQPConnectionManager
+                .registerConnectionObserver(new CAMQPConnectionReaper());
+        log.info("container ID: " + CAMQPConnectionManager.getContainerId());
     }
 
     /*

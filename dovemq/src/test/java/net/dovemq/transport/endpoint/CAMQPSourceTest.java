@@ -9,6 +9,7 @@ import net.dovemq.api.MessageFactory;
 import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
+import net.dovemq.transport.session.CAMQPSessionInterface;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
@@ -32,6 +33,12 @@ public class CAMQPSourceTest extends TestCase {
         @Override
         public long getHandle() {
             return 0;
+        }
+
+        @Override
+        public CAMQPSessionInterface getSession() {
+            // TODO Auto-generated method stub
+            return null;
         }
     }
 
