@@ -40,6 +40,19 @@ public class BasicSender {
 
     public static void main(String[] args) {
         /*
+         * Read the broker IP address passed in as -Ddovemq.broker Defaults to
+         * localhost
+         */
+        String doveMQListenerIP = System.getProperty("dovemq.endpoint", "localhost");
+
+        String connectPortAsString = System.getProperty("dovemq.endpointPort");
+        if (connectPortAsString == null) {
+            System.out.println("Please provide the endpoint port: -Ddovemq.endpointPort");
+            return;
+        }
+
+        int connectPort = Integer.valueOf(connectPortAsString);
+        /*
          * Initialize the DoveMQ runtime, specifying an endpoint name.
          */
         ConnectionFactory.initializeClientEndpoint("sender", new SampleEndpointListener());
@@ -48,25 +61,20 @@ public class BasicSender {
             /*
              * Create an AMQP session.
              */
-            Connection amqpConnection = ConnectionFactory.createConnectionToAMQPEndpoint("localhost", 8746);
+            Connection amqpConnection = ConnectionFactory.createConnectionToAMQPEndpoint(doveMQListenerIP, connectPort);
             Session session = amqpConnection.createSession();
             System.out.println("created session to DoveMQ broker running at: " + "localhost");
 
-            /*
-             * Create a producer that binds to a queue on the broker.
-             */
-            Sender sender = session.createSender("foobar");
+            Sender sender = session.createSender("sampleTarget");
 
             /*
-             * Create and send some messages.
+             * Create and send a message.
              */
-            for (int i = 0; i < 1; i++) {
-                DoveMQMessage message = MessageFactory.createMessage();
-                String msg = "Hello from Producer: msg: " + i;
-                System.out.println("sending message: " + msg);
-                message.addPayload(msg.getBytes());
-                sender.sendMessage(message);
-            }
+            DoveMQMessage message = MessageFactory.createMessage();
+            String msg = "Hello from Producer";
+            System.out.println("sending message: " + msg);
+            message.addPayload(msg.getBytes());
+            sender.sendMessage(message);
 
             System.out.println("sleeping for 10 secs");
             try {

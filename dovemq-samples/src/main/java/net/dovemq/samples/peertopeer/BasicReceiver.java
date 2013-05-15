@@ -31,7 +31,7 @@ public class BasicReceiver {
             Runnable r = new Runnable() {
                 @Override
                 public void run() {
-                    Sender sender = recvEndpoint.getSession().createSender("foobarnook");
+                    Sender sender = recvEndpoint.getSession().createSender("ReplyTarget");
                     try {
                         Thread.sleep(3000);
                     }
@@ -60,10 +60,17 @@ public class BasicReceiver {
     }
 
     public static void main(String[] args) {
+        String listenPortAsString = System.getProperty("dovemq.listenPort");
+        if (listenPortAsString == null) {
+            System.out.println("Please provide the listenPort: -Ddovemq.listenPort");
+            return;
+        }
+
+        int listenPort = Integer.valueOf(listenPortAsString);
         /*
          * Initialize the DoveMQ runtime, specifying an endpoint name.
          */
-        ConnectionFactory.initializeEndpoint("consumer", 8746, new SampleEndpointListener());
+        ConnectionFactory.initializeEndpoint("consumer", listenPort, new SampleEndpointListener());
 
         try {
             System.out.println("waiting for messages. Press Ctl-C to shut down consumer.");
