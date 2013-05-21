@@ -17,15 +17,16 @@
 
 package net.dovemq.broker.endpoint;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import net.dovemq.api.DoveMQMessage;
+import net.dovemq.broker.endpoint.PublisherContext.MessageContext;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
@@ -36,36 +37,14 @@ import org.apache.commons.lang.StringUtils;
 
 final class TopicRouter implements
         CAMQPMessageReceiver,
-        CAMQPMessageDispositionObserver,
-        Runnable {
-    private static class MessageContext {
-        boolean hasExpired(long currentTime) {
-            return (currentTime - contextCreationTime > 60000);
-        }
-
-        MessageContext(int numSubscribers, CAMQPTargetInterface sourceSink) {
-            super();
-            this.numSubscribers = new AtomicInteger(numSubscribers);
-            this.sourceSink = sourceSink;
-            contextCreationTime = System.currentTimeMillis();
-        }
-
-        final AtomicInteger numSubscribers;
-
-        final long contextCreationTime;
-
-        final CAMQPTargetInterface sourceSink;
-    }
-
+        CAMQPMessageDispositionObserver {
     private final String topicName;
 
     private final TopicRouterType routerType;
 
     private final Set<RoutingEvaluator> subscriberProxies = new CopyOnWriteArraySet<>();
 
-    private final Set<CAMQPTargetInterface> publisherSinks = new CopyOnWriteArraySet<>();
-
-    private final ConcurrentMap<Long, ConcurrentMap<Long, MessageContext>> inFlightMessagesByPublisherId = new ConcurrentHashMap<>();
+    private final Map<Long, PublisherContext> publisherSinks = new ConcurrentHashMap<>();
 
     TopicRouter(String topicName, TopicRouterType routerType) {
         super();
@@ -79,38 +58,9 @@ final class TopicRouter implements
      */
     @Override
     public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source) {
-        long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
         long sourceId = ((DoveMQMessageImpl) message).getSourceId();
-        ConcurrentMap<Long, MessageContext> unackedMap = inFlightMessagesByPublisherId.get(sourceId);
-        if (unackedMap != null) {
-            MessageContext msgContext = unackedMap.get(deliveryId);
-            if (msgContext != null) {
-                int numSubscribersLeftToAck = msgContext.numSubscribers.decrementAndGet();
-
-                /*
-                 * All subscribers have acknowledged; Notify the publisher of
-                 * message processing completion
-                 */
-                if (0 == numSubscribersLeftToAck) {
-                    notifyPublisherOfMessageProcessingCompletion(deliveryId, unackedMap, msgContext);
-                }
-            }
-        }
-    }
-
-    /**
-     * Remove the message from the unacknowledged map, and notify Publisher of
-     * message processing completion.
-     *
-     * @param deliveryId
-     * @param unackedMap
-     * @param msgContext
-     */
-    private void notifyPublisherOfMessageProcessingCompletion(long deliveryId, ConcurrentMap<Long, MessageContext> unackedMap,
-            MessageContext msgContext) {
-        if (null != unackedMap.remove(deliveryId)) {
-            msgContext.sourceSink.acknowledgeMessageProcessingComplete(deliveryId);
-        }
+        PublisherContext publisherContext = publisherSinks.get(sourceId);
+        publisherContext.messageAckedByConsumer(message);
     }
 
     /**
@@ -121,14 +71,18 @@ final class TopicRouter implements
      * the message to determine whether it can be routed to the subscriber.
      */
     @Override
-    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target) {
-        long publisherId = target.getId();
+    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface publisher) {
+        long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
+        if (subscriberProxies.isEmpty()) {
+            publisher.acknowledgeMessageProcessingComplete(deliveryId);
+            return;
+        }
+
+        long publisherId = publisher.getId();
         ((DoveMQMessageImpl) message).setSourceId(publisherId);
 
-        long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
-        ConcurrentMap<Long, MessageContext> inFlightMsgMap = inFlightMessagesByPublisherId.get(publisherId);
-        MessageContext msgContext = new MessageContext(subscriberProxies.size(), target);
-        inFlightMsgMap.put(deliveryId, msgContext);
+        PublisherContext publisherContext = publisherSinks.get(publisherId);
+        MessageContext messageContext = publisherContext.addInFlightMessage(deliveryId, subscriberProxies.size());
 
         Object routingEvaluationContext = null;
         if (routerType == TopicRouterType.MessageTagFilter) {
@@ -141,24 +95,18 @@ final class TopicRouter implements
          * Keep track of a count of how many subscribers the message could not be routed
          * to. Then, update the MessageContext accordingly, and notify the publisher if
          * there are no subscribers left to acknowledge.
-         *
-         * P.S: unroutedSubscriberCount is kept as a negative count (hence decremented) because it is
-         * later used as delta in {@link AtomicInteger }
          */
         int unroutedSubscriberCount = 0;
         for (RoutingEvaluator subscriberProxy : subscriberProxies) {
             if (subscriberProxy.canMessageBePublished(routingEvaluationContext)) {
                 subscriberProxy.getSubscriberProxy().sendMessage(message);
             } else {
-                unroutedSubscriberCount--;
+                unroutedSubscriberCount++;
             }
         }
 
-        if (unroutedSubscriberCount < 0) {
-            int numSubscribersLeftToAck = msgContext.numSubscribers.addAndGet(unroutedSubscriberCount);
-            if (0 == numSubscribersLeftToAck) {
-                notifyPublisherOfMessageProcessingCompletion(deliveryId, inFlightMsgMap, msgContext);
-            }
+        if (unroutedSubscriberCount > 0) {
+            publisherContext.messageFilteredOutBySubscribers(deliveryId, messageContext, unroutedSubscriberCount);
         }
     }
 
@@ -197,47 +145,31 @@ final class TopicRouter implements
         for (RoutingEvaluator subscriberContext : subscriberProxies) {
             if (subscriberContext.getSubscriberProxy() == targetProxy) {
                 subscriberProxies.remove(subscriberContext);
+                /*
+                 * Notify PublisherContexts so that they are not waiting for
+                 * in-flight messages to be acked.
+                 */
+                Collection<PublisherContext> publisherContexts = publisherSinks.values();
+                long now = System.currentTimeMillis();
+                for (PublisherContext publisherSink : publisherContexts) {
+                    publisherSink.subscriberDetached(subscriberContext.getTimeOfSubscription(), now);
+                }
                 return;
             }
         }
     }
 
     void publisherAttached(CAMQPTargetInterface sourceSink) {
-        publisherSinks.add(sourceSink);
-        inFlightMessagesByPublisherId.put(sourceSink.getId(), new ConcurrentHashMap<Long, MessageContext>());
+        publisherSinks.put(sourceSink.getId(), new PublisherContext(sourceSink));
         sourceSink.registerMessageReceiver(this);
     }
 
-    void publisherDetached(CAMQPTargetInterface source) {
-        publisherSinks.remove(source);
-        inFlightMessagesByPublisherId.remove(source.getId());
+    void publisherDetached(CAMQPTargetInterface sourceSink) {
+        publisherSinks.remove(sourceSink.getId());
     }
 
     boolean isCompletelyDetached() {
         return (publisherSinks.isEmpty() && subscriberProxies.isEmpty());
-    }
-
-    @Override
-    public void run() {
-        long currentTime = System.currentTimeMillis();
-
-        try {
-            Set<Long> publisherIds = inFlightMessagesByPublisherId.keySet();
-            for (long id : publisherIds) {
-                ConcurrentMap<Long, MessageContext> inFlightMessages = inFlightMessagesByPublisherId.get(id);
-                Set<Long> inflightMessageIDs = inFlightMessages.keySet();
-                for (Long messageId : inflightMessageIDs) {
-                    MessageContext messageContext = inFlightMessages.get(messageId);
-                    if ((messageContext != null) && messageContext.hasExpired(currentTime)) {
-                        if (null != inFlightMessages.remove(messageId)) {
-                            messageContext.sourceSink.acknowledgeMessageProcessingComplete(messageId);
-                        }
-                    }
-                }
-            }
-        }
-        finally {
-        }
     }
 
     String getTopicName() {

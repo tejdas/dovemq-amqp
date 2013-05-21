@@ -44,10 +44,16 @@ class RoutingEvaluator {
         return subscriberProxy;
     }
 
+    long getTimeOfSubscription() {
+        return timeOfSubscription;
+    }
+
     public RoutingEvaluator(CAMQPSourceInterface subscriberProxy) {
         super();
         this.subscriberProxy = subscriberProxy;
+        timeOfSubscription = System.currentTimeMillis();
     }
 
     private final CAMQPSourceInterface subscriberProxy;
+    private final long timeOfSubscription;
 }
