@@ -26,7 +26,7 @@ import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
 
-public class PublisherContext {
+final class PublisherContext {
 
     static final class MessageContext {
         boolean sentInBetween(long beginTime, long endTime) {
@@ -43,7 +43,8 @@ public class PublisherContext {
 
         private final long contextCreationTime;
     }
-    public PublisherContext(CAMQPTargetInterface publisher) {
+
+    PublisherContext(CAMQPTargetInterface publisher) {
         super();
         this.publisher = publisher;
     }

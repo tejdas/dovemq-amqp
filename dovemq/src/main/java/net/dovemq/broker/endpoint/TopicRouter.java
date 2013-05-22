@@ -60,7 +60,9 @@ final class TopicRouter implements
     public void messageAckedByConsumer(DoveMQMessage message, CAMQPSourceInterface source) {
         long sourceId = ((DoveMQMessageImpl) message).getSourceId();
         PublisherContext publisherContext = publisherSinks.get(sourceId);
-        publisherContext.messageAckedByConsumer(message);
+        if (publisherContext != null) {
+            publisherContext.messageAckedByConsumer(message);
+        }
     }
 
     /**
