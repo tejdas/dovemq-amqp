@@ -11,8 +11,15 @@ import net.dovemq.api.Sender;
 import net.dovemq.api.Session;
 
 /**
- * This sample shows how to create a DoveMQ producer that creates a
- * queue in the DoveMQ broker, and sends messages.
+ * AMQP is a peer-to-peer messaging transport protocol. DoveMQ provides capability
+ * for AMQP to be used in a peer-to-peer manner. In this case, there is no Broker
+ * involved. Messages are sent between two AMQP peers. For DoveMQ to work in the
+ * peer-to-peer manner, one endpoint acts as a DoveMQ listener, listening on a TCP port.
+ * Another endpoint acts as a client. After an AMQP session is established, there is
+ * no distinction between the client, and listener, i.e, they become peers and either
+ * endpoint can initiate an AMQP link on the underlying (bidirectional) AMQP session.
+ *
+ * This sample demonstrates how to create and use a DoveMQ client.
  */
 public class BasicSender {
     private static final SampleMessageReceiver messageReceiver = new SampleMessageReceiver();
