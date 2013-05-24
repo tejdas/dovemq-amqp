@@ -6,9 +6,9 @@ It constitutes a standalone AMQP Broker and an API to write messaging applicatio
 
 [DoveMQ: A tour of API](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ)
 
-[Messaging and pub-sub samples](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-Samples)
+[DovMQ as AMQP transport](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-as-AMQP-transport)
 
-[Organization of the code](https://github.com/tejdas/dovemq-amqp/blob/master/code_org.md)
+[Messaging and pub-sub samples](https://github.com/tejdas/dovemq-amqp/wiki/DoveMQ-Samples)
 
 [Build and run broker](https://github.com/tejdas/dovemq-amqp/wiki/Build-and-run-DoveMQ-broker)
 
