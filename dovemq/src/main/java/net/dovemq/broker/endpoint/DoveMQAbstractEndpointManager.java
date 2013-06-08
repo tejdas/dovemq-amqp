@@ -18,13 +18,24 @@
 package net.dovemq.broker.endpoint;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import net.dovemq.transport.utils.CAMQPThreadFactory;
 
 public abstract class DoveMQAbstractEndpointManager implements DoveMQEndpointManager {
-    private final ExecutorService executor = Executors.newCachedThreadPool(new CAMQPThreadFactory("DoveMQEndpointManagerThread"));
+    private static final int NUM_ENDPOINT_MANAGER_THREADS = 128;
+
+    private final ThreadPoolExecutor executor;
+
+    DoveMQAbstractEndpointManager() {
+        executor = new ThreadPoolExecutor(NUM_ENDPOINT_MANAGER_THREADS,
+                NUM_ENDPOINT_MANAGER_THREADS, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>(), new CAMQPThreadFactory(
+                        "DoveMQEndpointManagerThread"));
+        executor.allowCoreThreadTimeOut(true);
+    }
 
     ExecutorService getExecutor() {
         return executor;

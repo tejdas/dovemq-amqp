@@ -73,7 +73,7 @@ final class TopicRouter implements
      * the message to determine whether it can be routed to the subscriber.
      */
     @Override
-    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface publisher) {
+    public void messageReceived(final DoveMQMessage message, CAMQPTargetInterface publisher) {
         long deliveryId = ((DoveMQMessageImpl) message).getDeliveryId();
         if (subscriberProxies.isEmpty()) {
             publisher.acknowledgeMessageProcessingComplete(deliveryId);
@@ -99,9 +99,14 @@ final class TopicRouter implements
          * there are no subscribers left to acknowledge.
          */
         int unroutedSubscriberCount = 0;
-        for (RoutingEvaluator subscriberProxy : subscriberProxies) {
+        for (final RoutingEvaluator subscriberProxy : subscriberProxies) {
             if (subscriberProxy.canMessageBePublished(routingEvaluationContext)) {
-                subscriberProxy.getSubscriberProxy().sendMessage(message);
+                DoveMQEndpointDriver.getExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        subscriberProxy.getSubscriberProxy().sendMessage(message);
+                    }
+                });
             } else {
                 unroutedSubscriberCount++;
             }
@@ -144,19 +149,18 @@ final class TopicRouter implements
     }
 
     void subscriberDetached(CAMQPSourceInterface targetProxy) {
-        for (RoutingEvaluator subscriberContext : subscriberProxies) {
-            if (subscriberContext.getSubscriberProxy() == targetProxy) {
-                subscriberProxies.remove(subscriberContext);
-                /*
-                 * Notify PublisherContexts so that they are not waiting for
-                 * in-flight messages to be acked.
-                 */
-                Collection<PublisherContext> publisherContexts = publisherSinks.values();
-                long now = System.currentTimeMillis();
-                for (PublisherContext publisherSink : publisherContexts) {
-                    publisherSink.subscriberDetached(subscriberContext.getTimeOfSubscription(), now);
-                }
-                return;
+        RoutingEvaluator subscriberContext = unregisterSubscriber(targetProxy);
+        if (subscriberContext != null) {
+            /*
+             * Notify PublisherContexts so that they are not waiting for
+             * in-flight messages to be acked.
+             */
+            Collection<PublisherContext> publisherContexts = publisherSinks
+                    .values();
+            long now = System.currentTimeMillis();
+            for (PublisherContext publisherSink : publisherContexts) {
+                publisherSink.subscriberDetached(
+                        subscriberContext.getTimeOfSubscription(), now);
             }
         }
     }
@@ -180,5 +184,15 @@ final class TopicRouter implements
 
     TopicRouterType getRouterType() {
         return routerType;
+    }
+
+    private RoutingEvaluator unregisterSubscriber(CAMQPSourceInterface targetProxy) {
+        for (RoutingEvaluator subscriberContext : subscriberProxies) {
+            if (subscriberContext.getSubscriberProxy() == targetProxy) {
+                subscriberProxies.remove(subscriberContext);
+                return subscriberContext;
+            }
+        }
+        return null;
     }
 }

@@ -37,6 +37,7 @@ public final class DoveMQBrokerEndpointManagerImpl extends DoveMQAbstractEndpoin
     private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap = new HashMap<>();
 
     public DoveMQBrokerEndpointManagerImpl() {
+        super();
         topicRoutersMap.put(TopicRouterType.Basic, new ConcurrentHashMap<String, TopicRouter>());
         topicRoutersMap.put(TopicRouterType.MessageTagFilter, new ConcurrentHashMap<String, TopicRouter>());
         topicRoutersMap.put(TopicRouterType.Hierarchical, new ConcurrentHashMap<String, TopicRouter>());
