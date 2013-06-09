@@ -17,12 +17,13 @@
 
 package net.dovemq.broker.endpoint;
 
+import static org.junit.Assert.*;
+
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import junit.framework.TestCase;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.api.MessageFactory;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
@@ -34,9 +35,10 @@ import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionError;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TopicRouterTest extends TestCase {
+public class TopicRouterTest {
     private static final AtomicLong linkIds = new AtomicLong(0L);
 
     private static DoveMQBrokerEndpointManagerImpl endpointManager = null;
@@ -154,16 +156,10 @@ public class TopicRouterTest extends TestCase {
         }
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeClass
+    public static void setupBeforeClass() throws Exception {
         endpointManager = new DoveMQBrokerEndpointManagerImpl();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        endpointManager = null;
+        DoveMQEndpointDriver.setManager(endpointManager);
     }
 
     @Test
@@ -223,7 +219,7 @@ public class TopicRouterTest extends TestCase {
     }
 
     @Test
-    public void testTopicHierarchySubscription() {
+    public void testTopicHierarchySubscription() throws InterruptedException {
         CAMQPEndpointPolicy endpointPolicy = createPolicy(TopicRouterType.Hierarchical);
         CAMQPTargetInterface publisher = new MockPublisherSink();
         endpointManager.publisherAttached("root", publisher, endpointPolicy);
@@ -271,6 +267,7 @@ public class TopicRouterTest extends TestCase {
         topicRouter.messageReceived(message, publisher);
         assertEquals(null, subscriber1.getLastReceivedMessageId());
         assertEquals(null, subscriber2.getLastReceivedMessageId());
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(null, subscriber4.getLastReceivedMessageId());
 
@@ -289,6 +286,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo.bar");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
@@ -299,6 +297,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
         assertEquals(null, subscriber1.getLastReceivedMessageId());
@@ -309,6 +308,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo.bar.nook");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
@@ -319,6 +319,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo.bar.nook.candy");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber2.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
@@ -329,6 +330,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo.b");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
         assertEquals(null, subscriber1.getLastReceivedMessageId());
@@ -339,6 +341,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.bar");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(null, subscriber1.getLastReceivedMessageId());
         assertEquals(null, subscriber2.getLastReceivedMessageId());
@@ -349,6 +352,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo.nook");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
         assertEquals(null, subscriber1.getLastReceivedMessageId());
@@ -359,6 +363,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo.bar.candy");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
@@ -369,6 +374,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo.bar.can");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
@@ -379,6 +385,7 @@ public class TopicRouterTest extends TestCase {
          */
         message = createMessageWithHierarchicalTag("root.foo.bar.bunny.daddy");
         topicRouter.messageReceived(message, publisher);
+        Thread.sleep(500);
         assertEquals(message.getMessageProperties().getMessageId(), subscriber3.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber4.getLastReceivedMessageId());
         assertEquals(message.getMessageProperties().getMessageId(), subscriber1.getLastReceivedMessageId());
