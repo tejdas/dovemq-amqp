@@ -24,11 +24,11 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
  * a programming model that allows a DoveMQ Sender endpoint
  * to talk to an AMQP link receiver, without the DoveMQ Broker.
  *
- * This class provides the functionality of a DoveMQ Sender
+ * This class provides the functionality of a DoveMQ Channel
  * that encapsulates an AMQP link sender.
  */
-public final class Sender extends BaseAckReceiver {
-    private final CAMQPSourceInterface sourceEndpoint;
+public final class Channel extends BaseAckReceiver {
+    private final CAMQPSourceInterface source;
 
     /**
      * Send an AMQP message.
@@ -39,7 +39,7 @@ public final class Sender extends BaseAckReceiver {
         if (message == null) {
             throw new IllegalArgumentException("mesage cannot be null");
         }
-        sourceEndpoint.sendMessage(message);
+        source.sendMessage(message);
     }
 
     /**
@@ -53,12 +53,12 @@ public final class Sender extends BaseAckReceiver {
         }
         DoveMQMessage message = MessageFactory.createMessage();
         message.addPayload(payload);
-        sourceEndpoint.sendMessage(message);
+        source.sendMessage(message);
     }
 
-    Sender(String sourceName, CAMQPSourceInterface sourceEndpoint) {
+    Channel(String sourceName, CAMQPSourceInterface source) {
         super();
-        this.sourceEndpoint = sourceEndpoint;
-        sourceEndpoint.registerDispositionObserver(this);
+        this.source = source;
+        source.registerDispositionObserver(this);
     }
 }

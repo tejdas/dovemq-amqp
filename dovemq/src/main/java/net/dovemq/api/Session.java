@@ -67,19 +67,19 @@ public final class Session {
     }
 
     /**
-     * Create a Sender to the remote AMQP peer. This encapsulates
+     * Create a Channel to the remote AMQP peer. This encapsulates
      * an AMQP link sender.
      *
-     * @param endpointName
+     * @param channelEndpointName
      * @return
      */
-    public Sender createSender(String endpointName) {
-        if (StringUtils.isEmpty(endpointName)) {
-            throw new IllegalArgumentException("Null queue name specified");
+    public Channel createChannel(String channelEndpointName) {
+        if (StringUtils.isEmpty(channelEndpointName)) {
+            throw new IllegalArgumentException("Null channelEndpointName specified");
         }
-        String source = String.format("%s.%s", endpointId, endpointName);
-        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(session, source, endpointName, new CAMQPEndpointPolicy());
-        return new Sender(source, sender);
+        String sourceName = String.format("%s.%s", endpointId, channelEndpointName);
+        CAMQPSourceInterface source = CAMQPEndpointManager.createSource(session, sourceName, channelEndpointName, new CAMQPEndpointPolicy());
+        return new Channel(sourceName, source);
     }
 
     /**

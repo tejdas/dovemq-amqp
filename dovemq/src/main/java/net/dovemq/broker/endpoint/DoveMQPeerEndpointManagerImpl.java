@@ -17,17 +17,17 @@
 
 package net.dovemq.broker.endpoint;
 
-import net.dovemq.api.RecvEndpoint;
-import net.dovemq.api.RecvEndpointListener;
+import net.dovemq.api.ChannelEndpoint;
+import net.dovemq.api.ChannelEndpointListener;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
 public class DoveMQPeerEndpointManagerImpl extends DoveMQAbstractEndpointManager {
-    private final RecvEndpointListener endpointListener;
+    private final ChannelEndpointListener endpointListener;
     private final String containerId;
 
-    public DoveMQPeerEndpointManagerImpl(String containerId, RecvEndpointListener endpointListener) {
+    public DoveMQPeerEndpointManagerImpl(String containerId, ChannelEndpointListener endpointListener) {
         super();
         this.containerId = containerId;
         this.endpointListener = endpointListener;
@@ -43,9 +43,9 @@ public class DoveMQPeerEndpointManagerImpl extends DoveMQAbstractEndpointManager
 
     @Override
     public void targetEndpointAttached(final String endpointName, final CAMQPTargetInterface targetEndpoint, CAMQPEndpointPolicy endpointPolicy) {
-        RecvEndpoint recvEndpoint = new RecvEndpoint(endpointName,
+        ChannelEndpoint channelEndpoint = new ChannelEndpoint(endpointName,
                 targetEndpoint);
-        endpointListener.recvEndpointCreated(recvEndpoint);
+        endpointListener.channelCreated(channelEndpoint);
     }
 
     @Override

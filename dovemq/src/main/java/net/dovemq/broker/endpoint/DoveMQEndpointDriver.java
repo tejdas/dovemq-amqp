@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
 
 import net.dovemq.api.DoveMQEndpointPolicy;
 import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
-import net.dovemq.api.RecvEndpointListener;
+import net.dovemq.api.ChannelEndpointListener;
 import net.dovemq.transport.connection.CAMQPConnectionConstants;
 import net.dovemq.transport.endpoint.CAMQPEndpointManager;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
@@ -50,7 +50,7 @@ public final class DoveMQEndpointDriver {
         CAMQPEndpointManager.registerDoveMQEndpointManager(manager);
     }
 
-    public static void initializeEndpoint(int listenerPort, String containerId, RecvEndpointListener endpointListener) {
+    public static void initializeEndpoint(int listenerPort, String containerId, ChannelEndpointListener endpointListener) {
         CAMQPLinkManager.initializeEndpoint(listenerPort, containerId);
 
         CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
@@ -62,7 +62,7 @@ public final class DoveMQEndpointDriver {
         CAMQPEndpointManager.registerDoveMQEndpointManager(manager);
     }
 
-    public static void initializeClientEndpoint(String containerId, RecvEndpointListener endpointListener) {
+    public static void initializeClientEndpoint(String containerId, ChannelEndpointListener endpointListener) {
         CAMQPLinkManager.initialize(containerId);
 
         CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();

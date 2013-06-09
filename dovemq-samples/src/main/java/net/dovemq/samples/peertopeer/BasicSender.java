@@ -5,9 +5,9 @@ import net.dovemq.api.ConnectionFactory;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.api.DoveMQMessageReceiver;
 import net.dovemq.api.MessageFactory;
-import net.dovemq.api.RecvEndpoint;
-import net.dovemq.api.RecvEndpointListener;
-import net.dovemq.api.Sender;
+import net.dovemq.api.ChannelEndpoint;
+import net.dovemq.api.ChannelEndpointListener;
+import net.dovemq.api.Channel;
 import net.dovemq.api.Session;
 
 /**
@@ -19,9 +19,11 @@ import net.dovemq.api.Session;
  * no distinction between the client, and listener, i.e, they become peers and either
  * endpoint can initiate an AMQP link on the underlying (bidirectional) AMQP session.
  *
- * This sample demonstrates how to create and use a DoveMQ client.
+ * This sample demonstrates how to create and use a DoveMQ channel.
  */
 public class BasicSender {
+    private static final String CHANNEL_ENDPOINT_NAME = "SampleChannelEndpoint";
+
     private static final SampleMessageReceiver messageReceiver = new SampleMessageReceiver();
 
     /**
@@ -37,11 +39,11 @@ public class BasicSender {
         }
     }
 
-    private static class SampleEndpointListener implements RecvEndpointListener {
+    private static class SampleEndpointListener implements ChannelEndpointListener {
         @Override
-        public void recvEndpointCreated(RecvEndpoint recvEndpoint) {
-            System.out.println("recv endpoint created: " + recvEndpoint.getTargetName());
-            recvEndpoint.registerMessageReceiver(messageReceiver);
+        public void channelCreated(ChannelEndpoint channelEndpoint) {
+            System.out.println("Channel endpoint created: " + channelEndpoint.getTargetName());
+            channelEndpoint.registerMessageReceiver(messageReceiver);
         }
     }
 
@@ -62,7 +64,7 @@ public class BasicSender {
         /*
          * Initialize the DoveMQ runtime, specifying an endpoint name.
          */
-        ConnectionFactory.initializeClientEndpoint("sender", new SampleEndpointListener());
+        ConnectionFactory.initializeClientEndpoint("ChannelSender", new SampleEndpointListener());
 
         try {
             /*
@@ -72,7 +74,7 @@ public class BasicSender {
             Session session = amqpConnection.createSession();
             System.out.println("created session to DoveMQ broker running at: " + "localhost");
 
-            Sender sender = session.createSender("sampleTarget");
+            Channel sender = session.createChannel(CHANNEL_ENDPOINT_NAME);
 
             /*
              * Create and send a message.
@@ -81,9 +83,10 @@ public class BasicSender {
             String msg = "Hello from Producer";
             System.out.println("sending message: " + msg);
             message.addPayload(msg.getBytes());
+            message.getMessageProperties().setReplyToAddress("ReplyToEndpoint");
             sender.sendMessage(message);
 
-            System.out.println("sleeping for 10 secs");
+            System.out.println("sleeping for 10 secs to receive the message.");
             try {
                 Thread.sleep(10000);
             }

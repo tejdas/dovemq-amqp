@@ -17,17 +17,6 @@
 
 package net.dovemq.api;
 
-import net.dovemq.transport.endpoint.CAMQPTargetInterface;
-
-public final class RecvEndpoint extends BaseMessageReceiver {
-    public RecvEndpoint(String targetEndpointName, CAMQPTargetInterface targetEndpoint) {
-        super(targetEndpointName, targetEndpoint);
-        this.session = new Session(targetEndpointName, targetEndpoint.getSession());
-    }
-
-    public Session getSession() {
-        return session;
-    }
-
-    private final Session session;
+public interface ChannelEndpointListener {
+    public void channelCreated(ChannelEndpoint channelEndpoint);
 }
