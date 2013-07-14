@@ -55,7 +55,7 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler, CAMQ
 
     private String linkName;
 
-    public String getLinkName() {
+    String getLinkName() {
         return linkName;
     }
 
@@ -70,6 +70,10 @@ public abstract class CAMQPLinkEndpoint implements CAMQPLinkMessageHandler, CAMQ
     private String targetAddress;
 
     private CAMQPLinkKey linkKey;
+
+    CAMQPLinkKey getLinkKey() {
+        return linkKey;
+    }
 
     /*
      * Flow-control attributes

@@ -46,7 +46,7 @@ public final class CAMQPConnectionManager {
 
     private static volatile String containerId = null;
 
-    private static AtomicBoolean shutdownInProgress = new AtomicBoolean(false);;
+    private static AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
 
     private static final ConcurrentMap<CAMQPConnectionKey, CAMQPConnection> openConnections =
             new ConcurrentHashMap<>();
@@ -134,9 +134,11 @@ public final class CAMQPConnectionManager {
 
     private static CAMQPConnection connectionClosedInternal(CAMQPConnectionKey key) {
         CAMQPConnection connection = openConnections.remove(key);
-        synchronized (shutdownLock) {
-            if ((openConnections.size() == 0) && shutdownInProgress.get()) {
-                shutdownLock.notifyAll();
+        if (shutdownInProgress.get()) {
+            synchronized (shutdownLock) {
+                if (openConnections.size() == 0) {
+                    shutdownLock.notifyAll();
+                }
             }
         }
         return connection;

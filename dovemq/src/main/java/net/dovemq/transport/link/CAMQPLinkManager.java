@@ -17,8 +17,7 @@
 
 package net.dovemq.transport.link;
 
-import java.util.Iterator;
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,8 +95,6 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
     private final LinkHandshakeTracker linkHandshakeTracker = new LinkHandshakeTracker();
 
     private final ConcurrentMap<String, CAMQPLinkEndpoint> openLinks = new ConcurrentHashMap<>();
-
-    private final ConcurrentMap<CAMQPLinkKey, Set<String>> keyToLinkSets = new ConcurrentHashMap<>();
 
     static LinkHandshakeTracker getLinkHandshakeTracker() {
         return linkManager.linkHandshakeTracker;
@@ -188,20 +185,11 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
      */
      CAMQPLinkEndpoint getLinkEndpoint(String source, String target) {
         CAMQPLinkKey linkKey = new CAMQPLinkKey(source, target);
-
-        String linkName = null;
-        synchronized (this) {
-            Set<String> linkSetByKey = keyToLinkSets.get(linkKey);
-            if ((linkSetByKey != null) && (!linkSetByKey.isEmpty())) {
-                Iterator<String> iter = linkSetByKey.iterator();
-                if (iter.hasNext()) {
-                    linkName = iter.next();
-                }
+        Collection<CAMQPLinkEndpoint> openLinkEndpoints = openLinks.values();
+        for (CAMQPLinkEndpoint openLink : openLinkEndpoints) {
+            if (linkKey.equals(openLink.getLinkKey())) {
+                return openLink;
             }
-        }
-
-        if (linkName != null) {
-            return openLinks.get(linkName);
         }
         return null;
     }
@@ -260,29 +248,13 @@ public final class CAMQPLinkManager implements CAMQPLinkMessageHandlerFactory {
     void registerLinkEndpoint(String linkName, CAMQPLinkKey linkKey, CAMQPLinkEndpoint linkEndpoint) {
         log.debug("registerLinkEndpoint: linkName: " + linkName + "  LinkKey: " + linkKey.toString());
         openLinks.put(linkName, linkEndpoint);
-
-        synchronized (this) {
-            Set<String> linkSetByKey = keyToLinkSets.get(linkKey);
-            if (linkSetByKey == null) {
-                linkSetByKey = new LinkedHashSet<>();
-                keyToLinkSets.put(linkKey, linkSetByKey);
-            }
-            linkSetByKey.add(linkName);
-        }
     }
 
     void unregisterLinkEndpoint(String linkName, CAMQPLinkKey linkKey) {
         log.debug("unregisterLinkEndpoint: linkName: " + linkName + "  LinkKey: " + linkKey.toString());
-        synchronized (this) {
-            Set<String> linkSetByKey = keyToLinkSets.get(linkKey);
-            if (linkSetByKey != null) {
-                linkSetByKey.remove(linkName);
-                if (linkSetByKey.isEmpty()) {
-                    keyToLinkSets.remove(linkKey);
-                }
-            }
+        if (null == openLinks.remove(linkName)) {
+            log.warn("unregisterLinkEndpoint failed to find link in the map; linkName: " + linkName + "  LinkKey: " + linkKey.toString());
         }
-        openLinks.remove(linkName);
     }
 
     private void shutdownLinks() {
