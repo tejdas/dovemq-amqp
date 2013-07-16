@@ -18,6 +18,7 @@
 package net.dovemq.broker.endpoint;
 
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
+import net.jcip.annotations.Immutable;
 
 /**
  * This class is used to evaluate an incoming message against
@@ -29,6 +30,7 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
  * @author tejdas
  *
  */
+@Immutable
 class RoutingEvaluator {
     /**
      * Used to evaluate for {@link TopicRouterType#Basic}.

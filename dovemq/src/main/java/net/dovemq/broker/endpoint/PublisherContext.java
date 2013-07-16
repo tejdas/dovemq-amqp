@@ -25,9 +25,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.dovemq.api.DoveMQMessage;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 import net.dovemq.transport.endpoint.DoveMQMessageImpl;
+import net.jcip.annotations.Immutable;
 
 final class PublisherContext {
 
+    @Immutable
     static final class MessageContext {
         boolean sentInBetween(long beginTime, long endTime) {
             return ((contextCreationTime > beginTime) && (contextCreationTime < endTime));

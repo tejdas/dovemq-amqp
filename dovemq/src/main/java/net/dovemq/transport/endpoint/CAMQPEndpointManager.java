@@ -24,7 +24,7 @@ import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
 public final class CAMQPEndpointManager {
-    private static CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
+    private static volatile CAMQPEndpointPolicy defaultEndpointPolicy = new CAMQPEndpointPolicy();
 
     private static DoveMQEndpointManager doveMQEndpointManager = null;
 

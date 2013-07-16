@@ -31,7 +31,7 @@ import org.apache.commons.lang.StringUtils;
  * @author tejdas
  *
  */
-class RoutingTopicHeirarchyMatcher extends RoutingEvaluator {
+final class RoutingTopicHeirarchyMatcher extends RoutingEvaluator {
     /**
      * Evaluate the routingEvaluationContext (topicPublishHierarchy) of the
      * incoming message against the Subscriber's topic hierarchy to determine if

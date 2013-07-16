@@ -32,6 +32,7 @@ import net.dovemq.transport.link.CAMQPLinkSenderInterface;
 import net.dovemq.transport.link.CAMQPMessage;
 import net.dovemq.transport.protocol.data.CAMQPDefinitionAccepted;
 import net.dovemq.transport.session.CAMQPSessionInterface;
+import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
@@ -59,8 +60,9 @@ final class CAMQPSource implements CAMQPSourceInterface {
      * Count of unsent messages at Link Sender, because of link congestion.
      * (link credit not available and/or session credit not available)
      */
-    private long unsentDeliveryCount = 0L;
     private final Object unsentCountLock = new Object();
+    @GuardedBy("unsentCountLock")
+    private long unsentDeliveryCount = 0L;
     /*
      * Max unsent messages at which the message sender waits until the
      * unsent delivery count drops to minUnsettledDeliveryThreshold

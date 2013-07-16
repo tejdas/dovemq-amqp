@@ -39,11 +39,13 @@ final class CAMQPHeartbeatProcessor implements Runnable {
     @GuardedBy("this")
     private Date lastReceivedHeartBeatTime = new Date();
 
+    @GuardedBy("this")
     private CAMQPConnectionStateActor stateActor = null;
 
+    @GuardedBy("this")
     private CAMQPSender sender = null;
 
-    private ScheduledFuture<?> scheduledFuture = null;
+    private volatile ScheduledFuture<?> scheduledFuture = null;
 
     void scheduleNextHeartbeat() {
         scheduledFuture = CAMQPConnectionManager.getConnectionHeartbeatScheduler()

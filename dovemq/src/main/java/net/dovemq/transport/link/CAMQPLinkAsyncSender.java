@@ -50,10 +50,12 @@ final class CAMQPLinkAsyncSender extends CAMQPLinkEndpoint implements CAMQPLinkS
      * CAMQPSessionInterface.sendTransfer() It is set to false after the message
      * has been sent by the session layer, in the callback: messageSent()
      */
-    private AtomicBoolean messageOutstanding = new AtomicBoolean(false);
+    private final AtomicBoolean messageOutstanding = new AtomicBoolean(false);
 
+    @GuardedBy("this")
     private boolean sendInProgress = false;
 
+    @GuardedBy("this")
     private boolean drainRequested = false;
 
     public CAMQPLinkAsyncSender(CAMQPSessionInterface session) {

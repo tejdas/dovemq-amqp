@@ -17,7 +17,6 @@
 
 package net.dovemq.broker.endpoint;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -34,7 +33,7 @@ public final class DoveMQBrokerEndpointManagerImpl extends DoveMQAbstractEndpoin
 
     private final ConcurrentMap<String, QueueRouter> queueRouters = new ConcurrentHashMap<>();
 
-    private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap = new HashMap<>();
+    private final Map<TopicRouterType, ConcurrentMap<String, TopicRouter>> topicRoutersMap = new ConcurrentHashMap<>();
 
     public DoveMQBrokerEndpointManagerImpl() {
         super();

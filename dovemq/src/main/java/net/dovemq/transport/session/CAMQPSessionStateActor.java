@@ -55,10 +55,12 @@ class CAMQPSessionStateActor {
 
     private final CAMQPSession session;
 
+    @GuardedBy("this")
     private boolean processingQueuedEvents = false;
 
     private final Queue<CAMQPQueuedContext<Event>> queuedEvents = new ConcurrentLinkedQueue<>();
 
+    @GuardedBy("this")
     private State currentState = State.UNMAPPED;
 
     State getCurrentState() {

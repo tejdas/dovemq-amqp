@@ -46,7 +46,7 @@ public final class CAMQPConnectionManager {
 
     private static volatile String containerId = null;
 
-    private static AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
+    private static final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
 
     private static final ConcurrentMap<CAMQPConnectionKey, CAMQPConnection> openConnections =
             new ConcurrentHashMap<>();

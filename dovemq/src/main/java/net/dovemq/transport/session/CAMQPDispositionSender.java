@@ -138,7 +138,7 @@ final class CAMQPDispositionSender implements Runnable {
 
     private final CAMQPSession session;
 
-    private ScheduledFuture<?> scheduledFuture = null;
+    private volatile ScheduledFuture<?> scheduledFuture = null;
 
     void start() {
         scheduledFuture = CAMQPSessionManager.getSessionSendDispositionScheduler()

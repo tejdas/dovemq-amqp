@@ -34,7 +34,7 @@ import org.apache.commons.lang.StringUtils;
  * @author tejdas
  *
  */
-class RoutingMessageTagFilterEvaluator extends RoutingEvaluator {
+final class RoutingMessageTagFilterEvaluator extends RoutingEvaluator {
     /**
      * Evaluate the routingEvaluationContext (messageRoutingTag) of the incoming
      * message against the Subscriber's message-filter pattern to determine if
