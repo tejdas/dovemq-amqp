@@ -109,6 +109,7 @@ public class TopicHierarchyTest extends TestCase {
                 Thread.sleep(new Random().nextInt(200) + 100);
             }
             catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
 
 
@@ -127,6 +128,7 @@ public class TopicHierarchyTest extends TestCase {
                     Thread.sleep(5000);
                 }
                 catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
             done();
@@ -215,15 +217,13 @@ public class TopicHierarchyTest extends TestCase {
             messagesSent++;
         }
 
-        while (messageAckCount.get() < messagesSent)
-        {
-            try
-            {
+        while (messageAckCount.get() < messagesSent) {
+            try {
                 Thread.sleep(5000);
-                System.out.println("publisher waiting: " + messagesSent + " " + messageAckCount.get());
-            }
-            catch (InterruptedException e)
-            {
+                System.out.println("publisher waiting: " + messagesSent
+                        + " "
+                        + messageAckCount.get());
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }

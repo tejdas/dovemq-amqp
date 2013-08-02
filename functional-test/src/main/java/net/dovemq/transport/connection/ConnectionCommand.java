@@ -19,17 +19,15 @@ package net.dovemq.transport.connection;
 
 import java.util.Collection;
 
-public class ConnectionCommand implements ConnectionCommandMBean
-{
+public class ConnectionCommand implements ConnectionCommandMBean {
     private volatile boolean shutdown = false;
-    public boolean isShutdown()
-    {
+
+    public boolean isShutdown() {
         return shutdown;
     }
 
     @Override
-    public void help()
-    {
+    public void help() {
         System.out.println("shutdown");
         System.out.println("list");
         System.out.println("create [targetContainerId]");
@@ -39,29 +37,25 @@ public class ConnectionCommand implements ConnectionCommandMBean
     }
 
     @Override
-    public void create(String targetContainerId)
-    {
+    public void create(String targetContainerId) {
         CAMQPConnectionProperties connectionProps = CAMQPConnectionProperties.createConnectionProperties();
-        CAMQPConnectionInterface connection = CAMQPConnectionFactory.createCAMQPConnection(targetContainerId, connectionProps);
+        CAMQPConnectionInterface connection = CAMQPConnectionFactory.createCAMQPConnection(targetContainerId,
+                connectionProps);
         if (connection == null)
             System.out.println("AMQP connection could not be created");
     }
 
     @Override
-    public void shutdown()
-    {
+    public void shutdown() {
         shutdown = true;
     }
 
     @Override
-    public Collection<String> list()
-    {
+    public Collection<String> list() {
         Collection<String> connectionList = CAMQPConnectionManager.listConnections();
-        if (connectionList.size() > 0)
-        {
+        if (connectionList.size() > 0) {
             System.out.println("List of connections by targetContainerId");
-            for (String conn : connectionList)
-            {
+            for (String conn : connectionList) {
                 System.out.println(conn);
             }
         }
@@ -69,25 +63,19 @@ public class ConnectionCommand implements ConnectionCommandMBean
     }
 
     @Override
-    public void close(String targetContainerId)
-    {
+    public void close(String targetContainerId) {
         CAMQPConnection conn = CAMQPConnectionManager.getCAMQPConnection(targetContainerId);
         conn.close();
     }
 
     @Override
-    public boolean checkClosed(String targetContainerId)
-    {
+    public boolean checkClosed(String targetContainerId) {
         CAMQPConnection conn = CAMQPConnectionManager.getCAMQPConnection(targetContainerId);
-        if ((conn == null) || conn.isClosed())
-            return true;
-        else
-            return false;
+        return ((conn == null) || conn.isClosed());
     }
 
     @Override
-    public void closeAsync(String targetContainerId)
-    {
+    public void closeAsync(String targetContainerId) {
         CAMQPConnection conn = CAMQPConnectionManager.getCAMQPConnection(targetContainerId);
         conn.closeAsync();
     }

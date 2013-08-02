@@ -29,43 +29,40 @@ import net.dovemq.transport.protocol.data.CAMQPControlDetach;
 import net.dovemq.transport.protocol.data.CAMQPControlFlow;
 import net.dovemq.transport.protocol.data.CAMQPControlTransfer;
 
-public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
-{
+public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler {
     private SysTestCommandReceiverFactory factory = null;
+
     protected final CAMQPSessionInterface session;
+
     private FileOutputStream outputStream = null;
+
     private boolean firstCommand = true;
+
     private long expectedBytes = 0;
+
     private long receivedBytes = 0;
 
     private volatile boolean isDone = false;
 
-    public boolean isDone()
-    {
+    public boolean isDone() {
         return isDone;
     }
 
-    void registerFactory(SysTestCommandReceiverFactory factory)
-    {
+    void registerFactory(SysTestCommandReceiverFactory factory) {
         this.factory = factory;
     }
 
-    public SysBaseLinkReceiver(CAMQPSessionInterface session)
-    {
+    public SysBaseLinkReceiver(CAMQPSessionInterface session) {
         super();
         this.session = session;
     }
 
     @Override
-    public void sessionClosed()
-    {
-        if (outputStream != null)
-        {
-            try
-            {
+    public void sessionClosed() {
+        if (outputStream != null) {
+            try {
                 outputStream.close();
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -75,29 +72,24 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
     }
 
     @Override
-    public void transferReceived(long transferId, CAMQPControlTransfer transferFrame, CAMQPMessagePayload payload)
-    {
-        try
-        {
+    public void transferReceived(long transferId,
+            CAMQPControlTransfer transferFrame,
+            CAMQPMessagePayload payload) {
+        try {
             byte[] payloadBytes = CAMQPFunctionalTestUtils.getBytes(payload);
             parsePayload(payloadBytes);
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
-        catch (ClassNotFoundException e)
-        {
+        } catch (ClassNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
-    private void parsePayload(byte[] payload) throws IOException, ClassNotFoundException
-    {
-        if (firstCommand)
-        {
+    private void parsePayload(byte[] payload) throws IOException,
+            ClassNotFoundException {
+        if (firstCommand) {
             firstCommand = false;
             FileHeader fh = SessionIOTestUtils.unmarshalFileHeader(payload);
             expectedBytes = fh.getFileSize();
@@ -105,29 +97,22 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
             System.out.println("Target fileSize: " + expectedBytes);
 
             String localFileName = fh.getFileName();
-            try
-            {
+            try {
                 outputStream = new FileOutputStream(localFileName, false);
-            } catch (FileNotFoundException e)
-            {
+            } catch (FileNotFoundException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-        }
-        else
-        {
-            try
-            {
+        } else {
+            try {
                 receivedBytes += payload.length;
                 outputStream.write(payload);
                 outputStream.flush();
-                if (receivedBytes == expectedBytes)
-                {
+                if (receivedBytes == expectedBytes) {
                     System.out.println("Received entire transfer");
                     isDone = true;
                 }
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -135,20 +120,17 @@ public abstract class SysBaseLinkReceiver implements CAMQPLinkMessageHandler
     }
 
     @Override
-    public void flowReceived(CAMQPControlFlow flow)
-    {
+    public void flowReceived(CAMQPControlFlow flow) {
         // TODO Auto-generated method stub
     }
 
     @Override
-    public void attachReceived(CAMQPControlAttach controlFrame)
-    {
+    public void attachReceived(CAMQPControlAttach controlFrame) {
         // TODO Auto-generated method stub
     }
 
     @Override
-    public void detachReceived(CAMQPControlDetach controlFrame)
-    {
+    public void detachReceived(CAMQPControlDetach controlFrame) {
         // TODO Auto-generated method stub
     }
 }

@@ -29,77 +29,64 @@ import net.dovemq.broker.endpoint.CAMQPMessageReceiver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
-public class LinkTestTargetReceiver implements CAMQPMessageReceiver, Runnable
-{
+public class LinkTestTargetReceiver implements CAMQPMessageReceiver, Runnable {
     private volatile boolean shutdown = false;
+
     private final AtomicLong messageCount = new AtomicLong(0);
-    private final BlockingQueue<DoveMQMessage> msgQueue = new LinkedBlockingQueue<DoveMQMessage>();
+
+    private final BlockingQueue<DoveMQMessage> msgQueue = new LinkedBlockingQueue<>();
+
     private volatile CAMQPSourceInterface source = null;
+
     private volatile Thread sender = null;
 
     @Override
-    public void messageReceived(DoveMQMessage message, CAMQPTargetInterface target)
-    {
+    public void messageReceived(DoveMQMessage message,
+            CAMQPTargetInterface target) {
         long count = messageCount.incrementAndGet();
-        if (count%10000 == 0)
+        if (count % 10000 == 0)
             System.out.println("received messages: " + count);
 
-        try
-        {
+        try {
             if (source != null)
                 msgQueue.put(message);
-        }
-        catch (InterruptedException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
-    public long getNumberOfMessagesReceived()
-    {
+    public long getNumberOfMessagesReceived() {
         return messageCount.longValue();
     }
 
     @Override
-    public void run()
-    {
-        while (!shutdown)
-        {
-            try
-            {
+    public void run() {
+        while (!shutdown) {
+            try {
                 DoveMQMessage msg = msgQueue.poll(1000, TimeUnit.MILLISECONDS);
                 if (msg != null)
                     source.sendMessage(msg);
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 assertFalse(true);
             }
         }
     }
 
-    void setSource(CAMQPSourceInterface source)
-    {
+    void setSource(CAMQPSourceInterface source) {
         this.source = source;
         sender = new Thread(this);
         sender.start();
     }
 
-    void stop()
-    {
+    void stop() {
         messageCount.set(0);
         shutdown = true;
-        if (sender != null)
-        {
-            try
-            {
+        if (sender != null) {
+            try {
                 sender.join(5000);
-            }
-            catch (InterruptedException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }

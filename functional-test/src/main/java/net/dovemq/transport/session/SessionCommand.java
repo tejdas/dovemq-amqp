@@ -41,8 +41,7 @@ public class SessionCommand implements SessionCommandMBean {
                     targetContainerId,
                     command);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -67,8 +66,7 @@ public class SessionCommand implements SessionCommandMBean {
             try {
                 SessionIOTestUtils.transmitBinaryData(session, destfile);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

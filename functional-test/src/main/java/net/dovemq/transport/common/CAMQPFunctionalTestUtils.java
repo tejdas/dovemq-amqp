@@ -21,10 +21,8 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-public class CAMQPFunctionalTestUtils
-{
-    public static byte[] getBytes(CAMQPMessagePayload payload)
-    {
+public class CAMQPFunctionalTestUtils {
+    public static byte[] getBytes(CAMQPMessagePayload payload) {
         ChannelBuffer inputBuffer = payload.getPayload();
         byte[] input = new byte[inputBuffer.readableBytes()];
         inputBuffer.readBytes(input);

@@ -26,35 +26,33 @@ import java.util.concurrent.Executors;
 
 import net.dovemq.transport.common.CAMQPTestTask;
 
-public class SubscriberMTTest
-{
+public class SubscriberMTTest {
     private static String brokerIP;
+
     private static String endpointName;
+
     private static String topicName;
+
     private static int NUM_THREADS;
+
     private static boolean shareSession;
 
-    private static class TestMessageReceiver implements DoveMQMessageReceiver
-    {
+    private static class TestMessageReceiver implements DoveMQMessageReceiver {
         volatile boolean shutdown = false;
-        public TestMessageReceiver(PrintWriter fw)
-        {
+
+        public TestMessageReceiver(PrintWriter fw) {
             super();
             this.fw = fw;
         }
 
         @Override
-        public void messageReceived(DoveMQMessage message)
-        {
+        public void messageReceived(DoveMQMessage message) {
             byte[] body = message.getPayload();
             String bString = new String(body);
 
-            if ("TOPIC_TEST_DONE".equalsIgnoreCase(bString))
-            {
+            if ("TOPIC_TEST_DONE".equalsIgnoreCase(bString)) {
                 shutdown = true;
-            }
-            else
-            {
+            } else {
                 fw.println(bString);
             }
         }
@@ -62,29 +60,27 @@ public class SubscriberMTTest
         private final PrintWriter fw;
     }
 
-    private static class TestSubscriber extends CAMQPTestTask implements Runnable
-    {
-        public TestSubscriber(CountDownLatch startSignal, CountDownLatch doneSignal, Session session, int id)
-        {
+    private static class TestSubscriber extends CAMQPTestTask implements
+            Runnable {
+        public TestSubscriber(CountDownLatch startSignal,
+                CountDownLatch doneSignal,
+                Session session,
+                int id) {
             super(startSignal, doneSignal);
             this.session = session;
             this.id = id;
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             waitForReady();
-            try
-            {
+            try {
                 Thread.sleep(new Random().nextInt(200) + 100);
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
 
-            if (session == null)
-            {
+            if (session == null) {
                 session = ConnectionFactory.createSession(brokerIP);
             }
 
@@ -92,25 +88,19 @@ public class SubscriberMTTest
 
             String fileName = String.format("%s-%d.txt", endpointName, id);
             PrintWriter fw = null;
-            try
-            {
+            try {
                 fw = new PrintWriter(fileName);
-            }
-            catch (FileNotFoundException e)
-            {
+            } catch (FileNotFoundException e) {
             }
 
             TestMessageReceiver messageReceiver = new TestMessageReceiver(fw);
             subscriber.registerMessageReceiver(messageReceiver);
 
-            while (!messageReceiver.shutdown)
-            {
-                try
-                {
+            while (!messageReceiver.shutdown) {
+                try {
                     Thread.sleep(5000);
-                }
-                catch (InterruptedException e)
-                {
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
 
@@ -118,12 +108,14 @@ public class SubscriberMTTest
             fw.close();
             done();
         }
+
         private Session session;
+
         private final int id;
     }
 
-    public static void main(String[] args) throws InterruptedException, FileNotFoundException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            FileNotFoundException {
         brokerIP = args[0];
         endpointName = args[1];
         topicName = args[2];
@@ -140,9 +132,11 @@ public class SubscriberMTTest
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
 
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            TestSubscriber subscriber = new TestSubscriber(startSignal, doneSignal, session, i);
+        for (int i = 0; i < NUM_THREADS; i++) {
+            TestSubscriber subscriber = new TestSubscriber(startSignal,
+                    doneSignal,
+                    session,
+                    i);
             executor.submit(subscriber);
         }
 

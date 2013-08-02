@@ -30,15 +30,18 @@ import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.EndpointTestUtils;
 
-public class LinkTestBiDir
-{
+public class LinkTestBiDir {
     private static final String source = "src";
+
     private static final String target = "target";
-    private static String brokerContainerId ;
+
+    private static String brokerContainerId;
+
     private static LinkCommandMBean mbeanProxy;
 
-    public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException,
+            MalformedObjectNameException {
         /*
          * Read args
          */
@@ -57,24 +60,25 @@ public class LinkTestBiDir
 
         mbeanProxy = jmxWrapper.getLinkBean();
 
-        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, target, new CAMQPEndpointPolicy());
-        mbeanProxy.attachTarget(source,  target);
+        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId,
+                source,
+                target,
+                new CAMQPEndpointPolicy());
+        mbeanProxy.attachTarget(source, target);
 
         mbeanProxy.createSource("reverseSrc", "reverseTar", containerId);
         LinkCommand localLinkCommand = new LinkCommand();
         localLinkCommand.attachTarget("reverseSrc", "reverseTar");
 
-
         Random randomGenerator = new Random();
-        for (int i = 0; i < messagesToSend; i++)
-        {
-            DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator, true);
+        for (int i = 0; i < messagesToSend; i++) {
+            DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator,
+                    true);
             sender.sendMessage(message);
         }
         System.out.println("Done sending messages");
 
-        while (true)
-        {
+        while (true) {
             Thread.sleep(1000);
             long numMessagesReceivedAtRemote = mbeanProxy.getNumMessagesReceivedAtTargetReceiver();
             System.out.println(numMessagesReceivedAtRemote);

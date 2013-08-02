@@ -26,17 +26,17 @@ import net.dovemq.transport.endpoint.CAMQPMessageDispositionObserver;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.session.CAMQPSessionInterface;
 
-public class LinkTestSource implements CAMQPSourceInterface
-{
+public class LinkTestSource implements CAMQPSourceInterface {
     private final AtomicLong messageCount;
-    public LinkTestSource(long initialMessageCount)
-    {
+
+    public LinkTestSource(long initialMessageCount) {
         messageCount = new AtomicLong(initialMessageCount);
     }
+
     private final Random randomGenerator = new Random();
+
     @Override
-    public CAMQPMessage getMessage()
-    {
+    public CAMQPMessage getMessage() {
         if (messageCount.getAndDecrement() > 0)
             return LinkTestUtils.createMessage(randomGenerator);
         else
@@ -44,42 +44,36 @@ public class LinkTestSource implements CAMQPSourceInterface
     }
 
     @Override
-    public long getMessageCount()
-    {
+    public long getMessageCount() {
         return messageCount.get();
     }
 
     @Override
-    public void messageSent(long deliveryId, CAMQPMessage message)
-    {
+    public void messageSent(long deliveryId, CAMQPMessage message) {
         // TODO Auto-generated method stub
     }
 
     @Override
     public Collection<Long> processDisposition(Collection<Long> deliveryIds,
             boolean settleMode,
-            Object newState)
-    {
+            Object newState) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void sendMessage(DoveMQMessage message)
-    {
+    public void sendMessage(DoveMQMessage message) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void registerDispositionObserver(CAMQPMessageDispositionObserver observer)
-    {
+    public void registerDispositionObserver(CAMQPMessageDispositionObserver observer) {
         // TODO Auto-generated method stub
     }
 
     @Override
-    public long getId()
-    {
+    public long getId() {
         // TODO Auto-generated method stub
         return 0;
     }

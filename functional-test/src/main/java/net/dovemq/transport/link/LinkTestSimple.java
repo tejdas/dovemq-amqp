@@ -30,15 +30,18 @@ import net.dovemq.transport.endpoint.CAMQPEndpointPolicy.CAMQPMessageDeliveryPol
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.EndpointTestUtils;
 
-public class LinkTestSimple
-{
+public class LinkTestSimple {
     private static final String source = "src";
+
     private static final String target = "target";
-    private static String brokerContainerId ;
+
+    private static String brokerContainerId;
+
     private static LinkCommandMBean mbeanProxy;
 
-    public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException,
+            MalformedObjectNameException {
         /*
          * Read args
          */
@@ -67,19 +70,21 @@ public class LinkTestSimple
         mbeanProxy = jmxWrapper.getLinkBean();
 
         CAMQPEndpointPolicy endpointPolicy = new CAMQPEndpointPolicy(messageDelvieryPolicy);
-        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, source, target, endpointPolicy);
-        mbeanProxy.attachTarget(source,  target);
+        CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId,
+                source,
+                target,
+                endpointPolicy);
+        mbeanProxy.attachTarget(source, target);
 
         Random randomGenerator = new Random();
-        for (int i = 0; i < messagesToSend; i++)
-        {
-            DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator, true);
+        for (int i = 0; i < messagesToSend; i++) {
+            DoveMQMessage message = EndpointTestUtils.createEncodedMessage(randomGenerator,
+                    true);
             sender.sendMessage(message);
         }
         System.out.println("Done sending messages");
 
-        while (true)
-        {
+        while (true) {
             Thread.sleep(1000);
             long numMessagesReceivedAtRemote = mbeanProxy.getNumMessagesReceivedAtTargetReceiver();
             System.out.println(numMessagesReceivedAtRemote);

@@ -28,10 +28,10 @@ import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.ConnectionCommand;
 
-public class SessionSysTestJMXClient
-{
-    public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
-    {
+public class SessionSysTestJMXClient {
+    public static void main(String[] args) throws InterruptedException,
+            IOException,
+            MalformedObjectNameException {
         /*
          * Read args
          */
@@ -64,7 +64,9 @@ public class SessionSysTestJMXClient
 
         mbeanProxy.registerFactory(linkReceiverFactory);
 
-        SessionIOTestUtils.createSessions(numThreads, brokerContainerId, localSessionCommand);
+        SessionIOTestUtils.createSessions(numThreads,
+                brokerContainerId,
+                localSessionCommand);
 
         /*
          * Check and assert the number of sessions created on the CAMQP Broker
@@ -72,23 +74,26 @@ public class SessionSysTestJMXClient
         Collection<Integer> attachedChannels = mbeanProxy.getChannelId(CAMQPConnectionManager.getContainerId());
         assertTrue(attachedChannels.size() == numThreads);
 
-        if (performIO.equalsIgnoreCase("true"))
-        {
-            SessionIOTestUtils.sendTransferFrames(numThreads, brokerContainerId, localSessionCommand);
+        if (performIO.equalsIgnoreCase("true")) {
+            SessionIOTestUtils.sendTransferFrames(numThreads,
+                    brokerContainerId,
+                    localSessionCommand);
             System.out.println("waiting for IO to be done");
-            while (true)
-            {
+            while (true) {
                 Thread.sleep(1000);
                 if (mbeanProxy.isIODone())
                     break;
             }
         }
 
-        SessionIOTestUtils.closeSessions(numThreads, brokerContainerId, localSessionCommand);
+        SessionIOTestUtils.closeSessions(numThreads,
+                brokerContainerId,
+                localSessionCommand);
 
         localConnectionCommand.close(brokerContainerId);
         assertTrue(localConnectionCommand.checkClosed(brokerContainerId));
-        mbeanProxy.setSessionWindowSize(CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE, CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE);
+        mbeanProxy.setSessionWindowSize(CAMQPSessionConstants.DEFAULT_OUTGOING_WINDOW_SIZE,
+                CAMQPSessionConstants.DEFAULT_INCOMING_WINDOW_SIZE);
 
         SessionIOTestUtils.cleanup();
 

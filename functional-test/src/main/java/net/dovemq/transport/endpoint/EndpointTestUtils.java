@@ -7,8 +7,7 @@ import net.dovemq.transport.link.LinkTestMultipleSources;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-public class EndpointTestUtils
-{
+public class EndpointTestUtils {
     /**
       * Since the functional test {@link LinkTestMultipleSources}
       * uses NUM_THREADS=5 and
@@ -23,18 +22,15 @@ public class EndpointTestUtils
       * @param generateRandomString
       * @return
       */
-    public static DoveMQMessage createEncodedMessage(Random randomGenerator, boolean generateRandomString)
-    {
+    public static DoveMQMessage createEncodedMessage(Random randomGenerator,
+            boolean generateRandomString) {
         int sectionSize = 256 * (randomGenerator.nextInt(10) + 1);
         byte[] payload;
 
-        if (generateRandomString)
-        {
+        if (generateRandomString) {
             String str = RandomStringUtils.randomAlphanumeric(sectionSize);
             payload = str.getBytes();
-        }
-        else
-        {
+        } else {
             payload = new byte[sectionSize];
         }
 
@@ -43,18 +39,15 @@ public class EndpointTestUtils
         return message;
     }
 
-    public static DoveMQMessage createSmallEncodedMessage(Random randomGenerator, boolean generateRandomString)
-    {
+    public static DoveMQMessage createSmallEncodedMessage(Random randomGenerator,
+            boolean generateRandomString) {
         int sectionSize = (randomGenerator.nextInt(10) + 1);
         byte[] payload;
 
-        if (generateRandomString)
-        {
+        if (generateRandomString) {
             String str = RandomStringUtils.randomAlphanumeric(sectionSize);
             payload = str.getBytes();
-        }
-        else
-        {
+        } else {
             payload = new byte[sectionSize];
         }
 

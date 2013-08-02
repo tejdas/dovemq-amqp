@@ -28,40 +28,46 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import net.dovemq.transport.common.CAMQPTestTask;
 
-public class ProducerTest
-{
+public class ProducerTest {
+    private static final String SOURCE_NAME = "build.xml";
+
     private static String brokerIP;
+
     private static String endpointName;
+
     private static String queueNamePrefix;
+
     private static int numProducers;
+
     private static int numConsumersPerQueue = 1;
+
     private static int numIterations;
+
     private static boolean waitForAcks = true;
 
-    private static class TestProducer extends CAMQPTestTask implements Runnable
-    {
-        public TestProducer(CountDownLatch startSignal, CountDownLatch doneSignal, int id)
-        {
+    private static class TestProducer extends CAMQPTestTask implements Runnable {
+        public TestProducer(CountDownLatch startSignal,
+                CountDownLatch doneSignal,
+                int id) {
             super(startSignal, doneSignal);
             this.id = id;
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             waitForReady();
-            try
-            {
+            try {
                 Thread.sleep(new Random().nextInt(200) + 100);
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
 
             session = ConnectionFactory.createSession(brokerIP);
 
             final AtomicInteger messageAckCount = new AtomicInteger(0);
-            Producer producer = session.createProducer(String.format("%s.%d", queueNamePrefix, id));
+            Producer producer = session.createProducer(String.format("%s.%d",
+                    queueNamePrefix,
+                    id));
             if (waitForAcks) {
                 producer.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
 
@@ -72,26 +78,19 @@ public class ProducerTest
                 });
             }
 
-            String sourceName = "build.xml";
-
             int messagesSent = 0;
-            try
-            {
-                for (int i = 0; i < numIterations; i++)
-                {
-                    messagesSent += sendFileContents(sourceName, producer);
+            try {
+                for (int i = 0; i < numIterations; i++) {
+                    messagesSent += sendFileContents(SOURCE_NAME, producer);
                 }
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 Thread.currentThread().interrupt();
             }
 
             /*
              * Send final message
              */
-            for (int i = 0; i < numConsumersPerQueue; i++)
-            {
+            for (int i = 0; i < numConsumersPerQueue; i++) {
                 producer.sendMessage("QUEUE_TEST_DONE".getBytes());
                 messagesSent++;
             }
@@ -103,17 +102,16 @@ public class ProducerTest
                         System.out.println("producer waiting: " + messagesSent
                                 + " "
                                 + messageAckCount.get());
-                    }
-                    catch (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
                 }
             } else {
-                System.out.println("Producer sent " + messagesSent + " messages");
+                System.out.println("Producer sent " + messagesSent
+                        + " messages");
                 try {
                     Thread.sleep(5000);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
@@ -121,13 +119,14 @@ public class ProducerTest
             session.close();
             done();
         }
-        private Session session;
-        private final int id;
 
+        private Session session;
+
+        private final int id;
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException {
         brokerIP = args[0];
         endpointName = args[1];
         queueNamePrefix = args[2];
@@ -144,8 +143,7 @@ public class ProducerTest
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch doneSignal = new CountDownLatch(numProducers);
 
-        for (int i = 0; i < numProducers; i++)
-        {
+        for (int i = 0; i < numProducers; i++) {
             TestProducer producer = new TestProducer(startSignal, doneSignal, i);
             executor.submit(producer);
         }
@@ -161,13 +159,11 @@ public class ProducerTest
         ConnectionFactory.shutdown();
     }
 
-    private static int sendFileContents(String fileName, Producer producer) throws IOException
-    {
+    private static int sendFileContents(String fileName, Producer producer) throws IOException {
         int messageCount = 0;
         BufferedReader freader = new BufferedReader(new FileReader(fileName));
         String sLine = null;
-        while ((sLine = freader.readLine()) != null)
-        {
+        while ((sLine = freader.readLine()) != null) {
             DoveMQMessage message = MessageFactory.createMessage();
             message.addPayload(sLine.getBytes());
             producer.sendMessage(message);

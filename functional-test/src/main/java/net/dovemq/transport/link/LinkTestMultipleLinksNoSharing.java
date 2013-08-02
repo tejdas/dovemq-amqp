@@ -32,48 +32,53 @@ import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.session.SessionCommand;
 
-public class LinkTestMultipleLinksNoSharing
-{
+public class LinkTestMultipleLinksNoSharing {
     private static final String source = "src";
 
     private static final String target = "target";
 
     private static int NUM_THREADS = 5;
 
-    private static class LinkTestMessageSender extends CAMQPTestTask implements Runnable
-    {
+    private static class LinkTestMessageSender extends CAMQPTestTask implements
+            Runnable {
         private volatile CAMQPLinkSender linkSender = null;
-        CAMQPLinkSender getLinkSender()
-        {
+
+        CAMQPLinkSender getLinkSender() {
             return linkSender;
         }
 
         private final int numMessagesToSend;
+
         public LinkTestMessageSender(CountDownLatch startSignal,
-                CountDownLatch doneSignal, int numMessagesToSend)
-        {
+                CountDownLatch doneSignal,
+                int numMessagesToSend) {
             super(startSignal, doneSignal);
             this.numMessagesToSend = numMessagesToSend;
         }
 
         @Override
-        public void run()
-        {
-            String linkSource = String.format("%s%d", source, Thread.currentThread().getId());
-            String linkTarget = String.format("%s%d", target, Thread.currentThread().getId());
+        public void run() {
+            String linkSource = String.format("%s%d",
+                    source,
+                    Thread.currentThread().getId());
+            String linkTarget = String.format("%s%d",
+                    target,
+                    Thread.currentThread().getId());
 
-            CAMQPLinkSender sender = (CAMQPLinkSender) CAMQPLinkFactory.createLinkSender(brokerContainerId, linkSource, linkTarget, new CAMQPEndpointPolicy());
+            CAMQPLinkSender sender = (CAMQPLinkSender) CAMQPLinkFactory.createLinkSender(brokerContainerId,
+                    linkSource,
+                    linkTarget,
+                    new CAMQPEndpointPolicy());
             linkSender = sender;
-            System.out.println("Sender Link created between : " + linkSource + "  and: " + linkTarget);
+            System.out.println("Sender Link created between : " + linkSource
+                    + "  and: "
+                    + linkTarget);
 
             String linkName = linkSender.getLinkName();
 
-            try
-            {
+            try {
                 Thread.sleep(5000);
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
 
@@ -87,11 +92,13 @@ public class LinkTestMultipleLinksNoSharing
         }
     }
 
-    private static String brokerContainerId ;
+    private static String brokerContainerId;
+
     private static LinkCommandMBean mbeanProxy;
 
-    public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException,
+            MalformedObjectNameException {
         /*
          * Read args
          */
@@ -117,22 +124,23 @@ public class LinkTestMultipleLinksNoSharing
         CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
 
         LinkTestMessageSender[] senders = new LinkTestMessageSender[NUM_THREADS];
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal, doneSignal, numMessagesToSend);
+        for (int i = 0; i < NUM_THREADS; i++) {
+            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal,
+                    doneSignal,
+                    numMessagesToSend);
             senders[i] = sender;
             executor.submit(sender);
         }
 
         Random randomGenerator = new Random();
         int iterator = 0;
-        while (true)
-        {
+        while (true) {
             int randomInt = randomGenerator.nextInt(50);
             long messagesReceived = mbeanProxy.getNumMessagesReceived();
-            System.out.println("got messages: " + messagesReceived + " issuing link credit: " + randomInt);
-            if (messagesReceived == numMessagesToSend * NUM_THREADS)
-            {
+            System.out.println("got messages: " + messagesReceived
+                    + " issuing link credit: "
+                    + randomInt);
+            if (messagesReceived == numMessagesToSend * NUM_THREADS) {
                 break;
             }
             Thread.sleep(randomGenerator.nextInt(50) + 50);
@@ -144,7 +152,8 @@ public class LinkTestMultipleLinksNoSharing
              */
             CAMQPLinkSender linksender = sender.getLinkSender();
             if (linksender != null)
-                mbeanProxy.issueLinkCredit(sender.getLinkSender().getLinkName(), randomInt);
+                mbeanProxy.issueLinkCredit(sender.getLinkSender().getLinkName(),
+                        randomInt);
         }
 
         startSignal.countDown();

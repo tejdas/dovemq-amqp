@@ -27,10 +27,10 @@ import javax.management.MalformedObjectNameException;
 import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 
-public class LinkTestReceiver
-{
-    public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
-    {
+public class LinkTestReceiver {
+    public static void main(String[] args) throws InterruptedException,
+            IOException,
+            MalformedObjectNameException {
         /*
          * Read args
          */
@@ -48,8 +48,13 @@ public class LinkTestReceiver
 
         LinkCommandMBean mbeanProxy = jmxWrapper.getLinkBean();
 
-        CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(brokerContainerId, source, target, new CAMQPEndpointPolicy());
-        System.out.println("Receiver Link created between : " + source + "  and: " + target);
+        CAMQPLinkReceiverInterface linkReceiver = CAMQPLinkFactory.createLinkReceiver(brokerContainerId,
+                source,
+                target,
+                new CAMQPEndpointPolicy());
+        System.out.println("Receiver Link created between : " + source
+                + "  and: "
+                + target);
         long expectedMessageCount = 500;
 
         mbeanProxy.registerSource(source, target, expectedMessageCount);
@@ -60,18 +65,14 @@ public class LinkTestReceiver
         long requestedMessageCount = 0;
 
         Random randomGenerator = new Random();
-        while (linktarget.getNumberOfMessagesReceived() < expectedMessageCount)
-        {
+        while (linktarget.getNumberOfMessagesReceived() < expectedMessageCount) {
             int randomInt = randomGenerator.nextInt(50) + 5;
             long messagesYetToBeReceived = expectedMessageCount - linktarget.getNumberOfMessagesReceived();
 
-            if (randomInt > messagesYetToBeReceived)
-            {
+            if (randomInt > messagesYetToBeReceived) {
                 requestedMessageCount = expectedMessageCount;
-                System.out.println("Requesting extra number of messages: "  + (randomInt - messagesYetToBeReceived));
-            }
-            else
-            {
+                System.out.println("Requesting extra number of messages: " + (randomInt - messagesYetToBeReceived));
+            } else {
                 requestedMessageCount += randomInt;
             }
 
@@ -80,12 +81,13 @@ public class LinkTestReceiver
             while (linktarget.getNumberOfMessagesReceived() < requestedMessageCount)
                 Thread.sleep(500);
 
-            System.out.println("received " + requestedMessageCount + " messages so far");
+            System.out.println("received " + requestedMessageCount
+                    + " messages so far");
         }
 
         assertTrue(linktarget.getNumberOfMessagesReceived() == expectedMessageCount);
 
-        ((CAMQPLinkReceiver)linkReceiver).destroyLink();
+        ((CAMQPLinkReceiver) linkReceiver).destroyLink();
 
         CAMQPLinkManager.shutdown();
         mbeanProxy.reset();

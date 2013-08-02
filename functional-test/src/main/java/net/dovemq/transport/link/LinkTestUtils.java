@@ -24,30 +24,24 @@ import net.dovemq.transport.frame.CAMQPMessagePayload;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-public class LinkTestUtils
-{
-    public static void sendMessagesOnLink(CAMQPLinkSender linkSender, int numMessagesToSend)
-    {
+public class LinkTestUtils {
+    public static void sendMessagesOnLink(CAMQPLinkSender linkSender,
+            int numMessagesToSend) {
         Random randomGenerator = new Random();
-        for (int i = 0; i < numMessagesToSend; i++)
-        {
+        for (int i = 0; i < numMessagesToSend; i++) {
             int randomInt = randomGenerator.nextInt(5);
             CAMQPMessage message = createMessage(randomGenerator);
-            linkSender.sendMessage(new CAMQPMessage(message.getDeliveryTag(), message.getPayload()));
-            try
-            {
+            linkSender.sendMessage(new CAMQPMessage(message.getDeliveryTag(),
+                    message.getPayload()));
+            try {
                 Thread.sleep(randomInt);
-            }
-            catch (InterruptedException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }
 
-    public static CAMQPMessage createMessage(Random randomGenerator)
-    {
+    public static CAMQPMessage createMessage(Random randomGenerator) {
         String deliveryTag = UUID.randomUUID().toString();
         int sectionSize = 256 * (randomGenerator.nextInt(10) + 1);
         String str = RandomStringUtils.randomAlphanumeric(sectionSize);
@@ -55,8 +49,7 @@ public class LinkTestUtils
         return new CAMQPMessage(deliveryTag, payload);
     }
 
-    public static CAMQPMessagePayload createMessagePayload(Random randomGenerator)
-    {
+    public static CAMQPMessagePayload createMessagePayload(Random randomGenerator) {
         int sectionSize = 256 * (randomGenerator.nextInt(10) + 1);
         String str = RandomStringUtils.randomAlphanumeric(sectionSize);
         return new CAMQPMessagePayload(str.getBytes());

@@ -98,6 +98,7 @@ public class TopicTagFilterTest {
                 Thread.sleep(new Random().nextInt(200) + 100);
             }
             catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
 
 
@@ -115,6 +116,7 @@ public class TopicTagFilterTest {
                     Thread.sleep(5000);
                 }
                 catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
             done();
@@ -193,15 +195,13 @@ public class TopicTagFilterTest {
         publisher.publishMessage(shutdownMessage2);
         messagesSent++;
 
-        while (messageAckCount.get() < messagesSent)
-        {
-            try
-            {
+        while (messageAckCount.get() < messagesSent) {
+            try {
                 Thread.sleep(5000);
-                System.out.println("publisher waiting: " + messagesSent + " " + messageAckCount.get());
-            }
-            catch (InterruptedException e)
-            {
+                System.out.println("publisher waiting: " + messagesSent
+                        + " "
+                        + messageAckCount.get());
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }

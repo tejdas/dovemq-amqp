@@ -24,66 +24,60 @@ import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.CAMQPTargetInterface;
 
-public class LinkCommand implements LinkCommandMBean
-{
+public class LinkCommand implements LinkCommandMBean {
     private volatile LinkTestTarget linkTargetEndpoint = new LinkTestTarget();
 
     private volatile LinkTestDelayedTarget linkDelayedTargetEndpoint = null;
+
     private volatile LinkTestTargetReceiver linkTargetReceiver = null;
+
     private volatile CAMQPSourceInterface linkSource = null;
+
     private final LinkTestTargetReceiver linkTargetSharedReceiver = new LinkTestTargetReceiver();
 
     @Override
-    public void registerFactory(String factoryName)
-    {
+    public void registerFactory(String factoryName) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void registerSource(String linkSource, String linkTarget, long initialMessageCount)
-    {
-        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
-        if (linkEndpoint == null)
-        {
+    public void registerSource(String linkSource,
+            String linkTarget,
+            long initialMessageCount) {
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager()
+                .getLinkEndpoint(linkSource, linkTarget);
+        if (linkEndpoint == null) {
             System.out.println("could not find linkEndpoint");
             return;
         }
-        if (linkEndpoint.getRole() == LinkRole.LinkSender)
-        {
+        if (linkEndpoint.getRole() == LinkRole.LinkSender) {
             CAMQPLinkAsyncSender linkSender = (CAMQPLinkAsyncSender) linkEndpoint;
             linkSender.registerSource(new LinkTestSource(initialMessageCount));
-        }
-        else
-        {
+        } else {
             System.out.println("LinkEndpoint is not a LinkSender");
         }
     }
 
     @Override
-    public void registerTarget(String linkSource, String linkTarget)
-    {
-        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
-        if (linkEndpoint == null)
-        {
+    public void registerTarget(String linkSource, String linkTarget) {
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager()
+                .getLinkEndpoint(linkSource, linkTarget);
+        if (linkEndpoint == null) {
             System.out.println("could not find linkEndpoint");
             return;
         }
-        if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
-        {
+        if (linkEndpoint.getRole() == LinkRole.LinkReceiver) {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
 
             linkReceiver.registerTarget(linkTargetEndpoint);
-        }
-        else
-        {
+        } else {
             System.out.println("LinkEndpoint is not a LinkReceiver");
         }
     }
 
     @Override
-    public Collection<String> getLinks()
-    {
+    public Collection<String> getLinks() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -91,72 +85,65 @@ public class LinkCommand implements LinkCommandMBean
     @Override
     public void createSenderLink(String source,
             String target,
-            String remoteContainerId)
-    {
+            String remoteContainerId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void setLinkCreditSteadyState(String linkName, long minLinkCreditThreshold, long linkCreditBoost, ReceiverLinkCreditPolicy policy)
-    {
-        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkName);
-        if (linkEndpoint == null)
-        {
+    public void setLinkCreditSteadyState(String linkName,
+            long minLinkCreditThreshold,
+            long linkCreditBoost,
+            ReceiverLinkCreditPolicy policy) {
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager()
+                .getLinkEndpoint(linkName);
+        if (linkEndpoint == null) {
             System.out.println("could not find linkEndpoint");
             return;
         }
-        if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
-        {
+        if (linkEndpoint.getRole() == LinkRole.LinkReceiver) {
             CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
             if (policy == ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE)
-                linkReceiver.configureSteadyStatePacedByMessageReceipt(minLinkCreditThreshold, linkCreditBoost);
+                linkReceiver.configureSteadyStatePacedByMessageReceipt(minLinkCreditThreshold,
+                        linkCreditBoost);
             else
-                linkReceiver.configureSteadyStatePacedByMessageProcessing(minLinkCreditThreshold, linkCreditBoost);
-        }
-        else
-        {
+                linkReceiver.configureSteadyStatePacedByMessageProcessing(minLinkCreditThreshold,
+                        linkCreditBoost);
+        } else {
             System.out.println("LinkEndpoint is not a LinkReceiver");
         }
     }
 
     @Override
-    public void issueLinkCredit(String linkName, long linkCreditBoost)
-    {
-        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkName);
-        if (linkEndpoint == null)
-        {
+    public void issueLinkCredit(String linkName, long linkCreditBoost) {
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager()
+                .getLinkEndpoint(linkName);
+        if (linkEndpoint == null) {
             System.out.println("could not find linkEndpoint");
             return;
         }
-        if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
-        {
+        if (linkEndpoint.getRole() == LinkRole.LinkReceiver) {
             CAMQPLinkReceiverInterface linkReceiver = (CAMQPLinkReceiverInterface) linkEndpoint;
             linkReceiver.issueLinkCredit(linkCreditBoost);
-        }
-        else
-        {
+        } else {
             System.out.println("LinkEndpoint is not a LinkReceiver");
         }
     }
 
     @Override
-    public long getNumMessagesReceived()
-    {
+    public long getNumMessagesReceived() {
         return linkTargetEndpoint.getNumberOfMessagesReceived();
     }
 
     @Override
-    public void reset()
-    {
+    public void reset() {
         linkTargetEndpoint.resetNumberOfMessagesReceived();
         if (linkTargetReceiver != null)
             linkTargetReceiver.stop();
         linkSource = null;
         linkTargetReceiver = null;
         linkTargetSharedReceiver.stop();
-        if (linkDelayedTargetEndpoint != null)
-        {
+        if (linkDelayedTargetEndpoint != null) {
             linkDelayedTargetEndpoint.resetNumberOfMessagesReceived();
             linkDelayedTargetEndpoint.stopProcessing();
             linkDelayedTargetEndpoint = null;
@@ -164,17 +151,15 @@ public class LinkCommand implements LinkCommandMBean
     }
 
     @Override
-    public void attachTarget(String source, String target)
-    {
+    public void attachTarget(String source, String target) {
         linkTargetReceiver = new LinkTestTargetReceiver();
-        CAMQPTargetInterface linkTarget =
-                CAMQPLinkManager.getLinkmanager().attachLinkTargetEndpoint(source, target);
+        CAMQPTargetInterface linkTarget = CAMQPLinkManager.getLinkmanager()
+                .attachLinkTargetEndpoint(source, target);
         linkTarget.registerMessageReceiver(linkTargetReceiver);
     }
 
     @Override
-    public long getNumMessagesReceivedAtTargetReceiver()
-    {
+    public long getNumMessagesReceivedAtTargetReceiver() {
         if (linkTargetReceiver != null)
             return linkTargetReceiver.getNumberOfMessagesReceived();
         else
@@ -184,54 +169,54 @@ public class LinkCommand implements LinkCommandMBean
     @Override
     public void createSource(String source,
             String target,
-            String remoteContainerId)
-    {
-        linkSource = CAMQPEndpointManager.createSource(remoteContainerId, source, target, new CAMQPEndpointPolicy());
+            String remoteContainerId) {
+        linkSource = CAMQPEndpointManager.createSource(remoteContainerId,
+                source,
+                target,
+                new CAMQPEndpointPolicy());
         if (linkTargetReceiver != null)
             linkTargetReceiver.setSource(linkSource);
     }
 
     @Override
-    public void attachSharedTarget(String source, String target)
-    {
-        CAMQPTargetInterface linkTarget = //CAMQPEndpointManager.attachTarget(source, target);
-                CAMQPLinkManager.getLinkmanager().attachLinkTargetEndpoint(source, target);
+    public void attachSharedTarget(String source, String target) {
+        CAMQPTargetInterface linkTarget = // CAMQPEndpointManager.attachTarget(source,
+                                          // target);
+        CAMQPLinkManager.getLinkmanager().attachLinkTargetEndpoint(source,
+                target);
         linkTarget.registerMessageReceiver(linkTargetSharedReceiver);
     }
 
     @Override
-    public void registerDelayedTarget(String linkSource, String linkTarget, int averageMsgProcessingTime)
-    {
-        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager().getLinkEndpoint(linkSource, linkTarget);
-        if (linkEndpoint == null)
-        {
+    public void registerDelayedTarget(String linkSource,
+            String linkTarget,
+            int averageMsgProcessingTime) {
+        CAMQPLinkEndpoint linkEndpoint = CAMQPLinkManager.getLinkmanager()
+                .getLinkEndpoint(linkSource, linkTarget);
+        if (linkEndpoint == null) {
             System.out.println("could not find linkEndpoint");
             return;
         }
-        if (linkEndpoint.getRole() == LinkRole.LinkReceiver)
-        {
+        if (linkEndpoint.getRole() == LinkRole.LinkReceiver) {
             CAMQPLinkReceiver linkReceiver = (CAMQPLinkReceiver) linkEndpoint;
-            linkDelayedTargetEndpoint = new LinkTestDelayedTarget(linkReceiver, averageMsgProcessingTime);
+            linkDelayedTargetEndpoint = new LinkTestDelayedTarget(linkReceiver,
+                    averageMsgProcessingTime);
             linkReceiver.registerTarget(linkDelayedTargetEndpoint);
             linkDelayedTargetEndpoint.startProcessing();
-        }
-        else
-        {
+        } else {
             System.out.println("LinkEndpoint is not a LinkReceiver");
         }
     }
 
     @Override
-    public long getNumMessagesProcessedByDelayedEndpoint()
-    {
+    public long getNumMessagesProcessedByDelayedEndpoint() {
         if (linkDelayedTargetEndpoint != null)
             return linkDelayedTargetEndpoint.getNumberOfMessagesReceived();
         return 0;
     }
 
     @Override
-    public boolean processedAllMessages()
-    {
+    public boolean processedAllMessages() {
         if (linkDelayedTargetEndpoint != null)
             return linkDelayedTargetEndpoint.isDone();
         return false;

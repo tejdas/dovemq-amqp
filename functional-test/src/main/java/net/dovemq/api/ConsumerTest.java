@@ -32,51 +32,51 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.dovemq.api.DoveMQEndpointPolicy.MessageAcknowledgementPolicy;
 import net.dovemq.transport.common.CAMQPTestTask;
 
-public class ConsumerTest
-{
+public class ConsumerTest {
     private static String brokerIP;
+
     private static String endpointName;
+
     private static String queueNamePrefix;
+
     private static int numConsumers;
+
     private static int numProducers;
+
     private static int numConsumersPerQueue;
+
     private static boolean ackExplicit = false;
+
     private static ExecutorService executor;
 
-    private static class TestMessageReceiver implements DoveMQMessageReceiver
-    {
-        private final BlockingQueue<DoveMQMessage> receivedMessages = new LinkedBlockingQueue<DoveMQMessage>();
+    private static class TestMessageReceiver implements DoveMQMessageReceiver {
+        private final BlockingQueue<DoveMQMessage> receivedMessages = new LinkedBlockingQueue<>();
+
         private volatile boolean receivedFinalMessage = false;
+
         final AtomicInteger messageCount = new AtomicInteger(0);
 
-        public boolean hasReceivedFinalMessage()
-        {
+        public boolean hasReceivedFinalMessage() {
             return receivedFinalMessage;
         }
 
-        public TestMessageReceiver(PrintWriter fw, Consumer consumer)
-        {
+        public TestMessageReceiver(PrintWriter fw, Consumer consumer) {
             super();
             this.fw = fw;
             this.consumer = consumer;
         }
 
         @Override
-        public void messageReceived(DoveMQMessage message)
-        {
+        public void messageReceived(DoveMQMessage message) {
             messageCount.incrementAndGet();
             Collection<byte[]> body = message.getPayloads();
-            for (byte[] b : body)
-            {
+            for (byte[] b : body) {
                 String bString = new String(b);
-                if ("QUEUE_TEST_DONE".equalsIgnoreCase(bString))
-                {
-                    if (!ackExplicit)
-                    {
+                if ("QUEUE_TEST_DONE".equalsIgnoreCase(bString)) {
+                    if (!ackExplicit) {
                         receivedFinalMessage = true;
                     }
-                }
-                else
+                } else
                     fw.println(bString);
 
                 if (ackExplicit)
@@ -84,24 +84,18 @@ public class ConsumerTest
             }
         }
 
-        void ackMessage()
-        {
+        void ackMessage() {
             DoveMQMessage message = receivedMessages.poll();
-            try
-            {
+            try {
                 Thread.sleep(new Random().nextInt(5) + 5);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-            catch (InterruptedException e)
-            {
-            }
-            if (message != null)
-            {
+            if (message != null) {
                 byte[] body = message.getPayload();
-                if (body != null)
-                {
+                if (body != null) {
                     String bString = new String(body);
-                    if ("QUEUE_TEST_DONE".equalsIgnoreCase(bString))
-                    {
+                    if ("QUEUE_TEST_DONE".equalsIgnoreCase(bString)) {
                         receivedFinalMessage = true;
                     }
                 }
@@ -110,122 +104,116 @@ public class ConsumerTest
         }
 
         private final PrintWriter fw;
+
         private final Consumer consumer;
     }
 
-    private static class MessageAcker implements Runnable
-    {
-        public MessageAcker(TestMessageReceiver messageReceiver)
-        {
+    private static class MessageAcker implements Runnable {
+        public MessageAcker(TestMessageReceiver messageReceiver) {
             super();
             this.messageReceiver = messageReceiver;
         }
 
         @Override
-        public void run()
-        {
-            while (!done)
-            {
+        public void run() {
+            while (!done) {
                 messageReceiver.ackMessage();
             }
         }
 
-        public void shutdown()
-        {
+        public void shutdown() {
             done = true;
         }
 
         private final TestMessageReceiver messageReceiver;
+
         private volatile boolean done = false;
     }
 
-    private static class TestConsumer extends CAMQPTestTask implements Runnable
-    {
-        public TestConsumer(CountDownLatch startSignal, CountDownLatch doneSignal, int id, int consumerId)
-        {
+    private static class TestConsumer extends CAMQPTestTask implements Runnable {
+        public TestConsumer(CountDownLatch startSignal,
+                CountDownLatch doneSignal,
+                int id,
+                int consumerId) {
             super(startSignal, doneSignal);
             this.id = id;
             this.consumerId = consumerId;
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             waitForReady();
-            try
-            {
+            try {
                 Thread.sleep(new Random().nextInt(200) + 100);
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
 
             session = ConnectionFactory.createSession(brokerIP);
 
-            String suffixedQueueName = String.format("%s.%d", queueNamePrefix, id);
+            String suffixedQueueName = String.format("%s.%d",
+                    queueNamePrefix,
+                    id);
             Consumer consumer = null;
 
             if (ackExplicit)
-                consumer = session.createConsumer(suffixedQueueName, new DoveMQEndpointPolicy(MessageAcknowledgementPolicy.CONSUMER_ACKS));
+                consumer = session.createConsumer(suffixedQueueName,
+                        new DoveMQEndpointPolicy(MessageAcknowledgementPolicy.CONSUMER_ACKS));
             else
                 consumer = session.createConsumer(suffixedQueueName);
 
-            String fileName = String.format("%s-%d.txt", endpointName, consumerId);
+            String fileName = String.format("%s-%d.txt",
+                    endpointName,
+                    consumerId);
             PrintWriter fw = null;
-            try
-            {
+            try {
                 fw = new PrintWriter(fileName);
-            }
-            catch (FileNotFoundException e)
-            {
+            } catch (FileNotFoundException e) {
             }
 
-            TestMessageReceiver messageReceiver = new TestMessageReceiver(fw, consumer);
+            TestMessageReceiver messageReceiver = new TestMessageReceiver(fw,
+                    consumer);
             consumer.registerMessageReceiver(messageReceiver);
             MessageAcker acker = new MessageAcker(messageReceiver);
 
             if (ackExplicit)
                 executor.submit(acker);
 
-            while (!messageReceiver.hasReceivedFinalMessage())
-            {
-                try
-                {
+            while (!messageReceiver.hasReceivedFinalMessage()) {
+                try {
                     Thread.sleep(1000);
-                }
-                catch (InterruptedException e)
-                {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
 
-            System.out.println("consumer: " + consumerId + " received message count: " + messageReceiver.messageCount.get());
+            System.out.println("consumer: " + consumerId
+                    + " received message count: "
+                    + messageReceiver.messageCount.get());
             if (ackExplicit)
                 acker.shutdown();
 
             fw.flush();
             fw.close();
 
-            try
-            {
+            try {
                 Thread.sleep(5000);
-            }
-            catch (InterruptedException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
             session.close();
             done();
         }
+
         private Session session;
+
         private final int id;
+
         private final int consumerId;
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException {
         brokerIP = args[0];
         endpointName = args[1];
         queueNamePrefix = args[2];
@@ -237,16 +225,17 @@ public class ConsumerTest
 
         ConnectionFactory.initialize(endpointName);
 
-        executor = Executors.newFixedThreadPool(numConsumers*2);
+        executor = Executors.newFixedThreadPool(numConsumers * 2);
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch doneSignal = new CountDownLatch(numConsumers);
 
         int consumerId = 0;
-        for (int producerIndex = 0; producerIndex < numProducers; producerIndex++)
-        {
-            for (int j = 0; j < numConsumersPerQueue; j++)
-            {
-                TestConsumer consumer = new TestConsumer(startSignal, doneSignal, producerIndex, consumerId++);
+        for (int producerIndex = 0; producerIndex < numProducers; producerIndex++) {
+            for (int j = 0; j < numConsumersPerQueue; j++) {
+                TestConsumer consumer = new TestConsumer(startSignal,
+                        doneSignal,
+                        producerIndex,
+                        consumerId++);
                 executor.submit(consumer);
             }
         }

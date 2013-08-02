@@ -33,21 +33,23 @@ import net.dovemq.transport.endpoint.CAMQPSourceInterface;
 import net.dovemq.transport.endpoint.EndpointTestUtils;
 import net.dovemq.transport.session.SessionCommand;
 
-public class LinkTestMultipleSources
-{
+public class LinkTestMultipleSources {
     private static final String source = "src";
+
     private static final String target = "target";
-    private static String brokerContainerId ;
+
+    private static String brokerContainerId;
+
     private static int NUM_THREADS = 5;
+
     private static LinkCommandMBean mbeanProxy;
 
     private static final CountDownLatch startSignal = new CountDownLatch(1);
+
     private static volatile CountDownLatch doneSignal = null;
 
-    private static class LinkSourceDriver implements Runnable
-    {
-        public LinkSourceDriver(int numMessagesToSend)
-        {
+    private static class LinkSourceDriver implements Runnable {
+        public LinkSourceDriver(int numMessagesToSend) {
             super();
             this.numMessagesToSend = numMessagesToSend;
         }
@@ -55,44 +57,46 @@ public class LinkTestMultipleSources
         private final int numMessagesToSend;
 
         @Override
-        public void run()
-        {
-            try
-            {
+        public void run() {
+            try {
                 startSignal.await();
+            } catch (InterruptedException e1) {
+                Thread.currentThread().interrupt();
             }
-            catch (InterruptedException e1)
-            {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-            String localSource = String.format("%s%d", source, Thread.currentThread().getId());
-            String localTarget = String.format("%s%d", target, Thread.currentThread().getId());
-            CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId, localSource, localTarget, new CAMQPEndpointPolicy());
-            mbeanProxy.attachSharedTarget(localSource,  localTarget);
+            String localSource = String.format("%s%d",
+                    source,
+                    Thread.currentThread().getId());
+            String localTarget = String.format("%s%d",
+                    target,
+                    Thread.currentThread().getId());
+            CAMQPSourceInterface sender = CAMQPEndpointManager.createSource(brokerContainerId,
+                    localSource,
+                    localTarget,
+                    new CAMQPEndpointPolicy());
+            mbeanProxy.attachSharedTarget(localSource, localTarget);
 
             Random randomGenerator = new Random();
 
             /*
              * Since the functional test uses NUM_THREADS=5 and
-             * numMessagesToSend=50000, the test fails on Windows
-             * because of repeated calls to
-             * RandomStringUtils.randomAlphanumeric()
+             * numMessagesToSend=50000, the test fails on Windows because of
+             * repeated calls to RandomStringUtils.randomAlphanumeric().
              *
              * The following boolean is to suppress call to RandomStringUtils.
              */
             boolean generateRandomString = false;
-            for (int i = 0; i < numMessagesToSend; i++)
-            {
-                DoveMQMessage message = EndpointTestUtils.createSmallEncodedMessage(randomGenerator, generateRandomString);
+            for (int i = 0; i < numMessagesToSend; i++) {
+                DoveMQMessage message = EndpointTestUtils.createSmallEncodedMessage(randomGenerator,
+                        generateRandomString);
                 sender.sendMessage(message);
             }
             doneSignal.countDown();
         }
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException,
+            MalformedObjectNameException {
         /*
          * Read args
          */
@@ -120,8 +124,7 @@ public class LinkTestMultipleSources
         int numMessagesExpected = numMessagesToSend * NUM_THREADS;
 
         LinkSourceDriver[] senders = new LinkSourceDriver[NUM_THREADS];
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
+        for (int i = 0; i < NUM_THREADS; i++) {
             LinkSourceDriver sender = new LinkSourceDriver(numMessagesToSend);
             senders[i] = sender;
             executor.submit(sender);
@@ -132,8 +135,7 @@ public class LinkTestMultipleSources
         doneSignal.await();
         Thread.sleep(2000);
 
-        while (true)
-        {
+        while (true) {
             Thread.sleep(1000);
             long numMessagesReceivedAtRemote = mbeanProxy.getNumMessagesReceivedAtTargetReceiver();
             System.out.println(numMessagesReceivedAtRemote);

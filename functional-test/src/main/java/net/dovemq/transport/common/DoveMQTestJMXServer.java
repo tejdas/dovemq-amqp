@@ -32,17 +32,18 @@ import net.dovemq.transport.link.LinkCommandMBean;
 import net.dovemq.transport.session.SessionCommand;
 import net.dovemq.transport.session.SessionCommandMBean;
 
-public class DoveMQTestJMXServer
-{
-    public static void main(String[] args) throws InterruptedException, IOException
-    {
+public class DoveMQTestJMXServer {
+    public static void main(String[] args) throws InterruptedException,
+            IOException {
         CAMQPLinkManager.setLinkSenderType(LinkSenderType.PULL);
         CAMQPLinkManager.initialize(true, "broker");
 
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 
         ConnectionCommandMBean connectionCommandBean = new ConnectionCommand();
-        registerBean(mbs, connectionCommandBean, JMXConstants.CONNECTION_COMMAND_BEAN);
+        registerBean(mbs,
+                connectionCommandBean,
+                JMXConstants.CONNECTION_COMMAND_BEAN);
 
         SessionCommandMBean sessionCommandBean = new SessionCommand();
         registerBean(mbs, sessionCommandBean, JMXConstants.SESSION_COMMAND_BEAN);
@@ -52,23 +53,20 @@ public class DoveMQTestJMXServer
 
         ConnectionCommand beanImpl = (ConnectionCommand) connectionCommandBean;
 
-        while (!beanImpl.isShutdown())
-        {
+        while (!beanImpl.isShutdown()) {
             Thread.sleep(1000);
         }
 
         CAMQPLinkManager.shutdown();
     }
 
-    private static void registerBean(MBeanServer mbs, Object commandBean, String beanName)
-    {
-        try
-        {
+    private static void registerBean(MBeanServer mbs,
+            Object commandBean,
+            String beanName) {
+        try {
             ObjectName commandBeanName = new ObjectName(beanName);
             mbs.registerMBean(commandBean, commandBeanName);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

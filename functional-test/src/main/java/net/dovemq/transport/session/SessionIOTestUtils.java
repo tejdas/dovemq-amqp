@@ -140,8 +140,7 @@ final class SessionSender extends CAMQPTestTask implements Runnable {
                     Thread.currentThread().getId());
             SessionIOTestUtils.transmitBinaryData(session, targetName);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -27,28 +27,25 @@ import junit.framework.TestCase;
 import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.protocol.data.CAMQPConstants;
 
-public class ProducerAlreadyConnectedTest extends TestCase
-{
+public class ProducerAlreadyConnectedTest extends TestCase {
     private static String brokerIP;
+
     private static Session session = null;
+
     private static final CountDownLatch producerCreatedSignal = new CountDownLatch(1);
 
-    private static class TestProducer extends CAMQPTestTask implements Runnable
-    {
-        public TestProducer(CountDownLatch startSignal, CountDownLatch doneSignal)
-        {
+    private static class TestProducer extends CAMQPTestTask implements Runnable {
+        public TestProducer(CountDownLatch startSignal,
+                CountDownLatch doneSignal) {
             super(startSignal, doneSignal);
         }
 
         @Override
-        public void run()
-        {
-            try
-            {
+        public void run() {
+            try {
                 Thread.sleep(new Random().nextInt(200) + 100);
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
 
             session.createProducer("testQueue");
@@ -58,8 +55,8 @@ public class ProducerAlreadyConnectedTest extends TestCase
         }
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException {
         brokerIP = args[0];
 
         ConnectionFactory.initialize("foobar");
@@ -81,7 +78,8 @@ public class ProducerAlreadyConnectedTest extends TestCase
             assertFalse("Should have thrown RuntimeException", true);
         } catch (RuntimeException ex) {
             System.out.println("Caught RuntimeException: " + ex.toString());
-            assertTrue(ex.toString().contains(CAMQPConstants.AMQP_ERROR_RESOURCE_LOCKED));
+            assertTrue(ex.toString()
+                    .contains(CAMQPConstants.AMQP_ERROR_RESOURCE_LOCKED));
             assertTrue(ex.toString(), true);
         }
 

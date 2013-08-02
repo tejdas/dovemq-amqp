@@ -23,13 +23,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Random;
 
-public class ConnectionSysTestClient
-{
-    public static void main(String[] args) throws IOException, InterruptedException
-    {
+public class ConnectionSysTestClient {
+    public static void main(String[] args) throws IOException,
+            InterruptedException {
         Random r = new Random();
         Thread.sleep(500 + r.nextInt(500));
-        String id = (args.length == 0)? "publisher" : args[0];
+        String id = (args.length == 0) ? "publisher" : args[0];
         CAMQPConnectionManager.initialize(id);
         System.out.println("AMQP client container ID: " + CAMQPConnectionManager.getContainerId());
 
@@ -42,8 +41,7 @@ public class ConnectionSysTestClient
 
         Collection<String> connectionList = CAMQPConnectionManager.listConnections();
         assertTrue(connectionList.size() == 1);
-        for (String s : connectionList)
-        {
+        for (String s : connectionList) {
             assertTrue(s.contains(brokerContainerId));
         }
 

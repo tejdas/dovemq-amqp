@@ -30,8 +30,7 @@ import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 
-public class LinkTestMultipleSendersSharingOneDelayedLink
-{
+public class LinkTestMultipleSendersSharingOneDelayedLink {
     private static final String source = "src";
 
     private static final String target = "target";
@@ -39,8 +38,7 @@ public class LinkTestMultipleSendersSharingOneDelayedLink
     private static int NUM_THREADS = 10;
 
     private static class LinkTestMessageSender extends CAMQPTestTask implements
-            Runnable
-    {
+            Runnable {
         private final CAMQPLinkSender linkSender;
 
         private final int numMessagesToSend;
@@ -48,24 +46,23 @@ public class LinkTestMultipleSendersSharingOneDelayedLink
         public LinkTestMessageSender(CountDownLatch startSignal,
                 CountDownLatch doneSignal,
                 CAMQPLinkSender linkSender,
-                int numMessagesToSend)
-        {
+                int numMessagesToSend) {
             super(startSignal, doneSignal);
             this.linkSender = linkSender;
             this.numMessagesToSend = numMessagesToSend;
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             waitForReady();
             LinkTestUtils.sendMessagesOnLink(linkSender, numMessagesToSend);
             done();
         }
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException,
+            MalformedObjectNameException {
         /*
          * Read args
          */
@@ -83,8 +80,13 @@ public class LinkTestMultipleSendersSharingOneDelayedLink
 
         LinkCommandMBean mbeanProxy = jmxWrapper.getLinkBean();
 
-        CAMQPLinkSender linkSender = (CAMQPLinkSender) CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target, new CAMQPEndpointPolicy());
-        System.out.println("Sender Link created between : " + source + "  and: " + target);
+        CAMQPLinkSender linkSender = (CAMQPLinkSender) CAMQPLinkFactory.createLinkSender(brokerContainerId,
+                source,
+                target,
+                new CAMQPEndpointPolicy());
+        System.out.println("Sender Link created between : " + source
+                + "  and: "
+                + target);
 
         mbeanProxy.registerDelayedTarget(source, target, 500);
         /*
@@ -92,7 +94,10 @@ public class LinkTestMultipleSendersSharingOneDelayedLink
          * CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING
          */
         String linkName = linkSender.getLinkName();
-        mbeanProxy.setLinkCreditSteadyState(linkName, 100, 500, ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
+        mbeanProxy.setLinkCreditSteadyState(linkName,
+                100,
+                500,
+                ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE_DRIVEN_BY_TARGET_MESSAGE_PROCESSING);
 
         Thread.sleep(2000);
 
@@ -100,19 +105,19 @@ public class LinkTestMultipleSendersSharingOneDelayedLink
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
 
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal, doneSignal, linkSender, numMessagesToSend);
+        for (int i = 0; i < NUM_THREADS; i++) {
+            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal,
+                    doneSignal,
+                    linkSender,
+                    numMessagesToSend);
             executor.submit(sender);
         }
 
         startSignal.countDown();
-        while (true)
-        {
+        while (true) {
             long messagesReceived = mbeanProxy.getNumMessagesProcessedByDelayedEndpoint();
             System.out.println("got messages: " + messagesReceived);
-            if (messagesReceived == numMessagesToSend * NUM_THREADS)
-            {
+            if (messagesReceived == numMessagesToSend * NUM_THREADS) {
                 break;
             }
             Thread.sleep(1000);
@@ -120,8 +125,7 @@ public class LinkTestMultipleSendersSharingOneDelayedLink
 
         assertTrue(mbeanProxy.getNumMessagesProcessedByDelayedEndpoint() == numMessagesToSend * NUM_THREADS);
 
-        while (!mbeanProxy.processedAllMessages())
-        {
+        while (!mbeanProxy.processedAllMessages()) {
             System.out.println("still processing messages");
             Thread.sleep(1000);
         }

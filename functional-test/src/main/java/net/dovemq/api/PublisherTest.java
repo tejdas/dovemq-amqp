@@ -28,33 +28,35 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import net.dovemq.transport.common.CAMQPTestTask;
 
-public class PublisherTest
-{
+public class PublisherTest {
     private static String brokerIP;
+
     private static String endpointName;
+
     private static String topicName;
+
     private static String fileName;
+
     private static int numIterations;
+
     private static int NUM_THREADS = 1;
 
-    private static class TestPublisher extends CAMQPTestTask implements Runnable
-    {
-        public TestPublisher(CountDownLatch startSignal, CountDownLatch doneSignal, Session session)
-        {
+    private static class TestPublisher extends CAMQPTestTask implements
+            Runnable {
+        public TestPublisher(CountDownLatch startSignal,
+                CountDownLatch doneSignal,
+                Session session) {
             super(startSignal, doneSignal);
-            //this.session = session;
+            // this.session = session;
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             waitForReady();
-            try
-            {
+            try {
                 Thread.sleep(new Random().nextInt(200) + 100);
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
 
             session = ConnectionFactory.createSession(brokerIP);
@@ -66,57 +68,47 @@ public class PublisherTest
             publisher.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
 
                 @Override
-                public void messageAcknowledged(DoveMQMessage message)
-                {
+                public void messageAcknowledged(DoveMQMessage message) {
                     messageAckCount.incrementAndGet();
                 }
             });
 
             System.out.println("created publisher");
 
-            try
-            {
+            try {
                 Thread.sleep(10000);
-            }
-            catch (InterruptedException e1)
-            {
+            } catch (InterruptedException e1) {
                 Thread.currentThread().interrupt();
             }
 
             String sourceName = fileName;
             int messagesSent = 0;
-            for (int i = 0; i < numIterations; i++)
-            {
-                try
-                {
+            for (int i = 0; i < numIterations; i++) {
+                try {
                     messagesSent += sendFileContents(sourceName, publisher);
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     Thread.currentThread().interrupt();
                 }
             }
 
-            while (messageAckCount.get() < messagesSent)
-            {
-                try
-                {
+            while (messageAckCount.get() < messagesSent) {
+                try {
                     Thread.sleep(5000);
-                    System.out.println("publisher waiting: " + messagesSent + " " + messageAckCount.get());
-                }
-                catch (InterruptedException e)
-                {
+                    System.out.println("publisher waiting: " + messagesSent
+                            + " "
+                            + messageAckCount.get());
+                } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
-
             done();
         }
+
         private Session session;
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException {
         brokerIP = args[0];
         endpointName = args[1];
         topicName = args[2];
@@ -133,9 +125,10 @@ public class PublisherTest
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
 
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            TestPublisher publisher = new TestPublisher(startSignal, doneSignal, session);
+        for (int i = 0; i < NUM_THREADS; i++) {
+            TestPublisher publisher = new TestPublisher(startSignal,
+                    doneSignal,
+                    session);
             executor.submit(publisher);
         }
 
@@ -151,8 +144,7 @@ public class PublisherTest
         publisher.registerMessageAckReceiver(new DoveMQMessageAckReceiver() {
 
             @Override
-            public void messageAcknowledged(DoveMQMessage message)
-            {
+            public void messageAcknowledged(DoveMQMessage message) {
                 messageAckCount.incrementAndGet();
             }
         });
@@ -163,15 +155,13 @@ public class PublisherTest
         publisher.publishMessage("TOPIC_TEST_DONE".getBytes());
         messagesSent++;
 
-        while (messageAckCount.get() < messagesSent)
-        {
-            try
-            {
+        while (messageAckCount.get() < messagesSent) {
+            try {
                 Thread.sleep(5000);
-                System.out.println("publisher waiting: " + messagesSent + " " + messageAckCount.get());
-            }
-            catch (InterruptedException e)
-            {
+                System.out.println("publisher waiting: " + messagesSent
+                        + " "
+                        + messageAckCount.get());
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
@@ -183,13 +173,11 @@ public class PublisherTest
         ConnectionFactory.shutdown();
     }
 
-    private static int sendFileContents(String fileName, Publisher publisher) throws IOException
-    {
+    private static int sendFileContents(String fileName, Publisher publisher) throws IOException {
         int messageCount = 0;
         BufferedReader freader = new BufferedReader(new FileReader(fileName));
         String sLine = null;
-        while ((sLine = freader.readLine()) != null)
-        {
+        while ((sLine = freader.readLine()) != null) {
             DoveMQMessage message = MessageFactory.createMessage();
             message.addPayload(sLine.getBytes());
             publisher.publishMessage(message);

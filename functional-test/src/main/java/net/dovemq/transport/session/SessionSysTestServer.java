@@ -24,17 +24,14 @@ import net.dovemq.transport.connection.CAMQPConnectionManager;
 import net.dovemq.transport.connection.CAMQPConnectionProperties;
 import net.dovemq.transport.connection.CAMQPListener;
 
-public class SessionSysTestServer
-{
-    public static void main(String[] args) throws InterruptedException, IOException
-    {
+public class SessionSysTestServer {
+    public static void main(String[] args) throws InterruptedException,
+            IOException {
         CAMQPConnectionManager.initialize("broker");
         System.out.println("container ID: " + CAMQPConnectionManager.getContainerId());
-        CAMQPConnectionProperties defaultConnectionProps =
-            CAMQPConnectionProperties.createConnectionProperties();
+        CAMQPConnectionProperties defaultConnectionProps = CAMQPConnectionProperties.createConnectionProperties();
 
-        CAMQPListener listener =
-                CAMQPListener.createCAMQPListener(defaultConnectionProps);
+        CAMQPListener listener = CAMQPListener.createCAMQPListener(defaultConnectionProps);
         CAMQPSessionManager.initialize();
         listener.start();
 

@@ -30,35 +30,39 @@ import net.dovemq.transport.common.CAMQPTestTask;
 import net.dovemq.transport.common.JMXProxyWrapper;
 import net.dovemq.transport.endpoint.CAMQPEndpointPolicy;
 
-public class LinkTestMultipleSendersSharingOneLink
-{
+public class LinkTestMultipleSendersSharingOneLink {
     private static final String source = "src";
+
     private static final String target = "target";
+
     private static int NUM_THREADS = 10;
 
-    private static class LinkTestMessageSender extends CAMQPTestTask implements Runnable
-    {
+    private static class LinkTestMessageSender extends CAMQPTestTask implements
+            Runnable {
         private final CAMQPLinkSender linkSender;
+
         private final int numMessagesToSend;
+
         public LinkTestMessageSender(CountDownLatch startSignal,
-                CountDownLatch doneSignal, CAMQPLinkSender linkSender, int numMessagesToSend)
-        {
+                CountDownLatch doneSignal,
+                CAMQPLinkSender linkSender,
+                int numMessagesToSend) {
             super(startSignal, doneSignal);
             this.linkSender = linkSender;
             this.numMessagesToSend = numMessagesToSend;
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             waitForReady();
             LinkTestUtils.sendMessagesOnLink(linkSender, numMessagesToSend);
             done();
         }
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException, MalformedObjectNameException
-    {
+    public static void main(String[] args) throws InterruptedException,
+            IOException,
+            MalformedObjectNameException {
         /*
          * Read args
          */
@@ -76,8 +80,13 @@ public class LinkTestMultipleSendersSharingOneLink
 
         LinkCommandMBean mbeanProxy = jmxWrapper.getLinkBean();
 
-        CAMQPLinkSender linkSender = (CAMQPLinkSender) CAMQPLinkFactory.createLinkSender(brokerContainerId, source, target, new CAMQPEndpointPolicy());
-        System.out.println("Sender Link created between : " + source + "  and: " + target);
+        CAMQPLinkSender linkSender = (CAMQPLinkSender) CAMQPLinkFactory.createLinkSender(brokerContainerId,
+                source,
+                target,
+                new CAMQPEndpointPolicy());
+        System.out.println("Sender Link created between : " + source
+                + "  and: "
+                + target);
 
         String linkName = linkSender.getLinkName();
 
@@ -85,7 +94,10 @@ public class LinkTestMultipleSendersSharingOneLink
         /*
          * ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE
          */
-        mbeanProxy.setLinkCreditSteadyState(linkName, 100, 500, ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE);
+        mbeanProxy.setLinkCreditSteadyState(linkName,
+                100,
+                500,
+                ReceiverLinkCreditPolicy.CREDIT_STEADY_STATE);
 
         Thread.sleep(2000);
 
@@ -93,19 +105,19 @@ public class LinkTestMultipleSendersSharingOneLink
         CountDownLatch startSignal = new CountDownLatch(1);
         CountDownLatch doneSignal = new CountDownLatch(NUM_THREADS);
 
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal, doneSignal, linkSender, numMessagesToSend);
+        for (int i = 0; i < NUM_THREADS; i++) {
+            LinkTestMessageSender sender = new LinkTestMessageSender(startSignal,
+                    doneSignal,
+                    linkSender,
+                    numMessagesToSend);
             executor.submit(sender);
         }
 
         startSignal.countDown();
-        while (true)
-        {
+        while (true) {
             long messagesReceived = mbeanProxy.getNumMessagesReceived();
             System.out.println("got messages: " + messagesReceived);
-            if (messagesReceived == numMessagesToSend * NUM_THREADS)
-            {
+            if (messagesReceived == numMessagesToSend * NUM_THREADS) {
                 break;
             }
             Thread.sleep(1000);
